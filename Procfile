@@ -1,0 +1,2 @@
+web: node script.js
+

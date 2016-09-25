@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+<meta name='viewport' content='initial-scale=1'/>
+<script src='https://code.jquery.com/jquery-latest.min.js'></script>
+
+<script>
+
+var randomHash=function(){ return Math.random().toString(36).slice(2)+Math.random().toString(36).slice(2);}
+var parseQS=function(str){
+  var params = {},      regex = /([^&=]+)=([^&]*)/g, m;
+  while (m = regex.exec(str)) {
+    params[decodeURIComponent(m[1])] = decodeURIComponent(m[2]);
+  }
+  return params;
+}
+
+
+  // Fill in your data !!!!
+var AppId={  fb:"your-fb-app-id",  google:"your-google-app-id",  idplace:"your-idplace-app-id"  }; // <--- Fill in your data !!!!
+var uRedir='http://localhost/loginBack.html';  // <--- Fill in your data !!!!
+
+
+var UrlOAuth={fb:"https://www.facebook.com/v2.8/dialog/oauth", google: "https://accounts.google.com/o/oauth2/v2/auth", idplace:'https://idplace.org'};
+var UrlGraph={fb:"https://graph.facebook.com/v2.8/me", google: "https://www.googleapis.com/plus/v1/people/me", idplace:'https://idplace.org/me'};
+
+var setUp=function(){
+  "use strict"
+  var $body=$('body');
+
+
+  var popupWin=function(IP) {
+    flowLogin=flowLoginF.call(this, IP);  flowLogin.next();
+  }  
+  var flowLoginF=function*(IP){
+    $divMess.html('');
+    $divParamMeReq.html('');
+    $divParamAccessTokenReq.html('');
+      // Get access_token
+    var nonce=randomHash();
+    var arrQ=["client_id="+AppId[IP], "redirect_uri="+encodeURIComponent(uRedir), "state="+nonce, "response_type=token"];
+    if(IP=='fb')   arrQ.push( "display=popup");
+    else if(IP=='google')    arrQ.push("scope=profile");
+    else if(IP=='idplace' || IP=='idL' || IP=='id192')    arrQ.push("scope=name,image");
+    var uPop=UrlOAuth[IP]+'?'+arrQ.join('&');
+    window.open(uPop, '_blank', 'width=580,height=400');
+
+    var strQS, strHash;
+    window.loginReturn=function(strQST, strHashT){
+      strQS=strQST; strHash=strHashT;
+      flowLogin.next();
+    };
+    yield;
+    var param=parseQS(strHash.substring(1));
+    var tmp='<b>Result of access_token request</b>:<pre>'+JSON.stringify(param, null,2)+"</pre>";   $divParamAccessTokenReq.html(tmp);
+
+    if(!('state' in param) || param.state !== nonce) {    $divMess.html('Invalid state.'); return;  } 
+
+    var access_token;
+    if('error' in param) { $divMess.html(param.error); return }
+    
+    if(!('access_token' in param)) {  $divMess.html('no "access_token" parameter in response from IP'); return;  }
+    var access_token=param.access_token;
+
+
+      // Get graph (make cross site ajax-request)
+    var uGraph=UrlGraph[IP];
+    if(IP=='fb')  var objForm={access_token:access_token, fields:"id,name,verified,picture"};
+    else if(IP=='google')  var objForm={access_token:access_token, fields:"id,name,verified,image"};
+    else if(IP=='idplace' || IP=='idL' || IP=='id192')  var objForm={access_token:access_token};
+     
+    var arrT = Object.keys(objForm).map(function (key) { return key+'='+encodeURIComponent(objForm[key]); }), strQuery=arrT.join('&'); 
+    if(strQuery.length) uGraph+='?'+strQuery;
+
+    var xhr = new XMLHttpRequest(), boExit=0;
+    xhr.open('GET', uGraph);
+    xhr.onload = function() {
+      if(xhr.status !== 200) {   boExit=1;  $divMess.html('"Me"-Request failed.  Returned status of ' + xhr.status);  }
+      flowLogin.next();
+    };
+    xhr.send();
+    yield; if(boExit==1) {return; }
+
+    var data=xhr.responseText;
+    try{ var objGraph=JSON.parse(data); }catch(e){ console.log(e);  debugger; return; }
+
+    var tmp='<b>Result of "Me"-request</b>:<pre>'+JSON.stringify(objGraph, null,2)+"</pre>";   $divParamMeReq.html(tmp);
+
+  }
+  var flowLogin;  
+
+
+  var $buttonFB=$('<button>').click(function(){popupWin('fb');}).append('Facebook');
+  var $buttonGoogle=$('<button>').click(function(){popupWin('google');}).append('Google');
+  var $buttonIdPlace=$('<button>').click(function(){popupWin('idplace');}).append('idPlace');
+
+  var $divParamAccessTokenReq=$('<div>');
+  var $divParamMeReq=$('<div>');
+  var $divMess=$('<div>');  //,  setMess=function(strMess){$divMess.html(strMess);}
+
+  $body.append($buttonFB,$buttonGoogle,$buttonIdPlace, $divParamAccessTokenReq, $divParamMeReq, $divMess); 
+}
+
+window.onload=function(){  setUp();};
+
+
+</script>
+</head>
+<body>
+<p>Note! this test-app only works with browsers supporting <a href=https://kangax.github.io/compat-table/es6/>Generators</a></p>
+<p>Privacy policy: The data sent back from the IdP will just be displayed to you (nothing stored)</p>
+</body></html>

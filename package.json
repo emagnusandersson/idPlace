@@ -1,0 +1,43 @@
+{
+  "name": "id",
+  "version": "0.0.0",
+  "description": "Opensource idProvider software!",
+  "main": "script.js",
+  "scripts": {
+    "start": "node script.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Magnus Andersson",
+  "license": "BSD-2-Clause",
+  "dependencies": {
+    "request": "2.75.x",
+    "mysql": "2.11.x",
+    "gm": "1.23.x",
+    "through": "2.3.x",
+    "concat-stream": "1.5.x",
+    "formidable": "1.0.17",
+    "async": "2.0.x",
+    "node-rsa": "0.4.x",
+    "atob": "2.0.x",
+    "node-zip": "1.1.x",
+    "fibers": "1.0.14",
+    "uglify-js": "2.7.x",
+    "redis": "2.6.x",
+    "image-size": "0.5.x",
+    "tmp": "0.0.29",
+    "captchapng": "0.0.1",
+    "imagemagick": "0.1.x",
+    "sendgrid": "4.3.0"
+  },
+  "devDependencies": {},
+  "private": true,
+  "repository" :{
+    "type" : "git",
+    "url" : "http://github.com/"
+  },
+  "engines": {
+    "node": "6.x",
+    "npm": ""
+  }
+}
+

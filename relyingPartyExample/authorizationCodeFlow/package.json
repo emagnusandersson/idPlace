@@ -1,0 +1,26 @@
+{
+  "name": "",
+  "version": "0.0.0",
+  "description": "",
+  "main": "script.js",
+  "scripts": {
+    "start": "node script.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Magnus Andersson",
+  "license": "BSD-2-Clause",
+  "dependencies": {
+    "request": "2.72.x",
+    "concat-stream": "1.5.x"
+  },
+  "devDependencies": {},
+  "private": true,
+  "repository" :{
+    "type" : "git",
+    "url" : "http://github.com/"
+  },
+  "engines": {
+    "node": "6.x",
+    "npm": ""
+  }
+}

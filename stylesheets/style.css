@@ -1,0 +1,386 @@
+
+
+/* images */
+div.floatnone, table.floatnone {
+	display: inline-block;
+}
+
+div.floatright, table.floatright {
+	clear: right;
+	float: right;
+	position: relative;
+	margin: 0 0 .5em .5em;
+	border: 0;
+/*
+	border: .5em solid white;
+	border-width: .5em 0 .8em 1.4em;
+*/
+}
+
+
+div.floatright p { font-style: italic; }
+div.floatleft, table.floatleft {
+	float: left;
+	clear: left;
+	position: relative;
+	margin: 0 .5em .5em 0;
+	border: 0;
+/*
+	margin: .3em .5em .5em 0;
+	border: .5em solid white;
+	border-width: .5em 1.4em .8em 0;
+*/
+}
+div.floatleft p { font-style: italic; }
+/* thumbnails */
+div.thumb {
+	margin-bottom: .5em;
+	border-style: solid;
+	border-color: white;
+	width: auto;
+}
+div.noFrame {
+	margin-bottom: .5em;
+	border-style: hidden;
+	width: auto;
+}
+div.noFrameinner {
+	border: 1px hidden #ccc;
+	padding: 3px !important;
+	font-size: 94%;
+	text-align: center;
+	overflow: hidden;
+}
+div.thumbinner {
+	border: 1px solid #ccc;
+	padding: 3px !important;
+	background-color: #f9f9f9;
+	font-size: 94%;
+	text-align: center;
+	overflow: hidden;
+}
+html .thumbimage {
+	border: 1px solid #ccc;
+}
+html .thumbcaption {
+	border: none;
+	text-align: left;
+	line-height: 1.4em;
+	padding: 3px !important;
+	font-size: 94%;
+}
+html .noFrameCaption {
+	border: none;
+	text-align: center;
+	line-height: 1.4em;
+	padding: 3px !important;
+	font-size: 94%;
+}
+div.magnify {
+	float: right;
+	border: none !important;
+	background: none !important;
+}
+div.magnify a, div.magnify img {
+	display: block;
+	border: none !important;
+	background: none !important;
+}
+div.tright {
+	clear: right;
+	float: right;
+	border-width: .5em 0 .8em 1.4em;
+}
+div.tleft {
+	float: left;
+	clear: left;
+	margin-right: .5em;
+	border-width: .5em 1.4em .8em 0;
+}
+
+img.thumbborder {
+	border: 1px solid #dddddd;
+}
+
+/* emulate center */
+.center {
+	width: 100%;
+	text-align: center;
+}
+*.center * {
+	margin-left: auto;
+	margin-right: auto;
+}
+
+p {
+    margin: 0.3em 0em 0.3em 0em;
+    line-height: 1.2em;
+}
+
+dl{
+    margin-top: 0.2em;
+    margin-bottom: 0.5em;
+}
+dd {
+    line-height: 1.2em;
+    margin-left: 2em;
+    margin-bottom: 0.1em;
+}
+
+a {
+	text-decoration: none;
+	color: #0000ff;
+	background: none;
+}
+a:visited {
+	color: #9a16b6;
+}
+a:active {
+	color: #faa700;
+}
+a:hover {
+	text-decoration: underline;
+}
+a.stub, :visited.stub{
+	color: #ff2233;
+}
+
+
+a.external {
+	background: url(external.png) center right no-repeat;
+	padding-right: 13px;
+  color:#36b
+}
+a.external:visited {  color:#636  }
+a.wikipedia {
+	background: url(wikipedia.png) center right no-repeat;
+	padding-right: 13px;
+  color:#36b
+}
+a.wikipedia:visited {  color:#636  }
+
+*.hidden {	visibility: hidden;height:10;}
+
+code {	
+	font-family:courier;
+}
+
+pre {
+	
+	border: solid 1px #3c78b5;
+	padding: 1em;
+	border-style:dashed;
+}
+
+
+body {	font-family:verdana, arial, helvetica;font-size:100%}
+
+body { -webkit-text-size-adjust: 100%; }
+
+body { -webkit-overflow-scrolling: touch; }
+
+.fillScreen { height:100%;overflow:hidden}
+
+/*
+div.gallerytext{overflow:hidden;font-size:94%;padding:2px 4px}
+li.gallerybox{vertical-align:top;background-color:#f9f9f9;border:solid 1px white;display:-moz-inline-box}
+ul.gallery,li.gallerybox{display:inline-block;zoom:1}
+ul.gallery{margin:2px;padding:2px;background-color:white;display:block}
+li.gallerycaption{font-weight:bold;text-align:center;display:block;word-wrap:break-word}
+li.gallerybox div.thumb{text-align:center;border:1px solid #ccc;margin:2px}
+
+li.HLbox{vertical-align:top;background-color:#f9f9f9;border:solid 2px white;display:-moz-inline-box}
+ul.HL,li.HLbox{display:inline-block;zoom:1}
+ul.HL{margin:2px;padding:2px;background-color:white;display:block}
+li.HLbox div.thumb{text-align:center;border:1px solid #ccc;margin:2px}
+*/
+
+/*
+button {
+border-radius: 2px;
+border: solid 1px grey;
+margin:2px;
+padding:1px 6px;
+background:#ddd;
+}*/
+
+button::-moz-focus-inner {   padding: 0;    border: 0  } /*Making firefox buttons behave like other browsers*/
+
+input[type='text'],input[type='number'],textarea {font-size:16px;}
+
+div.vPassword{
+  border:black 2px solid;
+  position:fixed;
+  _position:absolute;
+  top:50%;
+  _top:expression(eval(document.body.scrollTop+document.body.clientHeight/2));
+  left:40%;
+  margin:0;
+  padding:10px;
+  background:lightgray;
+ }
+ 
+
+dt	{font-weight:bold;}
+
+del	{background-color:#ffaaaa;}
+ins	{background-color:#aaffaa;text-decoration: none;}
+
+/* Sortable tables */
+table.sortable thead {
+    background-color:#eee;
+    color:#666666;
+    font-weight: bold;
+    cursor: default;
+}
+
+
+
+td,th {border-width:inherit;border-style:inherit }
+tr {border-width:inherit;border-style:inherit }
+tbody,thead {border-width:inherit;border-style:inherit }
+
+
+button.highStyle, select { box-sizing:border-box; height:2.5em; font-size:0.8em; margin:0.5 0.5; padding:0 0.2em; font-size: inherit;vertical-align:middle;background-color:#eee;border-radius:0.4em}
+button.flexWidth{} /*height:1.8em;padding-left:0.7em;padding-right:0.7em*/
+button.fixWidth{} /*width:2em*/
+.rowButtonFeat  span { vertical-align:bottom}
+.rowButtonFeat button, .rowButtonFeat select { box-sizing:border-box; min-height:1.5em; font-size:0.8em; margin:0.5 0.5; padding:0 0.2em; font-size: inherit;vertical-align:bottom;background-color:#eee;border-radius:0.4em}
+.rowButtonFeat button > span:first-child { vertical-align:baseline;line-height:2.3em}
+.rowButtonFeat button > span:nth-child(2) { vertical-align:baseline;line-height:2.3em}
+
+.devAppList td, .userAppList td { background-color: #ccc;}
+
+
+.pageList p > span, .imageList p > span{  vertical-align:top; display:inline-block}
+.pageList span[name=cb], .imageList span[name=cb] { margin-left:0.5em; width:1.4em;}
+.pageList span[name=cb] > input, .imageList span[name=cb] > input { transform:scale(1.5,1.5);}
+.pageList span[name=execute] , .imageList span[name=execute] { min-width:1.2em; margin-left:0.5em;}
+.pageList span[name=execute] > button, .imageList span[name=execute] > button { width:1.2em;padding:0em;}
+.pageList span[name=date], .imageList span[name=date] { margin-left:0.3em; margin-right:0.3em; width:1.3em;}
+.pageList span[name=boOR], .pageList span[name=boOW], .pageList span[name=boSiteMap] { margin-left:0.3em; width:.7em;}
+.listBody span[name=boOR], .listBody span[name=boOW], .listBody span[name=boSiteMap] {font-family:courier}
+.imageList span[name=image] { margin-left:0.5em; width:50px;}
+.imageList span[name=image] > img { vertical-align: middle;margin-right:0.1em; max-width:50px; max-height:50px}
+
+.pageList span[name=size], .imageList span[name=size] { min-width:2em; float: right;text-align:right}
+   /* Right aligned buttons */
+.pageList span[name=nParent], .pageList span[name=nChild], .pageList span[name=nImage], .imageList span[name=nParent], .imageList span[name=nParentI] { min-width:1.5em; float: right;}
+.pageList span[name=nParent] > button, .pageList span[name=nChild] > button, .pageList span[name=nImage] > button, .imageList span[name=nParent] > button, .imageList span[name=nParentI] > button { padding:0; min-width:1.4em}
+.pageList span[name=nImage] > button { background:lightblue}
+
+.spanGrandParent button { padding:0; min-width:1.4em}
+
+    /* Arrow buttons */
+.pageList span[name=nParent] button, .imageList span[name=nParent] button, .imageList span[name=nParentI] button, .spanGrandParent button { background-position: center; background-repeat: no-repeat; background-size: 100% 100%; border: 0;border-radius: 0;background-color: transparent;}
+/*
+.pageList span[name=nChild] button, .pageList span[name=nImage] button,
+*/
+.pageList span[name=nParent] button, .imageList span[name=nParent] button {background-image: url("buttonUp1.png");}
+.imageList span[name=nParentI] button {background-image: url("buttonUpBlue1.png");}
+/*
+, .spanGrandParent button
+*/
+/*
+.pageList span[name=nChild] button {background-image: url("buttonDown1.png");}
+.pageList span[name=nImage] button {background-image: url("buttonDownBlue1.png");}
+*/ 
+
+.pageList span[name=siteName] { margin-right:0.5em}
+.listHead {margin:.5em 0 0}
+.listHead span[name=siteName] { margin-left:1em}
+.listHead span[name=link] { margin-left:2em}
+.listHead span {cursor:pointer}
+.listHead img {transform:scale(1.5,1.5);margin:0.3em auto;display:block}
+.pageList span[name=link] > a, .imageList span[name=link] > a { word-break:break-word; vertical-align:top}
+/*.imageList img { vertical-align:top}*/
+
+.pageList span[name=version] {  margin-left:0.5em; margin-right:0.5em; float: right}
+.imageList span[name=boOther] {  margin-left:0.5em; margin-right:0.5em; float: right}
+.listBody span[name=version], .listBody span[name=boOther] { background:red; }
+.listHead span[name=version], .listHead span[name=boOther] { min-width:1.5em;}
+.listHead span[name=execute] { visibility:hidden}
+.listHead span[name=image] { visibility:hidden}
+
+
+.pageList p { overflow:hidden;background: #ccc; line-height:2em}
+.imageList p { background: #ddd; line-height:3em}
+
+/*.menuItem:nth-child(odd) {background:#ccc}*/
+/*.menuItem {line-height:2}*/
+
+.popupHover {
+  position:absolute;
+  z-index:200; 
+  padding: 0.2em;
+  margin-left: .7em;
+  margin-top: .3em;
+  max-width: 16em;
+  border: 1px solid black;
+  background-color: #777;
+  color: white;
+  font-size: 0.95em;
+}
+
+.fixedArea {margin:0em 0; text-align:center; position:fixed; bottom:0; width:100%; background:#fff}
+
+
+/*z-index ooveeerrrr nine thoussaaaannnd*/
+/*
+  .blanketPop {
+   background-color:#111;
+   opacity: 0.65;
+   position:absolute;
+   z-index: 9001; 
+   top:0px;
+   left:0px;
+   width:100%;
+}
+.popUpDiv {
+  position:absolute;
+	background-color:#eeeeee;
+	z-index: 9002; 
+  border:1px solid
+}
+*/
+
+.blanket{
+  position: relative;
+  width: 100%;
+  height: 100%;
+  background-color: white;
+  opacity:0.5;
+  position: fixed;
+  top:0px;
+  z-index: 9001;
+}
+
+.Center-Container {
+  position: relative;
+}
+
+.Center {
+  height: 50%;
+  max-width:300px;  
+  overflow: auto;    /* Recommended in case content is larger than the container */  
+  margin: auto;    
+  position: fixed;    
+  top: 0;
+  left: 0;
+  bottom: 0;
+  right: 0;
+  /* Set the bounds in which to center it, relative to its parent/container */
+  background-color: #eeeeee;
+  box-sizing: border-box;
+  border:1px solid;
+  z-index: 9002;
+}
+
+*.unselectable {
+   -webkit-user-select: none; /* Safari, Chrome */
+    -khtml-user-select: none; /* Konqueror */
+    -moz-user-select: none; /* Firefox */
+    -ms-user-select: none; /* IE */
+    -o-user-select: none;
+    user-select: none; /* CSS3 */
+}
