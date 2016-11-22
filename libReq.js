@@ -208,6 +208,8 @@ app.ReqIndex.prototype.go=function() {
   Str.push(strTracker);
 
 
+
+
   Str.push("</head>");
   Str.push('<body style="visibility:hidden">');
 
@@ -1451,7 +1453,7 @@ app.createDumpCommand=function(){
     }
     strCommand+='          '+StrTab.join(' ');
   }
-  strCommand="mysqldump mmm --user=root -p --no-create-info --hex-blob"+strCommand+'          >tracker.sql';
+  strCommand="mysqldump mmm --user=root -p --no-create-info --hex-blob"+strCommand+'          >idplace.sql';
 
   return strCommand;
 }

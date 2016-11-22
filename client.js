@@ -257,16 +257,15 @@ var mainDivExtend=function($el){
     $userSettingDiv.setVis();
     $el.devStuffToggleEventF();
   });
-  var $buttonUserAppList=$('<button>').addClass('highStyle').append('App list').click(function(){ //.css({display: 'block'})
+  var $buttonUserAppList=$('<button>').addClass('highStyle').append('Apps you use').click(function(){ //.css({display: 'block'})
     doHistPush({$view:$userAppList});
     $userAppList.setVis();
   });
-  var $buttonDevAppList=$('<button>').addClass('highStyle').append('App list (app owners)').click(function(){ // .css({display: 'block'})
+  var $buttonDevAppList=$('<button>').addClass('highStyle').append('Apps you own').click(function(){ // .css({display: 'block'})
     doHistPush({$view:$devAppList});
     $devAppList.setVis();
   });
   var $divA=$('<div>').append($buttonUserSetting), $divB=$('<div>').append($buttonUserAppList),  $divDev=$('<div>').append($buttonDevAppList); 
-  $divDev.toggle(boShowDevStuff);
 
   var $DivAll=$([]).push($divA, $divB, $divDev).css(cssCol);
   $([]).push($divB, $divDev).css({'border-left':'2px solid grey'});
@@ -274,6 +273,8 @@ var mainDivExtend=function($el){
   var $divRowB=$('<div>').append($DivAll).css({display: 'flex', 'justify-content':'space-around'});
 
   var $loggedInDiv=$('<div>').css({'margin-top':'1em'}).append($divRowB);
+  $divDev.toggle(boShowDevStuff);
+  //if(boShowDevStuff) $divDev.show(); else   $divDev.hide();
 
 
   var $infoLink=$('<a>').prop({href:"http://www.emagnusandersson.com/idPlace"}).append("More info");
@@ -498,13 +499,14 @@ var createUserDivExtend=function($el){
   
 
   var $h1=$('<h1>').append('Create account');
+  var $divWarning=$('<div>').append(langHtml.warning).css({'background':'pink', 'margin-bottom':'1em', 'padding':'0.2em', border:'1px red solid'});
   var $messDiv=$('<div>').css({color:'red'});
   var $obliDiv=$('<div>').append('* = obligatory');
   var $labPass=$('<label>').append('Password'),  $labPassB=$('<label>').append('Password again');  
   var $inpPass=$('<input type=password placeholder="at least 6 characters">'),  $inpPassB=$('<input type=password>');
   $inpPass.add($inpPassB).css({display:'block', 'margin-bottom':'0.5em'});
 
-  $divCont.append($h1, $messDiv,   $labPass, $inpPass, $labPassB, $inpPassB);  //, $obliDiv
+  $divCont.append($h1, $divWarning, $messDiv,   $labPass, $inpPass, $labPassB, $inpPassB);  //, $obliDiv
   $el.createInputs();
 
   var $spanLabel=$('<span>').append(langHtml.CreateAccount).css({'float':'right',margin:'0.2em 0 0 0'}); 
@@ -852,8 +854,9 @@ var userSettingDivExtend=function($el){
     $deleteAccountPop.setVis();
   }).css({margin:'0.2em 0 0 0'});  //'float':'right',
   var $divCreated=$('<div>').append('Account created <b></b> ago ', $buttonDelete).css({'font-size':'90%', 'border-bottom':'2px solid grey', 'margin-bottom':'1em', 'padding-bottom':'0.5em'});
+  var $divWarning=$('<div>').append(langHtml.warning).css({'background':'pink', 'margin-bottom':'1em', 'padding':'0.2em', border:'1px red solid'});
 
-  var $divCont=$el.$divCont=$('<div>').append($divCreated).css({padding:'0 0.3em 0 0', overflow:'hidden', 'max-width':menuMaxWidth+'px', 'text-align':'left', margin:'1em auto'}); 
+  var $divCont=$el.$divCont=$('<div>').append($divCreated,$divWarning).css({padding:'0 0.3em 0 0', overflow:'hidden', 'max-width':menuMaxWidth+'px', 'text-align':'left', margin:'1em auto'}); 
   $el.createInputs();
 
   var $spanLabel=$('<span>').append(langHtml.Settings).css({'float':'right',margin:'0.2em 0 0 0'});
@@ -864,7 +867,6 @@ var userSettingDivExtend=function($el){
   $el.append($el.$divCont, $el.$fixedDiv);
   return $el;
 }
-
 
 
 
@@ -1518,6 +1520,7 @@ PropExtend=function(){
 
 timerALogout=null;
 
+
 langHtml={
   OK:'OK',
   Yes:'Yes',
@@ -1545,6 +1548,7 @@ langHtml={
     regret:"Do you really want to delete the account",
     help:"As long as you haven't made any payments, you can delete the account"
   },
+  warning:'Notes!<p>People who create multiple/fake/non-legitimate IDs may be deleted without warning.<p>It is better to leave fields empty than to write erratic information in them.<p>You can always delete your account and create a new one later.'
 };
 langHtml.label={
 id:'id',
