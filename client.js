@@ -498,8 +498,8 @@ var createUserDivExtend=function($el){
   var $divCont=$el.$divCont=$('<div>').css({padding:'0 0.3em 0 0', overflow:'hidden', 'max-width':menuMaxWidth+'px', 'text-align':'left', margin:'1em auto'});
   
 
-  var $h1=$('<h1>').append('Create account');
-  var $divWarning=$('<div>').append(langHtml.warning).css({'background':'pink', 'margin-bottom':'1em', 'padding':'0.2em', border:'1px red solid'});
+  var $h1=$('<h1>').append('Create account');  
+  var $divWarning=$('<div>').append(langHtml.warning, ' ', langHtml.SeeAlso, $aPurging, langHtml.YouCanAlwaysDeleteAccountLater).css({'background':'pink', 'margin-bottom':'1em', 'padding':'0.2em', border:'1px red solid'});
   var $messDiv=$('<div>').css({color:'red'});
   var $obliDiv=$('<div>').append('* = obligatory');
   var $labPass=$('<label>').append('Password'),  $labPassB=$('<label>').append('Password again');  
@@ -854,7 +854,7 @@ var userSettingDivExtend=function($el){
     $deleteAccountPop.setVis();
   }).css({margin:'0.2em 0 0 0'});  //'float':'right',
   var $divCreated=$('<div>').append('Account created <b></b> ago ', $buttonDelete).css({'font-size':'90%', 'border-bottom':'2px solid grey', 'margin-bottom':'1em', 'padding-bottom':'0.5em'});
-  var $divWarning=$('<div>').append(langHtml.warning).css({'background':'pink', 'margin-bottom':'1em', 'padding':'0.2em', border:'1px red solid'});
+  var $divWarning=$('<div>').append(langHtml.warning, ' ', langHtml.SeeAlso, $aPurging, langHtml.YouCanAlwaysDeleteAccountLater).css({'background':'pink', 'margin-bottom':'1em', 'padding':'0.2em', border:'1px red solid'});
 
   var $divCont=$el.$divCont=$('<div>').append($divCreated,$divWarning).css({padding:'0 0.3em 0 0', overflow:'hidden', 'max-width':menuMaxWidth+'px', 'text-align':'left', margin:'1em auto'}); 
   $el.createInputs();
@@ -1548,8 +1548,12 @@ langHtml={
     regret:"Do you really want to delete the account",
     help:"As long as you haven't made any payments, you can delete the account"
   },
-  warning:'Notes!<p>People who create multiple/fake/non-legitimate IDs may be deleted without warning.<p>It is better to leave fields empty than to write erratic information in them.<p>You can always delete your account and create a new one later.'
+  warning:'<p>Notes!<p>People who create multiple/fake/non-legitimate IDs may be deleted without warning.<p>It is better to leave fields empty than to write erratic information in them.',
+  SeeAlso:'See Also: ',
+  YouCanAlwaysDeleteAccountLater:'<p>You can always delete your account and create a new one later.'
 };
+$aPurging=$("<a>").prop({href:'https://emagnusandersson.com/idPlace_purge_philosophy'}).text('Purging philosophy');
+
 langHtml.label={
 id:'id',
 //idUser:'idUser',
