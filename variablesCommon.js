@@ -47,7 +47,7 @@ ViewNameProt={};for(var i=0;i<StrViewsKey.length;i++) ViewNameProt[StrViewsKey[i
 specialistDefault={user:0,developer:0,admin:0};
 
 
-var StrProp=['name', 'password', 'image', 'telephone', 'email', 'boEmailVerified',   'country', 'federatedState', 'city', 'zip', 'address', 'timeZone', 'idFB', 'idGoogle', 'birthdate', 'motherTongue', 'gender'];
+var StrProp=['name', 'password', 'image', 'email', 'boEmailVerified', 'telephone',   'country', 'federatedState', 'county', 'city', 'zip', 'address', 'timeZone', 'idFB', 'idGoogle', 'idNational', 'birthdate', 'motherTongue', 'gender'];
 Prop={};
 for(var i=0;i<StrProp.length;i++){  var strName=StrProp[i];  Prop[strName]={};  }
 

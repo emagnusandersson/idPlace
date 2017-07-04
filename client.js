@@ -493,20 +493,20 @@ var createUserDivExtend=function($el){
   $el.cb=null;
 
   var $Inp=$([]);
-  $el.StrProp=['name', 'email', 'telephone',   'country', 'federatedState', 'city', 'zip', 'address', 'birthdate', 'motherTongue', 'gender'];
+  $el.StrProp=['name', 'email', 'telephone',   'country', 'federatedState', 'county', 'city', 'zip', 'address', 'idNational', 'birthdate', 'motherTongue', 'gender'];
 
   var $divCont=$el.$divCont=$('<div>').css({padding:'0 0.3em 0 0', overflow:'hidden', 'max-width':menuMaxWidth+'px', 'text-align':'left', margin:'1em auto'});
   
 
   var $h1=$('<h1>').append('Create account');  
-  var $divWarning=$('<div>').append(langHtml.warning, ' ', langHtml.SeeAlso, $aPurging, langHtml.YouCanAlwaysDeleteAccountLater).css({'background':'pink', 'margin-bottom':'1em', 'padding':'0.2em', border:'1px red solid'});
+  var $divDisclaimer=$('<div>').append(langHtml.disclaimer).css({'background':'pink', 'margin-bottom':'1em', 'padding':'0.2em', border:'1px red solid'});
   var $messDiv=$('<div>').css({color:'red'});
   var $obliDiv=$('<div>').append('* = obligatory');
   var $labPass=$('<label>').append('Password'),  $labPassB=$('<label>').append('Password again');  
   var $inpPass=$('<input type=password placeholder="at least 6 characters">'),  $inpPassB=$('<input type=password>');
   $inpPass.add($inpPassB).css({display:'block', 'margin-bottom':'0.5em'});
 
-  $divCont.append($h1, $divWarning, $messDiv,   $labPass, $inpPass, $labPassB, $inpPassB);  //, $obliDiv
+  $divCont.append($h1, $divDisclaimer, $messDiv,   $labPass, $inpPass, $labPassB, $inpPassB);  //, $obliDiv
   $el.createInputs();
 
   var $spanLabel=$('<span>').append(langHtml.CreateAccount).css({'float':'right',margin:'0.2em 0 0 0'}); 
@@ -847,16 +847,16 @@ var userSettingDivExtend=function($el){
   }
   var $Inp=$([]), $SpanLastChange=$([]);
 
-  $el.StrProp=['name', 'password', 'image', 'telephone', 'email', 'boEmailVerified',   'country', 'federatedState', 'city', 'zip', 'address',     'idFB', 'birthdate', 'motherTongue', 'gender']; //'idFB', 'idGoogle', 
+  $el.StrProp=['name', 'password', 'image', 'email', 'boEmailVerified', 'telephone',   'country', 'federatedState', 'county', 'city', 'zip', 'address',     'idFB', 'idNational', 'birthdate', 'motherTongue', 'gender']; //'idFB', 'idGoogle', 
 
   var $buttonDelete=$('<button>').append('Delete account').addClass('highStyle').click(function(){ 
     doHistPush({$view:$deleteAccountPop});
     $deleteAccountPop.setVis();
   }).css({margin:'0.2em 0 0 0'});  //'float':'right',
   var $divCreated=$('<div>').append('Account created <b></b> ago ', $buttonDelete).css({'font-size':'90%', 'border-bottom':'2px solid grey', 'margin-bottom':'1em', 'padding-bottom':'0.5em'});
-  var $divWarning=$('<div>').append(langHtml.warning, ' ', langHtml.SeeAlso, $aPurging, langHtml.YouCanAlwaysDeleteAccountLater).css({'background':'pink', 'margin-bottom':'1em', 'padding':'0.2em', border:'1px red solid'});
+  var $divDisclaimer=$('<div>').append(langHtml.disclaimer).css({'background':'pink', 'margin-bottom':'1em', 'padding':'0.2em', border:'1px red solid'});
 
-  var $divCont=$el.$divCont=$('<div>').append($divCreated,$divWarning).css({padding:'0 0.3em 0 0', overflow:'hidden', 'max-width':menuMaxWidth+'px', 'text-align':'left', margin:'1em auto'}); 
+  var $divCont=$el.$divCont=$('<div>').append($divCreated,$divDisclaimer).css({padding:'0 0.3em 0 0', overflow:'hidden', 'max-width':menuMaxWidth+'px', 'text-align':'left', margin:'1em auto'}); 
   $el.createInputs();
 
   var $spanLabel=$('<span>').append(langHtml.Settings).css({'float':'right',margin:'0.2em 0 0 0'});
@@ -1356,7 +1356,7 @@ GRet=function(data){
  *******************************************************************************************************************/
 
 
- // $el.StrProp=['name', 'password', 'image', 'telephone', 'email',   'country', 'federatedState', 'city', 'zip', 'address',     'idFB', 'idGoogle', 'birthdate', 'motherTongue', 'gender'];
+ // $el.StrProp=['name', 'password', 'image', 'email', 'telephone',   'country', 'federatedState', 'county', 'city', 'zip', 'address',     'idFB', 'idGoogle', 'idNational', 'birthdate', 'motherTongue', 'gender'];
 PropExtend=function(){
   var saveInpDefault=function($inp){ return [null, $inp.val().trim()];}
   var crInpDefault=function(){
@@ -1548,11 +1548,21 @@ langHtml={
     regret:"Do you really want to delete the account",
     help:"As long as you haven't made any payments, you can delete the account"
   },
-  warning:'<p>Notes!<p>People who create multiple/fake/non-legitimate IDs may be deleted without warning.<p>It is better to leave fields empty than to write erratic information in them.',
-  SeeAlso:'See Also: ',
-  YouCanAlwaysDeleteAccountLater:'<p>You can always delete your account and create a new one later.'
+  disclaimer:`<h4>Disclamer etc.</h4><p>The site might be taken down at any moment simply because the developer feels like it. The software is still free (to use and change) (<a href="https://github.com/emagnusandersson/idPlace">link</a>) and anyone who feel like it should be able to take over.\n
+  <h5>Your account might be deleted...</h5>
+  <p>... in attempts to keep the register free of fake accounts. (<a href="https://emagnusandersson.com/idPlace">Why is it important to get rid of fake accounts</a>)
+  <h5>Best practices to keep your account from being deleted</h5>
+  <p>• Don't enter fake data, it's better to leave a field empty than entering fake data. Note that just because you entered your data on this site, doesn't mean that you have to share them with the "Relying party" (the site you are "identifying" yourself to.)
+  <p>• Don't change data that is expected to be constant too often (Social security number, birth date ...)
+  <p>• Tie your account to Facebook. (This since Facebook also has a policy of maintaining unique accounts. (And they have much better resources to work on the issue.))
+  <h5>Also note:</h5>
+  <p>You can always delete your account and create a new one later.`
 };
-$aPurging=$("<a>").prop({href:'https://emagnusandersson.com/idPlace_purge_philosophy'}).text('Purging philosophy');
+//<p>• If you entered a correct email address you will most likely be emailed before you are deleted.
+//<p>(Taking someone elses identity may also go against the laws of the local justice system.)
+//<p>See Also: <a href='https://emagnusandersson.com/idPlace_purge_philosophy'>Purging philosophy</a>
+//People who create multiple/fake/non-legitimate IDs may be deleted without warning.<p>It is better to leave fields empty than to write erratic information in them.'
+
 
 langHtml.label={
 id:'id',
@@ -1565,6 +1575,7 @@ telephone:'Telephone',
 
 country:'Country',
 federatedState:'Federated state',
+county:'County',
 city:'City',
 zip:'Zip',
 address:'Address',
@@ -1572,6 +1583,7 @@ address:'Address',
 idFB:'Facebook ID',
 idGoogle:'Google ID',
 
+idNational: 'Social security number / National ID number',
 birthdate:'Birthdate',
 motherTongue:'Mother tongue',
 gender:'Gender'
@@ -1613,8 +1625,9 @@ setUp1=function(){
   boSmallAndroid=0;
   
   if(boTouch){
-    if(boIOS) {      } 
-    else {
+    if(boIOS) {  
+      $bodyNHtml.css({"height":"100%", "overflow-y":"scroll", "-webkit-overflow-scrolling":"touch"});
+    } else {
       //var h=screen.height, w=screen.width;
       var h=window.innerHeight, w=window.innerWidth;
       //alert(window.devicePixelRatio+' '+ screen.height+' '+screen.width);

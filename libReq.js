@@ -97,6 +97,7 @@ app.ReqIndex.prototype.go=function() {
   
 
   var ua=req.headers['user-agent']||''; ua=ua.toLowerCase();
+  var boMSIE=RegExp('/msie/').test(ua), boAndroid=RegExp('/android/').test(ua), boFireFox=RegExp('/firefox/').test(ua), boIOS= RegExp('/iPhone|iPad|iPod/i').test(ua);
   if(/facebookexternalhit/.test(ua)) { objQS.lang='en';  }
   if('fb_locale' in objQS) objQS.lang=objQS.fb_locale.substr(0,2);   
   var strLang='en';
@@ -176,19 +177,25 @@ app.ReqIndex.prototype.go=function() {
   Str.push(tmp);
 
 
-  var uJQuery='https://code.jquery.com/jquery-latest.min.js';    if(boDbg) uJQuery=uSite+'/'+flFoundOnTheInternetFolder+"/jquery-latest.js";      Str.push("<script src='"+uJQuery+"'></script>");
+  //var uJQuery='https://code.jquery.com/jquery-latest.min.js';    if(boDbg) uJQuery=uSite+'/'+flFoundOnTheInternetFolder+"/jquery-latest.js";      Str.push("<script src='"+uJQuery+"'></script>");
+  var uJQuery='https://code.jquery.com/jquery-3.2.1.min.js';    if(boDbg) uJQuery=uSite+'/'+flFoundOnTheInternetFolder+"/jquery-3.2.1.min.js";
+  Str.push('<script src="'+uJQuery+'" integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4=" crossorigin="anonymous"></script>');
+ 
+  
   Str.push('<script src="'+uSite+'/lib/foundOnTheInternet/sha1.js"></script>');
   //Str.push('<script src="'+uSite+'/lib/foundOnTheInternet/md5.js"></script>');
 
     // If boDbg then set vTmp=0 so that the url is the same, this way the debugger can reopen the file between changes
 
+    // Use normal vTmp on iOS (since I don't have any method of disabling cache on iOS devices (nor any debugging interface))
+  var boDbgT=boDbg; if(boIOS) boDbgT=0;
     // Include stylesheets
-  var pathTmp='/stylesheets/style.css', vTmp=CacheUri[pathTmp].eTag; if(boDbg) vTmp=0;    Str.push('<link rel="stylesheet" href="'+uSite+pathTmp+'?v='+vTmp+'" type="text/css">');
+  var pathTmp='/stylesheets/style.css', vTmp=CacheUri[pathTmp].eTag; if(boDbgT) vTmp=0;    Str.push('<link rel="stylesheet" href="'+uSite+pathTmp+'?v='+vTmp+'" type="text/css">');
 
     // Include JS-files
   var StrTmp=['lib.js', 'libClient.js', 'client.js'];
   for(var i=0;i<StrTmp.length;i++){
-    var pathTmp='/'+StrTmp[i], vTmp=CacheUri[pathTmp].eTag; if(boDbg) vTmp=0;    Str.push('<script src="'+uSite+pathTmp+'?v='+vTmp+'"></script>');
+    var pathTmp='/'+StrTmp[i], vTmp=CacheUri[pathTmp].eTag; if(boDbgT) vTmp=0;    Str.push('<script src="'+uSite+pathTmp+'?v='+vTmp+'"></script>');
   }
 
 
@@ -284,7 +291,7 @@ app.ReqMe.prototype.go=function() {
   var fiber=Fiber.current;
 
   var Sql=[], Val=[]; 
-  Sql.push("SELECT name, image, eTagImage, sizeImage, imageHash, LENGTH(idFB)>0 AS boFB, LENGTH(idGoogle)>0 AS boGoogle, address, zip, city, federatedState, country, timeZone, telephone, email, boEmailVerified, birthdate,  motherTongue, gender, \n\
+  Sql.push("SELECT name, image, eTagImage, sizeImage, imageHash, LENGTH(idFB)>0 AS boFB, LENGTH(idGoogle)>0 AS boGoogle, address, zip, city, county, federatedState, country, timeZone, email, boEmailVerified, telephone, idNational, birthdate,  motherTongue, gender, \n\
 UNIX_TIMESTAMP(tCreated) AS tCreated, \n\
 UNIX_TIMESTAMP(tName) AS tName,  \n\
 UNIX_TIMESTAMP(tImage) AS tImage,  \n\
@@ -292,11 +299,13 @@ UNIX_TIMESTAMP(tEmail) AS tEmail,  \n\
 UNIX_TIMESTAMP(tTelephone) AS tTelephone,  \n\
 UNIX_TIMESTAMP(tCountry) AS tCountry,  \n\
 UNIX_TIMESTAMP(tFederatedState) AS tFederatedState,  \n\
+UNIX_TIMESTAMP(tCounty) AS tCounty  \n\
 UNIX_TIMESTAMP(tCity) AS tCity,  \n\
 UNIX_TIMESTAMP(tZip) AS tZip,  \n\
 UNIX_TIMESTAMP(tAddress) AS tAddress,  \n\
 UNIX_TIMESTAMP(tIdFB) AS tIdFB,  \n\
 UNIX_TIMESTAMP(tIdGoogle) AS tIdGoogle,  \n\
+UNIX_TIMESTAMP(tIdNational) AS tIdNational,  \n\
 UNIX_TIMESTAMP(tBirthdate) AS tBirthdate, \n\
 UNIX_TIMESTAMP(tMotherTongue) AS tMotherTongue, \n\
 UNIX_TIMESTAMP(tGender) AS tGender, \n\
@@ -305,6 +314,8 @@ scope, maxUnactivityToken, id \n\
 FROM "+user2AppTab+" ua JOIN "+userTab+" u ON ua.idUser=u.idUser WHERE access_token=?;");  // u.idUser AS idUser,
   Val.push(objQS.access_token);
 
+
+//nName, nImage, nEmail, nTelephone, nCountry, nFederatedState, nCounty, nCity, nZip, nAddress, nIdFB, nIdGoogle, nIdNational, nBirthdate, nMotherTongue, nGender, \n\
 
   
   var sql=Sql.join('\n');
@@ -363,11 +374,13 @@ app.PropAsScope={
   telephone: ['telephone', 'tTelephone'],
   country: ['country', 'tCountry'],
   federatedState: ['federatedState', 'tFederatedState'],
+  county: ['county', 'tCounty'],
   zip: ['zip', 'tZip'],
   city: ['city', 'tCity'],
   address: ['address', 'tAddress'],
   boFB: ['boFB', 'tIdFB'],
   boGoogle: ['boGoogle', 'tIdGoogle'],
+  idNational: ['idNational', 'tIdNational'],
   birthdate: ['birthdate', 'tBirthdate'],
   motherTongue: ['motherTongue', 'tMotherTongue'],
   gender: ['gender', 'tGender']
@@ -420,7 +433,7 @@ app.ReqToken.prototype.go=function() {
   
 
   var Sql=[], Val=[];
-  Sql.push("SELECT u.idUser AS idUser, u.name AS name, image, eTagImage, sizeImage, u.imageHash AS imageHash, LENGTH(idFB)>0 AS boFB, LENGTH(idGoogle)>0 AS boGoogle, address, zip, city, federatedState, country, timeZone, telephone, email, boEmailVerified, birthdate,  motherTongue, gender, \n\
+  Sql.push("SELECT u.idUser AS idUser, u.name AS name, image, eTagImage, sizeImage, u.imageHash AS imageHash, LENGTH(idFB)>0 AS boFB, LENGTH(idGoogle)>0 AS boGoogle, address, zip, city, county, federatedState, country, timeZone, email, boEmailVerified, telephone, idNational, birthdate,  motherTongue, gender, \n\
 UNIX_TIMESTAMP(tCreated) AS tCreated, \n\
 UNIX_TIMESTAMP(tName) AS tName,  \n\
 UNIX_TIMESTAMP(tImage) AS tImage,  \n\
@@ -428,11 +441,13 @@ UNIX_TIMESTAMP(tEmail) AS tEmail,  \n\
 UNIX_TIMESTAMP(tTelephone) AS tTelephone,  \n\
 UNIX_TIMESTAMP(tCountry) AS tCountry,  \n\
 UNIX_TIMESTAMP(tFederatedState) AS tFederatedState,  \n\
+UNIX_TIMESTAMP(tCounty) AS tCounty,  \n\
 UNIX_TIMESTAMP(tCity) AS tCity,  \n\
 UNIX_TIMESTAMP(tZip) AS tZip,  \n\
 UNIX_TIMESTAMP(tAddress) AS tAddress,  \n\
 UNIX_TIMESTAMP(tIdFB) AS tIdFB,  \n\
 UNIX_TIMESTAMP(tIdGoogle) AS tIdGoogle,  \n\
+UNIX_TIMESTAMP(tIdNational) AS tIdNational,  \n\
 UNIX_TIMESTAMP(tBirthdate) AS tBirthdate, \n\
 UNIX_TIMESTAMP(tMotherTongue) AS tMotherTongue, \n\
 UNIX_TIMESTAMP(tGender) AS tGender, \n\
@@ -492,10 +507,13 @@ var ReqLoginBack=app.ReqLoginBack=function(req, res){
 ReqLoginBack.prototype.go=function(){
   var self=this, req=this.req, res=this.res, objQS=req.objQS;
   var wwwLoginScopeTmp=null; if('wwwLoginScope' in this.site) wwwLoginScopeTmp=this.site.wwwLoginScope;
+  var uSite=req.strSchemeLong+req.wwwSite;
 
   var Str=[];
   Str.push("\n\
-<html><head><meta name='robots' content='noindex'></head>\n\
+<html><head><meta name='robots' content='noindex'>\n\
+<link rel='canonical' href='"+uSite+"'/>\n\
+</head>\n\
 <body>\n\
 <script>\n\
 var wwwLoginScope="+JSON.stringify(wwwLoginScopeTmp)+";\n\
@@ -720,7 +738,6 @@ app.ReqCaptcha=function(req, res){
 }
 app.ReqCaptcha.prototype.go=function(){
   var self=this, req=this.req, res=this.res, sessionID=req.sessionID;
-  //var strCaptcha=session.captcha=parseInt(Math.random()*9000+1000);
   var strCaptcha=parseInt(Math.random()*9000+1000);
   var redisVar=sessionID+'_captcha';
   var tmp=wrapRedisSendCommand('set',[redisVar,strCaptcha]);
@@ -832,8 +849,10 @@ app.ReqStat.prototype.go=function(){
 
 
     var uSite=req.strSchemeLong+wwwSite;
-    var uJQuery='https://code.jquery.com/jquery-latest.min.js';    if(boDbg) uJQuery=uSite+'/'+flFoundOnTheInternetFolder+"/jquery-latest.js";      Str.push("<script src='"+uJQuery+"'></script>");
-
+    //var uJQuery='https://code.jquery.com/jquery-latest.min.js';    if(boDbg) uJQuery=uSite+'/'+flFoundOnTheInternetFolder+"/jquery-latest.js";      Str.push("<script src='"+uJQuery+"'></script>");
+    var uJQuery='https://code.jquery.com/jquery-3.2.1.min.js';    if(boDbg) uJQuery=uSite+'/'+flFoundOnTheInternetFolder+"/jquery-3.2.1.min.js";
+    Str.push('<script src="'+uJQuery+'" integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4=" crossorigin="anonymous"></script>');
+ 
       // If boDbg then set vTmp=0 so that the url is the same, this way the debugger can reopen the file between changes
 
       // Include stylesheets
@@ -901,7 +920,7 @@ app.ReqStat.prototype.go=function(){
  * SetupSql
  ******************************************************************************/
 app.SetupSql=function(){
-  this.strSETScope="SET('name', 'image', 'email', 'telephone', 'country', 'federatedState', 'zip', 'city', 'address', 'timeZone', 'boFB', 'boGoogle', 'birthdate', 'motherTongue', 'gender', 'all')";
+  this.strSETScope="SET('name', 'image', 'email', 'telephone', 'country', 'federatedState', 'county', 'zip', 'city', 'address', 'timeZone', 'boFB', 'boGoogle', 'idNational', 'birthdate', 'motherTongue', 'gender', 'all')";
 }
 app.SetupSql.prototype.table=function(SiteName,boDropOnly){
   if(typeof SiteName=='string') SiteName=[SiteName];
@@ -948,12 +967,14 @@ app.SetupSql.prototype.table=function(SiteName,boDropOnly){
   telephone varchar(128) NOT NULL DEFAULT '', \n\
   country varchar(128) NOT NULL DEFAULT '', \n\
   federatedState varchar(128) NOT NULL DEFAULT '', \n\
+  county varchar(128) NOT NULL DEFAULT '', \n\
   city varchar(128) NOT NULL DEFAULT '', \n\
   zip varchar(128) NOT NULL DEFAULT '', \n\
   address varchar(128) NOT NULL DEFAULT '', \n\
   timeZone varchar(16) NULL DEFAULT 0, \n\
   idFB char(16) CHARSET utf8 NULL, \n\
   idGoogle varchar(128) CHARSET utf8 NULL, \n\
+  idNational varchar(128) CHARSET NOT NULL DEFAULT '', \n\
   birthdate DATE NOT NULL, \n\
   motherTongue varchar(32) NOT NULL DEFAULT '', \n\
   gender "+strEnumGender+" NOT NULL DEFAULT 'male', \n\
@@ -964,11 +985,13 @@ app.SetupSql.prototype.table=function(SiteName,boDropOnly){
   tTelephone TIMESTAMP NOT NULL, \n\
   tCountry TIMESTAMP NOT NULL, \n\
   tFederatedState TIMESTAMP NOT NULL, \n\
+  tCounty TIMESTAMP NOT NULL, \n\
   tCity TIMESTAMP NOT NULL, \n\
   tZip TIMESTAMP NOT NULL, \n\
   tAddress TIMESTAMP NOT NULL, \n\
   tIdFB TIMESTAMP NOT NULL, \n\
   tIdGoogle TIMESTAMP NOT NULL, \n\
+  tIdNational TIMESTAMP NOT NULL, \n\
   tBirthdate TIMESTAMP NOT NULL, \n\
   tMotherTongue TIMESTAMP NOT NULL, \n\
   tGender TIMESTAMP NOT NULL, \n\
@@ -1076,7 +1099,7 @@ app.SetupSql.prototype.fun=function(SiteName,boDropOnly){
   SqlFunctionDrop.push("DROP PROCEDURE IF EXISTS "+siteName+"getUserAppInfo");
   SqlFunction.push("CREATE PROCEDURE "+siteName+"getUserAppInfo(IidUser int(4), IidApp int(4)) \n\
     proc_label:BEGIN \n\
-      SELECT idUser, name, image, eTagImage, sizeImage, imageHash, telephone, email, boEmailVerified, country, federatedState, city, zip, address, timeZone, idFB, idGoogle, birthdate, motherTongue, gender,  \n\
+      SELECT idUser, name, image, eTagImage, sizeImage, imageHash, email, boEmailVerified, telephone, country, federatedState, county, city, zip, address, timeZone, idFB, idGoogle, idNational, birthdate, motherTongue, gender,  \n\
 UNIX_TIMESTAMP(tCreated) AS tCreated,  \n\
 UNIX_TIMESTAMP(tName) AS tName,  \n\
 UNIX_TIMESTAMP(tImage) AS tImage,  \n\
@@ -1084,11 +1107,13 @@ UNIX_TIMESTAMP(tEmail) AS tEmail,  \n\
 UNIX_TIMESTAMP(tTelephone) AS tTelephone,  \n\
 UNIX_TIMESTAMP(tCountry) AS tCountry,  \n\
 UNIX_TIMESTAMP(tFederatedState) AS tFederatedState,  \n\
+UNIX_TIMESTAMP(tCounty) AS tCounty,  \n\
 UNIX_TIMESTAMP(tCity) AS tCity,  \n\
 UNIX_TIMESTAMP(tZip) AS tZip,  \n\
 UNIX_TIMESTAMP(tAddress) AS tAddress,  \n\
 UNIX_TIMESTAMP(tIdFB) AS tIdFB,  \n\
 UNIX_TIMESTAMP(tIdGoogle) AS tIdGoogle,  \n\
+UNIX_TIMESTAMP(tIdNational) AS tIdNational,  \n\
 UNIX_TIMESTAMP(tBirthdate) AS tBirthdate,  \n\
 UNIX_TIMESTAMP(tMotherTongue) AS tMotherTongue,  \n\
 UNIX_TIMESTAMP(tGender) AS tGender  \n\
@@ -1211,7 +1236,7 @@ UNIX_TIMESTAMP(tGender) AS tGender  \n\
 \n\
       IF VidUser IS NULL THEN \n\
         INSERT INTO "+userTab+" SET idFB=IidIP, name=InameIP, password=MD5(RAND()), image=Iimage, email=Iemail, timeZone=ItimeZone, birthdate='2000-01-01', \n\
-   tCreated=now(), tName=now(), tImage=now(), tEmail=now(), tTelephone=now(), tCountry=now(), tFederatedState=now(), tCity=now(), tZip=now(), tAddress=now(), tIdFB=now(), tIdGoogle=now(), tBirthdate=now(), tMotherTongue=now(), tGender=now(); \n\
+   tCreated=now(), tName=now(), tImage=now(), tEmail=now(), tTelephone=now(), tCountry=now(), tFederatedState=now(), tCounty=now(), tCity=now(), tZip=now(), tAddress=now(), tIdFB=now(), tIdGoogle=now(), tIdNational=now(), tBirthdate=now(), tMotherTongue=now(), tGender=now(); \n\
         SELECT LAST_INSERT_ID() INTO VidUser; \n\
       ELSE \n\
         UPDATE "+userTab+" SET \n\

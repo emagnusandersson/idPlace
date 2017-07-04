@@ -484,16 +484,19 @@ boEmailVerified=IF(email!=?, 0, boEmailVerified), \n\
 tTelephone=IF(telephone!=?, now(), tTelephone), \n\
 tCountry=IF(country!=?, now(), tCountry), \n\
 tFederatedState=IF(federatedState!=?, now(), tFederatedState), \n\
+tCounty=IF(county!=?, now(), tCounty), \n\
 tCity=IF(city!=?, now(), tCity), \n\
 tZip=IF(zip!=?, now(), tZip), \n\
 tAddress=IF(address!=?, now(), tAddress), \n\
+tIdNational=IF(idNational!=?, now(), tIdNational), \n\
 tBirthdate=IF(birthdate!=?, now(), tBirthdate), \n\
 tMotherTongue=IF(motherTongue!=?, now(), tMotherTongue), \n\
 tGender=IF(gender!=?, now(), tGender), \n\
 name=?, \n\
 email=?, \n\
 telephone=?, \n\
-country=?, federatedState=?, city=?, zip=?, address=?, \n\
+country=?, federatedState=?, county=?, city=?, zip=?, address=?, \n\
+idNational=?, \n\
 birthdate=?, \n\
 motherTongue=?, \n\
 gender=? \n\
@@ -513,8 +516,8 @@ WHERE idUser=?;");
 
 
   var o=inObj;
-  Val=Val.concat(o.name, o.email, o.email, o.telephone, o.country, o.federatedState, o.city, o.zip, o.address, o.birthdate, o.motherTongue, o.gender);
-  Val=Val.concat(o.name, o.email, o.telephone, o.country, o.federatedState, o.city, o.zip, o.address, o.birthdate, o.motherTongue, o.gender);
+  Val=Val.concat(o.name, o.email, o.email, o.telephone, o.country, o.federatedState, o.county, o.city, o.zip, o.address, o.idNational, o.birthdate, o.motherTongue, o.gender);
+  Val=Val.concat(o.name, o.email, o.telephone, o.country, o.federatedState, o.county, o.city, o.zip, o.address, o.idNational, o.birthdate, o.motherTongue, o.gender);
   Val=Val.concat(idUser);
 
   var sql=Sql.join('\n');
@@ -526,7 +529,7 @@ WHERE idUser=?;");
     }
   });
 }
-//'name', 'password', 'image', 'email', 'telephone',    'country', 'federatedState', 'city', 'zip', 'address',    'fb', 'google', 'birthdate', 'motherTongue', 'gender' 
+//'name', 'password', 'image', 'email', 'telephone',    'country', 'federatedState', 'county', 'city', 'zip', 'address',    'fb', 'google', 'idNational', 'birthdate', 'motherTongue', 'gender' 
 
 
 ReqBE.prototype.createUser=function(callback,inObj){ // writing needSession
@@ -537,9 +540,9 @@ ReqBE.prototype.createUser=function(callback,inObj){ // writing needSession
   //var tmp=this.sessionMain.userInfoFrIP, IP=tmp.IP, idIP=tmp.idIP, nameIP=tmp.nameIP, image=tmp.image;
   
   var Sql=[]; 
-  Sql.push("INSERT INTO "+userTab+" SET name=?, password=?, email=?, telephone=?, country=?, federatedState=?, city=?, zip=?, address=?, timeZone=?, birthdate=?, motherTongue=?, gender=?,\n\
-  tCreated=now(), tName=now(), tImage=now(), tEmail=now(), tTelephone=now(), tCountry=now(), tFederatedState=now(), tCity=now(), tZip=now(), tAddress=now(), tIdFB=now(), tIdGoogle=now(), tBirthdate=now(), tMotherTongue=now(), tGender=now();");
-  var Val=[inObj.name, inObj.password, inObj.email, inObj.telephone, inObj.country, inObj.federatedState, inObj.city, inObj.zip, inObj.address, inObj.timeZone, inObj.birthdate, inObj.motherTongue, inObj.gender];
+  Sql.push("INSERT INTO "+userTab+" SET name=?, password=?, email=?, telephone=?, country=?, federatedState=?, county=?, city=?, zip=?, address=?, timeZone=?, idNational=?, birthdate=?, motherTongue=?, gender=?,\n\
+  tCreated=now(), tName=now(), tImage=now(), tEmail=now(), tTelephone=now(), tCountry=now(), tFederatedState=now(), tCounty=now(), tCity=now(), tZip=now(), tAddress=now(), tIdFB=now(), tIdGoogle=now(), tBirthdate=now(), tMotherTongue=now(), tGender=now();");
+  var Val=[inObj.name, inObj.password, inObj.email, inObj.telephone, inObj.country, inObj.federatedState, inObj.county, inObj.city, inObj.zip, inObj.address, inObj.timeZone, inObj.idNational, inObj.birthdate, inObj.motherTongue, inObj.gender];
   Sql.push("SELECT LAST_INSERT_ID() AS idUser;");
   //Sql.push("UPDATE "+userTab+" SET imageHash=LAST_INSERT_ID()%32 WHERE idUser=LAST_INSERT_ID();");
 
