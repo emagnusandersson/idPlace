@@ -441,6 +441,26 @@ var createUserPreDivExtend=function($el){
   return $el;
 }
 
+var divDisclaimerExtend=function($el){
+"use strict"
+  $el.setUp=function(boFrMem){
+    var boShowDisclaimer;
+    if(typeof boFrMem=='undefined') { boShowDisclaimer=$butTog.text()=='Show';}
+    else { boShowDisclaimer=getItem('boShowDisclaimer'); if(boShowDisclaimer===null) boShowDisclaimer=true; }
+
+    setItem('boShowDisclaimer',boShowDisclaimer);
+    var strTxt=boShowDisclaimer?langHtml.disclaimer:'';
+    $divText.html(strTxt);
+    $butTog.html(boShowDisclaimer?'Hide':'Show');
+  }
+  var $spanLable=$('<span>').append(langHtml.disclaimerHead).css({'font-weight':'bold','margin':'0.5em 0 0.5em'});
+  var $butTog=$('<button>').css({'float':'right','font-size':'60%'}).click(function(){$el.setUp();});
+  var $divTop=$('<div>').append($spanLable, $butTog), $divText=$('<div>');
+  $el.append($divTop, $divText);
+  $el.setUp(1);
+  return $el;
+}
+
 var createUserDivExtend=function($el){
 "use strict"
   $el.toString=function(){return 'createUserDiv';}
@@ -487,7 +507,7 @@ var createUserDivExtend=function($el){
   $el.setUp=function(){
     $Inp.each(function(i){
       var $inp=$(this), strName=$inp.attr('name'); Prop[strName].setInp($inp);
-    });           
+    });
     return true; 
   }
   $el.cb=null;
@@ -498,15 +518,16 @@ var createUserDivExtend=function($el){
   var $divCont=$el.$divCont=$('<div>').css({padding:'0 0.3em 0 0', overflow:'hidden', 'max-width':menuMaxWidth+'px', 'text-align':'left', margin:'1em auto'});
   
 
+  
   var $h1=$('<h1>').append('Create account');  
-  var $divDisclaimer=$('<div>').append(langHtml.disclaimer).css({'background':'pink', 'margin-bottom':'1em', 'padding':'0.2em', border:'1px red solid'});
+  $el.$divDisclaimerW=$('<div>').css({'margin':'0em', 'padding':'0em'});
   var $messDiv=$('<div>').css({color:'red'});
   var $obliDiv=$('<div>').append('* = obligatory');
   var $labPass=$('<label>').append('Password'),  $labPassB=$('<label>').append('Password again');  
   var $inpPass=$('<input type=password placeholder="at least 6 characters">'),  $inpPassB=$('<input type=password>');
   $inpPass.add($inpPassB).css({display:'block', 'margin-bottom':'0.5em'});
 
-  $divCont.append($h1, $divDisclaimer, $messDiv,   $labPass, $inpPass, $labPassB, $inpPassB);  //, $obliDiv
+  $divCont.append($h1, $el.$divDisclaimerW, $messDiv,   $labPass, $inpPass, $labPassB, $inpPassB);  //, $obliDiv
   $el.createInputs();
 
   var $spanLabel=$('<span>').append(langHtml.CreateAccount).css({'float':'right',margin:'0.2em 0 0 0'}); 
@@ -842,7 +863,7 @@ var userSettingDivExtend=function($el){
       var $inp=$(this), strName=$inp.attr('name'); Prop[strName].setInp($inp);
     });
     var arrTmp=getSuitableTimeUnit(unixNow()-userInfoFrDB.tCreated); arrTmp[0]=Math.round(arrTmp[0]);
-    $divCreated.children('b').html(arrTmp.join(' '));      
+    $divCreated.children('b').html(arrTmp.join(' '));
     return true; 
   }
   var $Inp=$([]), $SpanLastChange=$([]);
@@ -854,9 +875,9 @@ var userSettingDivExtend=function($el){
     $deleteAccountPop.setVis();
   }).css({margin:'0.2em 0 0 0'});  //'float':'right',
   var $divCreated=$('<div>').append('Account created <b></b> ago ', $buttonDelete).css({'font-size':'90%', 'border-bottom':'2px solid grey', 'margin-bottom':'1em', 'padding-bottom':'0.5em'});
-  var $divDisclaimer=$('<div>').append(langHtml.disclaimer).css({'background':'pink', 'margin-bottom':'1em', 'padding':'0.2em', border:'1px red solid'});
+  $el.$divDisclaimerW=$('<div>').css({'margin':'0em', 'padding':'0em'});
 
-  var $divCont=$el.$divCont=$('<div>').append($divCreated,$divDisclaimer).css({padding:'0 0.3em 0 0', overflow:'hidden', 'max-width':menuMaxWidth+'px', 'text-align':'left', margin:'1em auto'}); 
+  var $divCont=$el.$divCont=$('<div>').append($divCreated,$el.$divDisclaimerW).css({padding:'0 0.3em 0 0', overflow:'hidden', 'max-width':menuMaxWidth+'px', 'text-align':'left', margin:'1em auto'}); 
   $el.createInputs();
 
   var $spanLabel=$('<span>').append(langHtml.Settings).css({'float':'right',margin:'0.2em 0 0 0'});
@@ -1446,8 +1467,8 @@ PropExtend=function(){
     //boEmailVerified 
   var tmpCrInp=function(){
     var $c=$('<span>');
-    $c[0].$spanYes=$('<span>').css({'color':'green'}).append('Yes');
-    $c[0].$spanNo=$('<span>').css({'color':'red'}).append('No');
+    $c[0].$spanYes=$('<span>').css({'color':'green', 'margin-right':'1em'}).append('Yes');
+    $c[0].$spanNo=$('<span>').css({'color':'red', 'margin-right':'1em'}).append('No');
     $c[0].$butVerify=$('<button>').addClass('highStyle').append(langHtml.emailVerificationOfEmail).click(function(){
       //var vec=[['verifyEmail',1]];   majax(oAJAX,vec); 
       $verifyEmailPop.openFunc();
@@ -1548,7 +1569,8 @@ langHtml={
     regret:"Do you really want to delete the account",
     help:"As long as you haven't made any payments, you can delete the account"
   },
-  disclaimer:`<h4>Disclamer etc.</h4><p>The site might be taken down at any moment simply because the developer feels like it. The software is still free (to use and change) (<a href="https://github.com/emagnusandersson/idPlace">link</a>) and anyone who feel like it should be able to take over.\n
+  disclaimerHead:'Disclamer etc.',
+  disclaimer:`<p>The site might be taken down at any moment simply because the developer feels like it. The software is still free (to use and change) (<a href="https://github.com/emagnusandersson/idPlace">link</a>) and anyone who feel like it should be able to take over.\n
   <h5>Your account might be deleted...</h5>
   <p>... in attempts to keep the register free of fake accounts. (<a href="https://emagnusandersson.com/idPlace">Why is it important to get rid of fake accounts</a>)
   <h5>Best practices to keep your account from being deleted</h5>
@@ -1800,6 +1822,10 @@ setUp1=function(){
   $userAppDeleteDiv=userAppDeleteDivExtend($('<div>'));
   $userAppList=userAppListExtend($('<div>'));
 
+
+  $divDisclaimer=divDisclaimerExtend($('<div>')).css({'background':'pink', 'margin-bottom':'1em', 'padding':'0.2em', border:'1px red solid'});
+
+
   $createUserDiv=createUserDivExtend($('<div>'));
   $createUserPreDiv=createUserPreDivExtend($('<div>'));
   $userSettingDiv=userSettingDivExtend($('<div>'));
@@ -1847,13 +1873,15 @@ setUp1=function(){
   }
   $createUserDiv.setVis=function(){
     var $tmp=this;  $mainDivsTogglable.not($tmp).hide(); $tmp.show();
-    //$tmp.$divCont.css({'margin-bottom':285+'px'});
+    //$tmp.$divCont.css({'margin-bottom':285+'px'}); 
+    $tmp.$divDisclaimerW.append($divDisclaimer);
     return true;
   }
   $userSettingDiv.setVis=function(){
     var $tmp=this;  $mainDivsTogglable.not($tmp).hide(); $tmp.show();
     //$tmp.$divCont.css({'margin-bottom':285+'px'});
     $tmp.setUp(); 
+    $tmp.$divDisclaimerW.append($divDisclaimer);
     return true;
   }
   $consentDiv.setVis=function(){
