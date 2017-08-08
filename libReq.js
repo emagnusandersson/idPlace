@@ -310,12 +310,13 @@ UNIX_TIMESTAMP(tBirthdate) AS tBirthdate, \n\
 UNIX_TIMESTAMP(tMotherTongue) AS tMotherTongue, \n\
 UNIX_TIMESTAMP(tGender) AS tGender, \n\
 UNIX_TIMESTAMP(tAccess) AS tAccess, \n\
+nName, nImage, nEmail, nTelephone, nCountry, nFederatedState, nCounty, nCity, nZip, nAddress, nIdFB, nIdGoogle, nIdNational, nBirthdate, nMotherTongue, nGender, \n\
 scope, maxUnactivityToken, id \n\
 FROM "+user2AppTab+" ua JOIN "+userTab+" u ON ua.idUser=u.idUser WHERE access_token=?;");  // u.idUser AS idUser,
   Val.push(objQS.access_token);
 
 
-//nName, nImage, nEmail, nTelephone, nCountry, nFederatedState, nCounty, nCity, nZip, nAddress, nIdFB, nIdGoogle, nIdNational, nBirthdate, nMotherTongue, nGender, \n\
+//
 
   
   var sql=Sql.join('\n');
@@ -368,23 +369,25 @@ FROM "+user2AppTab+" ua JOIN "+userTab+" u ON ua.idUser=u.idUser WHERE access_to
 }
 
 app.PropAsScope={
-  name: ['name', 'tName'],
-  image: ['image', 'tImage'],  //, 'eTagImage', 'sizeImage'
-  email: ['email', 'tEmail', 'boEmailVerified'],
-  telephone: ['telephone', 'tTelephone'],
-  country: ['country', 'tCountry'],
-  federatedState: ['federatedState', 'tFederatedState'],
-  county: ['county', 'tCounty'],
-  zip: ['zip', 'tZip'],
-  city: ['city', 'tCity'],
-  address: ['address', 'tAddress'],
-  boFB: ['boFB', 'tIdFB'],
-  boGoogle: ['boGoogle', 'tIdGoogle'],
-  idNational: ['idNational', 'tIdNational'],
-  birthdate: ['birthdate', 'tBirthdate'],
-  motherTongue: ['motherTongue', 'tMotherTongue'],
-  gender: ['gender', 'tGender']
+  name: ['name', 'tName', 'nName'],
+  image: ['image', 'tImage', 'nImage'],  //, 'eTagImage', 'sizeImage'
+  email: ['email', 'tEmail', 'nEmail', 'boEmailVerified'],
+  telephone: ['telephone', 'tTelephone', 'nTelephone'],
+  country: ['country', 'tCountry', 'nCountry'],
+  federatedState: ['federatedState', 'tFederatedState', 'nFederatedState'],
+  county: ['county', 'tCounty', 'nCounty'],
+  city: ['city', 'tCity', 'nCity'],
+  zip: ['zip', 'tZip', 'nZip'],
+  address: ['address', 'tAddress', 'nAddress'],
+  boFB: ['boFB', 'tIdFB', 'nIdFB'],
+  boGoogle: ['boGoogle', 'tIdGoogle', 'nIdGoogle'],
+  idNational: ['idNational', 'tIdNational', 'nIdNational'],
+  birthdate: ['birthdate', 'tBirthdate', 'nBirthdate'],
+  motherTongue: ['motherTongue', 'tMotherTongue', 'nMotherTongue'],
+  gender: ['gender', 'tGender', 'nGender']
 }
+
+
 var objAllTmp={};
 for(var key in app.PropAsScope){
   var StrTmp=app.PropAsScope[key];
@@ -452,6 +455,7 @@ UNIX_TIMESTAMP(tBirthdate) AS tBirthdate, \n\
 UNIX_TIMESTAMP(tMotherTongue) AS tMotherTongue, \n\
 UNIX_TIMESTAMP(tGender) AS tGender, \n\
 UNIX_TIMESTAMP(tAccess) AS tAccess, \n\
+nName, nImage, nEmail, nTelephone, nCountry, nFederatedState, nCounty, nCity, nZip, nAddress, nIdFB, nIdGoogle, nIdNational, nBirthdate, nMotherTongue, nGender, \n\
 scope, maxUnactivityToken, access_token, secret, id \n\
 FROM "+user2AppTab+" ua JOIN "+userTab+" u ON ua.idUser=u.idUser JOIN "+appTab+" a ON ua.idApp=a.idApp WHERE code=?;");
   Val.push(objQS.code);
@@ -995,6 +999,22 @@ app.SetupSql.prototype.table=function(SiteName,boDropOnly){
   tBirthdate TIMESTAMP NOT NULL, \n\
   tMotherTongue TIMESTAMP NOT NULL, \n\
   tGender TIMESTAMP NOT NULL, \n\
+  nName int(4) NOT NULL, \n\
+  nImage int(4) NOT NULL, \n\
+  nEmail int(4) NOT NULL, \n\
+  nTelephone int(4) NOT NULL, \n\
+  nCountry int(4) NOT NULL, \n\
+  nFederatedState int(4) NOT NULL, \n\
+  nCounty int(4) NOT NULL, \n\
+  nCity int(4) NOT NULL, \n\
+  nZip int(4) NOT NULL, \n\
+  nAddress int(4) NOT NULL, \n\
+  nIdFB int(4) NOT NULL, \n\
+  nIdGoogle int(4) NOT NULL, \n\
+  nIdNational int(4) NOT NULL, \n\
+  nBirthdate int(4) NOT NULL, \n\
+  nMotherTongue int(4) NOT NULL, \n\
+  nGender int(4) NOT NULL, \n\
   PRIMARY KEY (idUser), \n\
   UNIQUE KEY (email), \n\
   UNIQUE KEY (imageHash), \n\
@@ -1116,7 +1136,8 @@ UNIX_TIMESTAMP(tIdGoogle) AS tIdGoogle,  \n\
 UNIX_TIMESTAMP(tIdNational) AS tIdNational,  \n\
 UNIX_TIMESTAMP(tBirthdate) AS tBirthdate,  \n\
 UNIX_TIMESTAMP(tMotherTongue) AS tMotherTongue,  \n\
-UNIX_TIMESTAMP(tGender) AS tGender  \n\
+UNIX_TIMESTAMP(tGender) AS tGender,  \n\
+nName, nImage, nEmail, nTelephone, nCountry, nFederatedState, nCounty, nCity, nZip, nAddress, nIdFB, nIdGoogle, nIdNational, nBirthdate, nMotherTongue, nGender \n\
  FROM "+userTab+" WHERE idUser=IidUser; \n\
  \n\
          # Note on the below query: If row doesn't exist, then nothing is done \n\
@@ -1176,7 +1197,7 @@ UNIX_TIMESTAMP(tGender) AS tGender  \n\
       DECLARE VimageHash char(56); \n\
       SET VimageHash=sha2(Idata,224); \n\
       REPLACE INTO "+imageTab+" (idUser,data) VALUES (IidUser,Idata); \n\
-      UPDATE "+userTab+" SET tImage=IF(imageHash IS NULL OR imageHash!=VimageHash, now(), tImage), imageHash=VimageHash WHERE idUser=IidUser; \n\
+      UPDATE "+userTab+" SET tImage=IF(imageHash IS NULL OR imageHash!=VimageHash, now(), tImage), nImage=nImage+(imageHash IS NULL OR imageHash!=VimageHash), imageHash=VimageHash WHERE idUser=IidUser; \n\
       SELECT VimageHash AS imageHash; \n\
     END"); 
 
@@ -1184,7 +1205,7 @@ UNIX_TIMESTAMP(tGender) AS tGender  \n\
   SqlFunction.push("CREATE PROCEDURE "+siteName+"deleteImage(IidUser int(4)) \n\
     proc_label:BEGIN \n\
       DELETE FROM "+imageTab+" WHERE idUser=IidUser; \n\
-      UPDATE "+userTab+" SET imageHash=NULL, tImage=now() WHERE idUser=IidUser; \n\
+      UPDATE "+userTab+" SET tImage=IF(imageHash IS NULL, tImage, now()), imageHash=NULL WHERE idUser=IidUser; \n\
       SELECT NULL AS imageHash; \n\
     END"); 
 
@@ -1245,10 +1266,15 @@ tName=IF(name!=InameIP, now(), tName), \n\
 tImage=IF(image!=Iimage AND imageHash IS NULL, now(), tImage), \n\
 tEmail=IF(email!=Iemail, now(), tEmail), \n\
 boEmailVerified=IF(email!=Iemail, 0, boEmailVerified), \n\
+nIdFB=nIdFB+(idFB!=IidIP), \n\
+nImage=nImage+(image!=Iimage AND imageHash IS NULL), \n\
+nName=nName+(name!=InameIP), \n\
+nEmail=nEmail+(email!=Iemail), \n\
 idFB=IidIP, name=InameIP, image=Iimage, email=Iemail, timeZone=ItimeZone WHERE idUser=VidUser;\n\
       END IF; \n\
       SELECT VidUser AS idUser; \n\
     END");  
+
 
 
 

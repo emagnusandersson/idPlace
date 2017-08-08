@@ -337,6 +337,10 @@ tName=IF(name!=?, now(), tName), \n\
 tImage=IF(image!=? AND imageHash IS NULL, now(), tImage), \n\
 tEmail=IF(email!=?, now(), tEmail), \n\
 boEmailVerified=IF(email!=?, 0, boEmailVerified), \n\
+nIdFB=nIdFB+(idFB IS NULL OR idFB!=?), \n\
+nName=nName+(name!=?), \n\
+nImage=nImage+(image!=? AND imageHash IS NULL), \n\
+nEmail=nEmail+(email!=?), \n\
 idFB=?, name=?, image=?, email=?, timeZone=? WHERE idUser=?;");
 Val.push(this.idIP, this.nameIP, this.image, this.email, this.email);
 Val.push(this.idIP, this.nameIP, this.image, this.email, this.timeZone, idUser);
@@ -492,6 +496,19 @@ tIdNational=IF(idNational!=?, now(), tIdNational), \n\
 tBirthdate=IF(birthdate!=?, now(), tBirthdate), \n\
 tMotherTongue=IF(motherTongue!=?, now(), tMotherTongue), \n\
 tGender=IF(gender!=?, now(), tGender), \n\
+nName=nName+(name!=?), \n\
+nEmail=nEmail+(email!=?), \n\
+nTelephone=nTelephone+(telephone!=?), \n\
+nCountry=nCountry+(country!=?), \n\
+nFederatedState=nFederatedState+(federatedState!=?), \n\
+nCounty=nCounty+(county!=?), \n\
+nCity=nCity+(city!=?), \n\
+nZip=nZip+(zip!=?), \n\
+nAddress=nAddress+(address!=?), \n\
+nIdNational=nIdNational+(idNational!=?), \n\
+nBirthdate=nBirthdate+(birthdate!=?), \n\
+nMotherTongue=nMotherTongue+(motherTongue!=?), \n\
+nGender=nGender+(gender!=?), \n\
 name=?, \n\
 email=?, \n\
 telephone=?, \n\
@@ -501,6 +518,7 @@ birthdate=?, \n\
 motherTongue=?, \n\
 gender=? \n\
 WHERE idUser=?;");
+
 
 //tImage=IF(boImageOwn!=? OR image!=?OR eTagImage!=?, now(), tImage), \n\
 //tIdFB=IF(idFB!=?, now(), tIdFB), \n\
@@ -517,6 +535,7 @@ WHERE idUser=?;");
 
   var o=inObj;
   Val=Val.concat(o.name, o.email, o.email, o.telephone, o.country, o.federatedState, o.county, o.city, o.zip, o.address, o.idNational, o.birthdate, o.motherTongue, o.gender);
+  Val=Val.concat(o.name, o.email, o.telephone, o.country, o.federatedState, o.county, o.city, o.zip, o.address, o.idNational, o.birthdate, o.motherTongue, o.gender);
   Val=Val.concat(o.name, o.email, o.telephone, o.country, o.federatedState, o.county, o.city, o.zip, o.address, o.idNational, o.birthdate, o.motherTongue, o.gender);
   Val=Val.concat(idUser);
 
@@ -541,7 +560,7 @@ ReqBE.prototype.createUser=function(callback,inObj){ // writing needSession
   
   var Sql=[]; 
   Sql.push("INSERT INTO "+userTab+" SET name=?, password=?, email=?, telephone=?, country=?, federatedState=?, county=?, city=?, zip=?, address=?, timeZone=?, idNational=?, birthdate=?, motherTongue=?, gender=?,\n\
-  tCreated=now(), tName=now(), tImage=now(), tEmail=now(), tTelephone=now(), tCountry=now(), tFederatedState=now(), tCounty=now(), tCity=now(), tZip=now(), tAddress=now(), tIdFB=now(), tIdGoogle=now(), tBirthdate=now(), tMotherTongue=now(), tGender=now();");
+  tCreated=now(), tName=now(), tImage=now(), tEmail=now(), tTelephone=now(), tCountry=now(), tFederatedState=now(), tCounty=now(), tCity=now(), tZip=now(), tAddress=now(), tIdFB=now(), tIdGoogle=now(), tIdNational=now(), tBirthdate=now(), tMotherTongue=now(), tGender=now();");
   var Val=[inObj.name, inObj.password, inObj.email, inObj.telephone, inObj.country, inObj.federatedState, inObj.county, inObj.city, inObj.zip, inObj.address, inObj.timeZone, inObj.idNational, inObj.birthdate, inObj.motherTongue, inObj.gender];
   Sql.push("SELECT LAST_INSERT_ID() AS idUser;");
   //Sql.push("UPDATE "+userTab+" SET imageHash=LAST_INSERT_ID()%32 WHERE idUser=LAST_INSERT_ID();");

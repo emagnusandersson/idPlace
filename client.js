@@ -257,11 +257,11 @@ var mainDivExtend=function($el){
     $userSettingDiv.setVis();
     $el.devStuffToggleEventF();
   });
-  var $buttonUserAppList=$('<button>').addClass('highStyle').append('Apps you use').click(function(){ //.css({display: 'block'})
+  var $buttonUserAppList=$('<button>').addClass('highStyle').append('Apps I use').click(function(){ //.css({display: 'block'})
     doHistPush({$view:$userAppList});
     $userAppList.setVis();
   });
-  var $buttonDevAppList=$('<button>').addClass('highStyle').append('Apps you own').click(function(){ // .css({display: 'block'})
+  var $buttonDevAppList=$('<button>').addClass('highStyle').append('Apps I own').click(function(){ // .css({display: 'block'})
     doHistPush({$view:$devAppList});
     $devAppList.setVis();
   });
@@ -845,7 +845,7 @@ var userSettingDivExtend=function($el){
       var $imgH=''; if(strName in helpBub ) {    var $imgH=$imgHelp.clone();   popupHoverM($imgH,helpBub[strName]);         }
 
       var $lab=$('<label>').append(calcLabel(langHtml.label, strName));
-      var $spanLastChange=Prop[strName].crLastChangeSpan().attr('name',strName);
+      var $spanLastChange=Prop[strName].crStatisticSpan().attr('name',strName);
       var $inp=Prop[strName].crInp().attr('name',strName);
       $SpanLastChange.push($spanLastChange);  $Inp.push($inp);
       $divCont.append($lab,$imgH,$spanLastChange,$inp);
@@ -857,7 +857,7 @@ var userSettingDivExtend=function($el){
   }
   $el.setUp=function(){
     $SpanLastChange.each(function(i){
-      var $spanLastChange=$(this), strName=$spanLastChange.attr('name'); Prop[strName].setLastChange($spanLastChange);
+      var $spanLastChange=$(this), strName=$spanLastChange.attr('name'); Prop[strName].setStatisticSpan($spanLastChange);
     });  
     $Inp.each(function(i){
       var $inp=$(this), strName=$inp.attr('name'); Prop[strName].setInp($inp);
@@ -1387,13 +1387,15 @@ PropExtend=function(){
   }
   var setInpDefault=function($inp){  var strName=$inp.attr('name');   $inp.val(userInfoFrDB[strName]);  }
 
-  var crLastChangeSpanDefault=function(){
-    var $bold=$('<b>'), $span=$('<span>').append(', Last changed ', $bold, ' ago').css({'font-size':'90%'});
+  var crStatisticSpanDefault=function(){
+    var $spanNChange=$('<span>').css({'font-weight':'bold'}).attr('name','nChange'), $spanLastChange=$('<span>').css({'font-weight':'bold'}).attr('name','lastChange');
+    var $span=$('<span>').append('Last changed ', $spanLastChange, ' ago (', $spanNChange, ' times)').css({'font-size':'85%', 'margin-left':'0.4em'});
     return $span;
   }
-  var setLastChangeDefault=function($span){
-    var strName='t'+ucfirst($span.attr('name')), arrTmp=getSuitableTimeUnit(unixNow()-userInfoFrDB[strName]); arrTmp[0]=Math.round(arrTmp[0]);
-    $span.children('b').html(arrTmp.join(' '));
+  var setStatisticSpanDefault=function($span){
+    var strNName='n'+ucfirst($span.attr('name'));       $span.children('span[name=nChange]').html(userInfoFrDB[strNName]);
+    var strTName='t'+ucfirst($span.attr('name')), arrTmp=getSuitableTimeUnit(unixNow()-userInfoFrDB[strTName]); arrTmp[0]=Math.round(arrTmp[0]);
+    $span.children('span[name=lastChange]').html(arrTmp.join(' '));
   }
 
 
@@ -1402,8 +1404,8 @@ PropExtend=function(){
     var strName=StrProp[i];  
     $.extend(Prop[strName], {
       saveInp:saveInpDefault, crInp:crInpDefault, setInp:setInpDefault,
-      crLastChangeSpan:crLastChangeSpanDefault,
-      setLastChange:setLastChangeDefault
+      crStatisticSpan:crStatisticSpanDefault,
+      setStatisticSpan:setStatisticSpanDefault
     });
   }
 
@@ -1422,8 +1424,8 @@ PropExtend=function(){
     crInp:function(){return $('<button>').addClass('highStyle').append('Change').click(function(){
       $changePWPop.openFunc();
     });},
-    crLastChangeSpan:function(){return $('<span>'); },
-    setLastChange:function(){ }
+    crStatisticSpan:function(){return $('<span>'); },
+    setStatisticSpan:function(){ }
   });
 
 
@@ -1482,8 +1484,8 @@ PropExtend=function(){
   };
   $.extend(Prop.boEmailVerified, {
     strType:'span', crInp:tmpCrInp, setInp:tmpSetInp, saveInp:function(){return [null, null];},
-    crLastChangeSpan:function(){return $('<span>'); },
-    setLastChange:function(){ }
+    crStatisticSpan:function(){return $('<span>'); },
+    setStatisticSpan:function(){ }
   });
 
     // birthdate
