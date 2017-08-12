@@ -555,8 +555,18 @@ ReqBE.prototype.createUser=function(callback,inObj){ // writing needSession
   var self=this, req=this.req, site=req.site;
   var userTab=site.TableName.userTab;
   var Ou={}; //debugger
+  var fiber = Fiber.current;
 
   //var tmp=this.sessionMain.userInfoFrIP, IP=tmp.IP, idIP=tmp.idIP, nameIP=tmp.nameIP, image=tmp.image;
+
+    // Check reCaptcha with google
+  var uGogCheck = "https://www.google.com/recaptcha/api/siteverify"; 
+  var objForm={  secret:strReCaptchaSecretKey, response:inObj['g-recaptcha-response'], remoteip:req.connection.remoteAddress  };
+  var reqStream=requestMod.post({url:uGogCheck, form: objForm},  function(err) { if(err) console.log(err);  });
+  var buf, myConcat=concat(function(bufT){ buf=bufT; fiber.run(); });  reqStream.pipe(myConcat); Fiber.yield();
+  var data = JSON.parse(buf.toString());
+  //console.log('Data: ', data);
+  if(!data.success) { self.mesEO('reCaptcha test not successfull'); callback('exited'); return; }
   
   var Sql=[]; 
   Sql.push("INSERT INTO "+userTab+" SET name=?, password=?, email=?, telephone=?, country=?, federatedState=?, county=?, city=?, zip=?, address=?, timeZone=?, idNational=?, birthdate=?, motherTongue=?, gender=?,\n\
@@ -566,7 +576,7 @@ ReqBE.prototype.createUser=function(callback,inObj){ // writing needSession
   //Sql.push("UPDATE "+userTab+" SET imageHash=LAST_INSERT_ID()%32 WHERE idUser=LAST_INSERT_ID();");
 
   var sql=Sql.join('\n');
-  var fiber = Fiber.current, boDoExit=0;
+  var boDoExit=0;
   myQueryF(sql, Val, mysqlPool, function(err, results){
     var boOK, mestmp;
     if(err && (typeof err=='object') && err.code=='ER_DUP_ENTRY'){boOK=0; mestmp='dup email';}

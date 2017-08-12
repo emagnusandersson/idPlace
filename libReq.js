@@ -214,6 +214,7 @@ app.ReqIndex.prototype.go=function() {
   }
   Str.push(strTracker);
 
+  Str.push("<script src='https://www.google.com/recaptcha/api.js'></script>");
 
 
 
@@ -236,6 +237,7 @@ leafLoginBack="+JSON.stringify(leafLoginBack)+";\n\
 userInfoFrDB="+JSON.stringify(userInfoFrDB)+";\n\
 objApp="+JSON.stringify(objApp)+";\n\
 objUApp="+JSON.stringify(objUApp)+";\n\
+strReCaptchaSiteKey="+JSON.stringify(strReCaptchaSiteKey)+";\n\
 \n\
 </script>\n\
 \n\
@@ -978,7 +980,7 @@ app.SetupSql.prototype.table=function(SiteName,boDropOnly){
   timeZone varchar(16) NULL DEFAULT 0, \n\
   idFB char(16) CHARSET utf8 NULL, \n\
   idGoogle varchar(128) CHARSET utf8 NULL, \n\
-  idNational varchar(128) CHARSET NOT NULL DEFAULT '', \n\
+  idNational varchar(128) CHARSET utf8 NOT NULL DEFAULT '', \n\
   birthdate DATE NOT NULL, \n\
   motherTongue varchar(32) NOT NULL DEFAULT '', \n\
   gender "+strEnumGender+" NOT NULL DEFAULT 'male', \n\

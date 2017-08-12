@@ -480,8 +480,9 @@ var createUserDivExtend=function($el){
       var $inp=$Inp.eq(i),  strName=$inp.attr('name');
       //var tmp=Prop[strName].saveInp($inp); if(tmp===false) return; else o[strName]=tmp; 
       var tmp=Prop[strName].saveInp($inp); if(tmp[0]) {setMess(tmp[0]); return; } else o[strName]=tmp[1];
-    }; 
-    $.extend(o, {password:SHA1($inpPass.val().trim()+strSalt)});
+    };
+    var strTmp=grecaptcha.getResponse(); if(!strTmp) {setMess("Captcha response is empty"); return; }
+    $.extend(o, {password:SHA1($inpPass.val().trim()+strSalt),  'g-recaptcha-response': grecaptcha.getResponse()});
 
     var vec=[['createUser',o,$el.setUp], ['specSetup',{idApp:idApp}, $el.cb]];   majax(oAJAX,vec); 
     $inpPass.val(''); $inpPassB.val('');
@@ -489,7 +490,7 @@ var createUserDivExtend=function($el){
   }
 
   $el.createInputs=function(){
-    for(var i=0;i<$el.StrProp.length;i++){      
+    for(var i=0;i<$el.StrProp.length;i++){
       var strName=$el.StrProp[i];
       var $imgH=''; if(strName in helpBub ) {    var $imgH=$imgHelp.clone();   popupHoverM($imgH,helpBub[strName]);         }
 
@@ -500,9 +501,10 @@ var createUserDivExtend=function($el){
       $divCont.append($lab, $imgH, $inp); //, strObli
     }
     //$divCont.find('input[type=text],[type=email],[type=number]').keypress( function(e){ if(e.which==13) {save();return false;}} );
-    var $tmp=$divCont.find('input[type=number]').prop({min:0});
+    var $tmp=$Inp.filter('input[type=number]');  $tmp.prop({min:0});
+    //var $tmp=$divCont.find('input[type=number]').prop({min:0});
     $Inp.css({display:'block', 'margin-bottom':'0.5em'});
-
+    $divCont.append($divReCaptcha);
   }
   $el.setUp=function(){
     $Inp.each(function(i){
@@ -517,7 +519,7 @@ var createUserDivExtend=function($el){
 
   var $divCont=$el.$divCont=$('<div>').css({padding:'0 0.3em 0 0', overflow:'hidden', 'max-width':menuMaxWidth+'px', 'text-align':'left', margin:'1em auto'});
   
-
+  var $divReCaptcha=$('<div class="g-recaptcha" data-sitekey="'+strReCaptchaSiteKey+'">');
   
   var $h1=$('<h1>').append('Create account');  
   $el.$divDisclaimerW=$('<div>').css({'margin':'0em', 'padding':'0em'});
