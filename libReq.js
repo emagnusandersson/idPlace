@@ -301,7 +301,7 @@ UNIX_TIMESTAMP(tEmail) AS tEmail,  \n\
 UNIX_TIMESTAMP(tTelephone) AS tTelephone,  \n\
 UNIX_TIMESTAMP(tCountry) AS tCountry,  \n\
 UNIX_TIMESTAMP(tFederatedState) AS tFederatedState,  \n\
-UNIX_TIMESTAMP(tCounty) AS tCounty  \n\
+UNIX_TIMESTAMP(tCounty) AS tCounty,  \n\
 UNIX_TIMESTAMP(tCity) AS tCity,  \n\
 UNIX_TIMESTAMP(tZip) AS tZip,  \n\
 UNIX_TIMESTAMP(tAddress) AS tAddress,  \n\
@@ -680,17 +680,24 @@ app.ReqVerifyPWResetReturn.prototype.go=function(){
 <p>Your new password on '+wwwSite+' is '+password+'</p>';
   
 
-  var semCB=0, semY=0, boDoExit=0;
-  objSendgrid.send({
-    to:       email,
-    from:     sendgridName,
-    subject:  'Password reset',
-    html:     strTxt
-  }, function(err, json) {
-    if(err){self.mesEO(err); boDoExit=1;} 
-    if(semY)fiber.run(); semCB=1;
-  });
-  if(!semCB){semY=1; Fiber.yield();}  if(boDoExit==1) {callback('exited'); return; }
+  const msg = {
+    to: email,
+    from: 'noreply@idplace.org',
+    subject: 'Password reset',
+    html: strTxt,
+  };
+  sgMail.send(msg);
+  //var semCB=0, semY=0, boDoExit=0;
+  //objSendgrid.send({
+    //to:       email,
+    //from:     sendgridName,
+    //subject:  'Password reset',
+    //html:     strTxt
+  //}, function(err, json) {
+    //if(err){self.mesEO(err); boDoExit=1;} 
+    //if(semY)fiber.run(); semCB=1;
+  //});
+  //if(!semCB){semY=1; Fiber.yield();}  if(boDoExit==1) {callback('exited'); return; }
 
   res.end("A new password has been generated and sent to your email address.");
 }
@@ -928,7 +935,7 @@ app.ReqStat.prototype.go=function(){
 app.SetupSql=function(){
   this.strSETScope="SET('name', 'image', 'email', 'telephone', 'country', 'federatedState', 'county', 'zip', 'city', 'address', 'timeZone', 'boFB', 'boGoogle', 'idNational', 'birthdate', 'motherTongue', 'gender', 'all')";
 }
-app.SetupSql.prototype.table=function(SiteName,boDropOnly){
+app.SetupSql.prototype.createTable=function(SiteName,boDropOnly){
   if(typeof SiteName=='string') SiteName=[SiteName];
   
   var SqlTabDrop=[], SqlTab=[];
@@ -1102,7 +1109,7 @@ app.SetupSql.prototype.table=function(SiteName,boDropOnly){
 
 
 
-app.SetupSql.prototype.fun=function(SiteName,boDropOnly){
+app.SetupSql.prototype.createFunction=function(SiteName,boDropOnly){
   if(typeof SiteName=='string') SiteName=[SiteName];
   
   var SqlFunctionDrop=[], SqlFunction=[];
@@ -1375,13 +1382,13 @@ app.SetupSql.prototype.funcGen=function(boDropOnly){
   else return array_merge(SqlFunctionDrop, SqlFunction);
 }
 
-app.SetupSql.prototype.dummies=function(SiteName){
+app.SetupSql.prototype.createDummies=function(SiteName){
   if(typeof SiteName=='string') SiteName=[SiteName];
   var SqlDummies=[];
   return SqlDummies;
 }
 
-app.SetupSql.prototype.dummy=function(SiteName){
+app.SetupSql.prototype.createDummy=function(SiteName){
   if(typeof SiteName=='string') SiteName=[SiteName];
   var SqlDummy=[];
   return SqlDummy;
@@ -1413,32 +1420,30 @@ app.SetupSql.prototype.truncate=function(SiteName){
 }
 
 
+  // Called when --sql command line option is used
 app.SetupSql.prototype.doQuery=function(strCreateSql){
+  //var StrValidSqlCalls=['createTable', 'dropTable', 'createFunction', 'dropFunction', 'truncate', 'createDummy', 'createDummies'];
+  if(StrValidSqlCalls.indexOf(strCreateSql)==-1){var tmp=strCreateSql+' is not valid input, try any of these: '+StrValidSqlCalls.join(', '); console.log(tmp); return; }
+  var Match=RegExp("^(drop|create)?(.*?)$").exec(strCreateSql);
+  if(!Match) { debugger;  return; }
+  
+  var boDropOnly=false, strMeth=Match[2];
+  if(Match[1]=='drop') { boDropOnly=true; strMeth='create'+strMeth;}
+  else if(Match[1]=='create')  { strMeth='create'+strMeth; }
+  
+  var SqlA=this[strMeth](SiteName, boDropOnly); 
+  var strDelim=';', sql=SqlA.join(strDelim+'\n')+strDelim, Val=[], boDoExit=0;  
   var fiber = Fiber.current;
-  var StrValid=['table', 'dropTable', 'fun', 'dropFun', 'truncate', 'dummy', 'dummies'];
-  var StrValidMeth=['table', 'fun', 'truncate', 'dummy', 'dummies'];
-  var Match=RegExp("^(drop)?(.*?)(All)?$").exec(strCreateSql);
-  //var Match=RegExp("^(drop)?(.*?)All$").exec(strCreateSql);
-  var boErr=true;
-  if(Match) {
-    var boDropOnly=Match[1]=='drop', strMeth=Match[2].toLowerCase(); //, boAll=Match[3]=='All';
-    //var objProtT=Object.getPrototypeOf(this); 
-    if(StrValidMeth.indexOf(strMeth)!=-1){
-      //var SqlA=objProtT[strMeth].call(this, SiteName, boDropOnly); 
-      var SqlA=this[strMeth](SiteName, boDropOnly); 
-      var strDelim=';', sql=SqlA.join(strDelim+'\n')+strDelim, Val=[], boDoExit=0;  
-      myQueryF(sql, Val, mysqlPool, function(err, results){ 
-        var tmp=createMessTextOfMultQuery(SqlA, err, results);  console.log(tmp); 
-        if(err){            boDoExit=1;  debugger;         } 
-        fiber.run();
-      });
-      Fiber.yield();  if(boDoExit==1) return;
-
-      boErr=false;
-    }
-  }
-  if(boErr) {var tmp=strCreateSql+' is not valid input, try: '+StrValid+' (suffixed with "All")'; console.log(tmp); }
+  myQueryF(sql, Val, mysqlPool, function(err, results){ 
+    var tmp=createMessTextOfMultQuery(SqlA, err, results);  console.log(tmp); 
+    if(err){            boDoExit=1;  debugger;         } 
+    fiber.run();
+  });
+  Fiber.yield();  if(boDoExit==1) return;
 }
+
+
+
 
 var createMessTextOfMultQuery=function(Sql, err, results){
   var nSql=Sql.length, nResults='na'; if(results instanceof Array) nResults=results.length;

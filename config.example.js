@@ -14,6 +14,9 @@ strSaltID='klmnopqrstu'; // Random letters to prevent that the hashed IDs can be
 
 googleSiteVerification="googleXXXXXXXXXXXXXXXX.html"; // Needed if you use Google Webmaster Tools  (www.google.com/webmasters)
 
+  // Sendgrid credentials
+apiKeySendGrid="XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX";
+//sendgridName="appXXXXXXX@heroku.com"; sendgridPassword="XXXXXXXXXXXX";
 
   //
   // This "if"-statement allows you to keep the same config-file for multiple infrastructure
@@ -55,8 +58,6 @@ if(process.env.strInfrastructure=='heroku'){
     // If levelMaintenance=1 then site visitors gets a "Down for maintenance"-message
   //levelMaintenance=1;
 
-    // Sendgrid credentials
-  sendgridName="appXXXXXXX@heroku.com"; sendgridPassword="XXXXXXXXXXXX";
   
 }
 else if(process.env.strInfrastructure=='af'){
@@ -108,7 +109,6 @@ else if(process.env.strInfrastructure=='af'){
   }
 
   //levelMaintenance=1;
-  sendgridName="appXXXXXXX@heroku.com"; sendgridPassword="XXXXXXXXXXXX";
 }
 else {
   uriDB='mysql://user:password@localhost/database';
@@ -134,7 +134,6 @@ else {
   }
 
   //levelMaintenance=1;
-  sendgridName="appXXXXXXX@heroku.com"; sendgridPassword="XXXXXXXXXXXX";
 } 
 
 

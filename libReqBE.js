@@ -916,23 +916,31 @@ ReqBE.prototype.verifyEmail=function(callback,inObj){
   var wwwSite=req.wwwSite;
   var uVerification=req.strSchemeLong+wwwSite+'/'+leafVerifyEmailReturn+'?code='+code;
   var strTxt='<h3>Email verification on '+wwwSite+'</h3> \n\
-<p>Someone (maybe you) uses '+wwwSite+' and claims that '+email+' is their email. Is this you, then use the link below to verify that you are the owner of this email.</p> \n\
+<p>Someone (maybe you) uses '+wwwSite+' and claims that '+email+' is their email address. Is this you? If so use the link below to verify that you are the owner of this email address.</p> \n\
 <p>Otherwise neglect this message.</p> \n\
 <p><a href='+uVerification+'>'+uVerification+'</a></p>  \n\
 <p>Note! The links stops working '+expirationTime/60+' minutes after the email was sent.</p>';
   
-  var semCB=0, semY=0, boDoExit=0;
-  objSendgrid.send({
-    to:       email,
-    from:     sendgridName,
-    subject:  'Email verification',
-    html:     strTxt
-  }, function(err, json) {
-    if(err){self.mesEO(err); boDoExit=1;} 
-    if(semY)fiber.run(); semCB=1;
-  });
-  if(!semCB){semY=1; Fiber.yield();}  if(boDoExit==1) {callback('exited'); return; }
-  self.mes('Email sent'); Ou.boOK=1;
+  const msg = {
+    to: email,
+    from: 'noreply@idplace.org',
+    subject: 'Email verification',
+    html: strTxt,
+  };
+  sgMail.send(msg);
+  //var semCB=0, semY=0, boDoExit=0;
+  //objSendgrid.send({
+    //to:       email,
+    //from:     sendgridName,
+    //subject:  'Email verification',
+    //html:     strTxt
+  //}, function(err, json) {
+    //if(err){self.mesEO(err); boDoExit=1;} 
+    //if(semY)fiber.run(); semCB=1;
+  //});
+  //if(!semCB){semY=1; Fiber.yield();}  if(boDoExit==1) {callback('exited'); return; }
+  self.mes('Email sent');
+  Ou.boOK=1;
   callback(null, [Ou]);
 
 }
@@ -981,17 +989,24 @@ ReqBE.prototype.verifyPWReset=function(callback,inObj){
 <p>Note! The links stops working '+expirationTime/60+' minutes after the email was sent.</p>';
   
 
-  var semCB=0, semY=0, boDoExit=0;
-  objSendgrid.send({
-    to:       email,
-    from:     sendgridName,
-    subject:  'Password reset request',
-    html:     strTxt
-  }, function(err, json) {
-    if(err){self.mesEO(err); boDoExit=1;} 
-    if(semY)fiber.run(); semCB=1;
-  });
-  if(!semCB){semY=1; Fiber.yield();}  if(boDoExit==1) {callback('exited'); return; }
+  const msg = {
+    to: email,
+    from: 'noreply@idplace.org',
+    subject: 'Password reset request',
+    html: strTxt,
+  };
+  sgMail.send(msg);
+  //var semCB=0, semY=0, boDoExit=0;
+  //objSendgrid.send({
+    //to:       email,
+    //from:     sendgridName,
+    //subject:  'Password reset request',
+    //html:     strTxt
+  //}, function(err, json) {
+    //if(err){self.mesEO(err); boDoExit=1;} 
+    //if(semY)fiber.run(); semCB=1;
+  //});
+  //if(!semCB){semY=1; Fiber.yield();}  if(boDoExit==1) {callback('exited'); return; }
   self.mes('Email sent'); Ou.boOK=1;
   callback(null, [Ou]);
 

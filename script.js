@@ -29,7 +29,9 @@ NodeZip=require('node-zip');
 //redis = require("then-redis");
 redis = require("redis");
 captchapng = require('captchapng');
-sendgrid  = require('sendgrid');
+//sendgrid  = require('sendgrid');
+sgMail = require('@sendgrid/mail');
+ip = require('ip');
 //UglifyJS = require("uglify-js");
 require('./lib.js');
 require('./libServerGeneral.js');
@@ -56,13 +58,18 @@ interpretArgv=function(){
       var tmp=Match[2][0];
       if(tmp=='p') port=Match[2].substr(1);
       else if(tmp=='h') helpTextExit();
+      else {console.log('Neglected option: '+myArg[i]); }
     }else if(Match[1]=='--') {
       var tmp=Match[2], tmpSql='sql';
-      if(tmp.slice(0,tmpSql.length)==tmpSql) strCreateSql=Match[2].substr(tmpSql.length).toLowerCase();
+      if(tmp.slice(0,tmpSql.length)==tmpSql) strCreateSql=Match[2].substr(tmpSql.length);
       else if(tmp=='help') helpTextExit();
+      else {console.log('Neglected option: '+myArg[i]); }
     }
   }
 }
+
+StrValidSqlCalls=['createTable', 'dropTable', 'createFunction', 'dropFunction', 'truncate', 'createDummy', 'createDummies'];
+  
 
 helpTextExit=function(){
   var arr=[];
@@ -70,12 +77,10 @@ helpTextExit=function(){
   arr.push('\t-h, --help\t\tDisplay this text');
   arr.push('\t-p[PORT]\t\tPort number (default: 5000)');
   arr.push('\t--sql[SQL_ACTION]\tRun a sql action.');
-  var StrValid=['table', 'dropTable', 'fun', 'dropFun', 'truncate', 'dummy', 'dummies'];
-  arr.push('\t\tSQL_ACTION='+StrValid.join('|'));
+  arr.push('\t\tSQL_ACTION='+StrValidSqlCalls.join('|'));
   console.log(arr.join('\n'));
   process.exit(0);
 }
-
 
 
     // Set up redisClient
@@ -130,7 +135,8 @@ Fiber( function(){
 
   if('levelMaintenance' in process.env) levelMaintenance=process.env.levelMaintenance;
 
-  objSendgrid  = sendgrid(sendgridName, sendgridPassword);
+  sgMail.setApiKey(apiKeySendGrid);
+  //objSendgrid  = sendgrid(sendgridName, sendgridPassword);
 
   SiteName=Object.keys(Site);
 

@@ -1755,7 +1755,7 @@ setUp1=function(){
       //$obj.setVis();       $body.scrollTop(tmpObj.scroll);
 
       var stateMy=history.StateMy[history.state.ind];
-      if(typeof stateMy!='object' ) {alert("Error: typeof stateMy!='object'"); return; }
+      if(typeof stateMy!='object' ) {var tmpStr=window.location.href +" Error: typeof stateMy: "+(typeof stateMy); if(!boEpiphany) alert(tmpStr); else  console.log(tmpStr); return; }
       var $view=stateMy.$view;
       $view.setVis();
       if(typeof $view.getScroll=='function') {
