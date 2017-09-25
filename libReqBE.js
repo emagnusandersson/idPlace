@@ -343,6 +343,7 @@ nImage=nImage+(image!=? AND imageHash IS NULL), \n\
 nEmail=nEmail+(email!=?), \n\
 idFB=?, name=?, image=?, email=?, timeZone=? WHERE idUser=?;");
 Val.push(this.idIP, this.nameIP, this.image, this.email, this.email);
+Val.push(this.idIP, this.nameIP, this.image, this.email);
 Val.push(this.idIP, this.nameIP, this.image, this.email, this.timeZone, idUser);
   var sql=Sql.join('\n');
   var fiber = Fiber.current, semCB=0, semY=0, boDoExit=0, results; 

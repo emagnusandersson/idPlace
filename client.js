@@ -295,59 +295,47 @@ var mainDivExtend=function($el){
  *
  *******************************************************************************************************************
  *******************************************************************************************************************/
-window.loginReturn=function(strQS, strHash){
+var createUPop=function(IP, uRedir, nonce){
+  var arrQ=["client_id="+site.client_id[IP], "redirect_uri="+encodeURIComponent(uRedir), "state="+nonce, "response_type=code"];
+  if(IP=='fb')   arrQ.push("scope=email", "display=popup"); //
+  else if(IP=='google')    arrQ.push("scope=profile,email");
+  else if(IP=='idplace')    arrQ.push("scope=name,image,email");
+  //arrQ.push("auth_type=reauthenticate");
+  return UrlOAuth[IP]+'?'+arrQ.join('&');
+}
+getOAuthCode=function*(flow){
+  var strQS, nonce=randomHash(), uPop=createUPop(strIPPrim, uSite+'/'+leafLoginBack, nonce);
+  window.loginReturn=function(strQST){ strQS=strQST; flow.next();}
+  if('wwwLoginScope' in site) document.domain = site.wwwLoginScope;
+  window.open(uPop, '_blank', 'width=580,height=400'); //, '_blank', 'popup', 'width=580,height=400'
+  yield;
+  
   var params=parseQS(strQS.substring(1));
-  if(!('state' in params) || params.state !== OAuth.nonce) {    alert('Invalid state parameter.'); return;  } 
-  OAuth.cb(params);
+  if(!('state' in params) || params.state !== nonce) {   return {err:'Invalid state parameter: '+params.state}; } 
+  if('error' in params) { return {err:params.error}; }
+  if(!('code' in params)) { return {err: 'No "code" parameter in response from IdP'}; }
+  return {err:null, code:params.code};
 }
-var OAuthT=function(){
-  this.urlOAuth={fb:"https://www.facebook.com/v2.5/dialog/oauth", google: "https://accounts.google.com/o/oauth2/v2/auth"};
-  this.createUrlNSetStatVar=function(IP, uRedir, fun, caller, cb){
-    $.extend(this, {IP:IP, fun:fun, caller:"index", cb:cb});
-    this.nonce=randomHash(); //CSRF protection
-    var arrQ=["client_id="+site.client_id[IP], "redirect_uri="+encodeURIComponent(uRedir), "state="+this.nonce, "response_type=code"];
-    if(IP=='fb')   arrQ.push("scope=email", "display=popup"); //
-    else if(IP=='google')    arrQ.push("scope=profile,email");
-    else if(IP=='idplace')    arrQ.push("scope=name,email");
-    //arrQ.push("auth_type=reauthenticate");
-    return this.urlOAuth[IP]+'?'+arrQ.join('&');
-  }
-}
-window.OAuth=new OAuthT();
+
 
 
 loginDivExtend=function($el){
-  var popupWin=function(IP) {
-    var uPop=OAuth.createUrlNSetStatVar(IP, uSite+'/'+leafLoginBack, 'userFun', "index", $el.loginReturn);
-    $el.winMy=window.open(uPop, '_blank', 'width=580,height=400'); // , '_blank', 'popup', 'width=580,height=400'
-    
-    if($el.winMy && !$el.winMy.closed){
-      $mess.empty();  $mess.append('Signing you in ',$imgBusy);
-      clearInterval(timerClosePoll);
-      timerClosePoll = setInterval(function() { if($el.winMy.closed){ clearInterval(timerClosePoll); $mess.html('Sign-in canceled'); }  }, 500);  
-    }
-  }
-  $el.loginReturn=function(params){
-    if('error' in params) { setMess(params.error); }
-    else{
-      if('code' in params) { 
-        var timeZone=new Date().toString().match(/([A-Z]+[\+-][0-9]+.*)/)[1];
-        var oT={IP:OAuth.IP, fun:OAuth.fun, caller:OAuth.caller, timeZone:timeZone}; oT.code=params.code;
-        var vec=[ ['loginGetGraph', oT], ['specSetup',{idApp:idApp}, $loginMixDiv.cb]];   majax(oAJAX,vec);
-      } else setMess('no code parameter in response');
-    }
-    $el.myReset();
-  }
-
-  var timerClosePoll=null;
-  $el.myReset=function(){     $mess.empty(); clearInterval(timerClosePoll);   }
-
-  var $mess=$('<span>').css({"margin-left":"0.3em"});
   var strButtonSize='2em';
-  var $imgFb=$('<img>').click(function(){popupWin('fb');}).prop({src:uFb});
-  var $imgGoogle=$('<img>').click(function(){popupWin('google');}).prop({src:uGoogle});
+  var $imgFb=$('<img>').prop({src:uFb}).click(function(){
+    var flow=(function*(){
+      var {err, code}=yield* getOAuthCode(flow); if(err) {setMess(err); return;}
+      var timeZone=new Date().toString().match(/([A-Z]+[\+-][0-9]+.*)/)[1];
+      var oT={IP:strIPPrim, fun:'userFun', caller:'index', code:code, timeZone:timeZone};
+      var vec=[['loginGetGraph', oT], ['specSetup',{idApp:idApp}, function(){ flow.next(); }]];   majax(oAJAX,vec);   yield;
+      
+      $loginMixDiv.cb();
+    })(); flow.next();
+  });
+  var $imgGoogle=$('<img>').prop({src:uGoogle}).click(function(){
+    popupWin('google');
+  });
   var $Im=$([]).push($imgFb).css({align:'center', display:'block', 'margin-top': '0.7em'}); //  , $imgGoogle    position:'relative',top:'0.4em',heigth:strButtonSize,width:strButtonSize
-  $el.append($Im, $mess); //,$fbHelp
+  $el.append($Im); //,$fbHelp , $mess
   return $el;
 }
 
@@ -1446,15 +1434,16 @@ PropExtend=function(){
       var vec=[['deleteExtId', {kind:'fb'}], ['specSetup',{}, $userSettingDiv.setUp]];   majax(oAJAX,vec); 
     });
     $c[0].$buttFetch=$('<button>').addClass('highStyle').html('Fetch').click(function(){
-      var uPop=OAuth.createUrlNSetStatVar('fb', uSite+'/'+leafLoginBack, 'fetchFun', "index", loginReturnLocal);
-      window.open(uPop, '_blank', 'width=580,height=400'); //, '_blank', 'popup', 'width=580,height=400'
+      var flow=(function*(){
+        var {err, code}=yield* getOAuthCode(flow); if(err) {setMess(err); return;}
+        var timeZone=new Date().toString().match(/([A-Z]+[\+-][0-9]+.*)/)[1];
+        var oT={IP:strIPPrim, fun:'fetchFun', caller:'index', code:code, timeZone:timeZone};
+        var vec=[['loginGetGraph', oT], ['specSetup',{idApp:idApp}, function(){ flow.next(); }]];   majax(oAJAX,vec);   yield;
+        
+        $userSettingDiv.setUp();
+      })(); flow.next();
     });
     $c[0].$thumb=$('<img>').css({'vertical-align':'middle'});
-    var loginReturnLocal=function(params){
-      var timeZone=new Date().toString().match(/([A-Z]+[\+-][0-9]+.*)/)[1];
-      var oT={IP:OAuth.IP, fun:OAuth.fun, caller:OAuth.caller, timeZone:timeZone}; oT['code']=params['code'];
-      var vec=[ ['loginGetGraph', oT], ['specSetup',{idApp:idApp}, $userSettingDiv.setUp]];   majax(oAJAX,vec);
-    }
     $c.append($c[0].$nr, $c[0].$thumb, $c[0].$butDelete, $c[0].$buttFetch);  //langHtml.YourImage+': ',
     return $c;
   };

@@ -238,6 +238,8 @@ userInfoFrDB="+JSON.stringify(userInfoFrDB)+";\n\
 objApp="+JSON.stringify(objApp)+";\n\
 objUApp="+JSON.stringify(objUApp)+";\n\
 strReCaptchaSiteKey="+JSON.stringify(strReCaptchaSiteKey)+";\n\
+UrlOAuth="+JSON.stringify(UrlOAuth)+";\n\
+strIPPrim="+JSON.stringify(strIPPrim)+";\n\
 \n\
 </script>\n\
 \n\
@@ -249,6 +251,9 @@ strReCaptchaSiteKey="+JSON.stringify(strReCaptchaSiteKey)+";\n\
 \n\
 </body>\n\
 </html>");
+
+//response_type="+JSON.stringify(response_type)+";\n\
+
 //maxUnactivityToken="+JSON.stringify(maxUnactivityToken)+";\n\
 //specialistDefault="+JSON.stringify(specialistDefault)+";\n\
 //scope="+JSON.stringify(scope)+";\n\
