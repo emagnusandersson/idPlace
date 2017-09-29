@@ -281,13 +281,11 @@ ReqBE.prototype.loginGetGraph=function(callback,inObj){
   extend(this,{IP:IP, idIP:idIP, nameIP:nameIP, image:image, email:email, timeZone:inObj.timeZone});
 
 
-  if(['userFun', 'fetchFun'].indexOf(strFun)!=-1){
-    var  semCB=0, semY=0, boDoExit=0; 
-    this[strFun](function(err,result){
-      if(err){  boDoExit=1; if(err!='exited') res.out500(err);  }
-      if(semY)fiber.run(); semCB=1;
-    });
-    if(!semCB){semY=1; Fiber.yield();}  if(boDoExit==1) {callback('exited'); return; }
+  if(['userFun', 'fetchFun', 'getSecretFun'].indexOf(strFun)!=-1){
+    var  semCB=0, semY=0, err, result; 
+    this[strFun](function(errT,resultT){ err=errT; result=resultT;  if(semY)fiber.run(); semCB=1;  }, inObj);  if(!semCB){semY=1; Fiber.yield();}
+    if(err){ if(err!='exited') res.out500(err); callback('exited'); return; }
+    if(result) Ou.resultOfFun=result;
   }
 
 
@@ -297,8 +295,9 @@ ReqBE.prototype.loginGetGraph=function(callback,inObj){
 }
 
 
-ReqBE.prototype.userFun=function(callback){
+ReqBE.prototype.userFun=function(callback,inObj){
   var self=this, req=this.req, res=this.res, site=req.site,  siteName=site.siteName, userTab=site.TableName.userTab;
+  var Ou={}; 
    
   var password=randomHash();
   var Sql=[], Val=[]; 
@@ -319,10 +318,10 @@ ReqBE.prototype.userFun=function(callback){
   var idUser=Number(results[1][0].idUser);
   self.sessionMain.idUser=idUser;
   setSessionMain.call(self);
-  callback(null,0);
+  callback(null, Ou);
 }
 
-ReqBE.prototype.fetchFun=function(callback){
+ReqBE.prototype.fetchFun=function(callback,inObj){
   var self=this, req=this.req, res=this.res, site=req.site,  siteName=site.siteName, userTab=site.TableName.userTab;
   var Ou={}; 
    
@@ -358,8 +357,26 @@ Val.push(this.idIP, this.nameIP, this.image, this.email, this.timeZone, idUser);
   if(c>0) {boOK=1; mestmp="Data changed"; } else {boOK=1; mestmp="Nothing changed"; }
   self.mes(mestmp);
   Ou.boOK=boOK; 
-  callback(null,0);
+  callback(null, Ou);
 }
+ReqBE.prototype.getSecretFun=function(callback,inObj){
+  var self=this, req=this.req, res=this.res, site=req.site,  siteName=site.siteName, userTab=site.TableName.userTab;
+  var Ou={};
+  var appTab=site.TableName.appTab
+   
+  if(typeof this.sessionMain!='object' || !('idUser' in this.sessionMain)) { self.mes('No session'); callback(null,[Ou]); return;}
+  var idUser=this.sessionMain.idUser;
+
+  var sql="SELECT secret FROM "+appTab+" WHERE idOwner=? AND idApp=?;";
+  var Val=[idUser, inObj.idApp];
+  var fiber = Fiber.current, semCB=0, semY=0, err, results; 
+  myQueryF(sql, Val, mysqlPool, function(errT, resultsT) { err=errT;  results=resultsT;    if(semY)fiber.run(); semCB=1;  });  if(!semCB){semY=1; Fiber.yield();} 
+  if(err){ self.mesEO(err); callback('exited');  return;  }
+  Ou.secret=results[0].secret;
+  //callback(null,0);
+  callback(null, Ou);
+}
+
 
 
 ReqBE.prototype.deleteExtId=function(callback,inObj){ // Remove link to the external IP
@@ -478,6 +495,7 @@ ReqBE.prototype.UUpdate=function(callback,inObj){ // writing needSession
   if(typeof this.sessionMain!='object' || !('idUser' in this.sessionMain)) { self.mes('No session'); callback(null,[Ou]); return;}
   var idUser=this.sessionMain.idUser;
 
+  if(!/\S+@\S+/.test(inObj.email)) { self.mesEO('Invalid email'); callback('exited'); return; }
     
 
   var Sql=[], Val=[];
@@ -568,6 +586,8 @@ ReqBE.prototype.createUser=function(callback,inObj){ // writing needSession
   var data = JSON.parse(buf.toString());
   //console.log('Data: ', data);
   if(!data.success) { self.mesEO('reCaptcha test not successfull'); callback('exited'); return; }
+  
+  if(!/\S+@\S+/.test(inObj.email)) { self.mesEO('Invalid email'); callback('exited'); return; }
   
   var Sql=[]; 
   Sql.push("INSERT INTO "+userTab+" SET name=?, password=?, email=?, telephone=?, country=?, federatedState=?, county=?, city=?, zip=?, address=?, timeZone=?, idNational=?, birthdate=?, motherTongue=?, gender=?,\n\
@@ -766,12 +786,13 @@ ReqBE.prototype.devAppListGet=function(callback,inObj){
 }
 ReqBE.prototype.devAppSecret=function(callback,inObj){ 
   var self=this, req=this.req, site=req.site;
-  var appTab=site.TableName.appTab;
+  var appTab=site.TableName.appTab, userTab=site.TableName.userTab;
   if(typeof this.sessionMain!='object' || !('idUser' in this.sessionMain)) { self.mes('No session'); callback(null,[Ou]); return;}
   var idUser=this.sessionMain.idUser;
 
   var Ou={};
-  var sql="SELECT secret FROM "+appTab+" WHERE idOwner=? AND idApp=?;";
+  //var sql="SELECT secret FROM "+appTab+" WHERE idOwner=? AND idApp=?;";
+  var sql="SELECT password, secret FROM "+userTab+" u JOIN "+appTab+" a ON u.idUser=a.idOwner WHERE u.idUser=? AND a.idApp=?;";
   var Val=[idUser, inObj.idApp];
   var fiber=Fiber.current, semY=0, semCB=0, err, results;
   myQueryF(sql, Val, mysqlPool, function(errT, resultsT) {
@@ -780,6 +801,7 @@ ReqBE.prototype.devAppSecret=function(callback,inObj){
   });
   if(!semCB) { semY=1; Fiber.yield();}
   if(err){ self.mesEO(err); callback('exited');  return;  }
+  if(results[0].password!=inObj.password) {this.mesO('password missmatch'); callback('exited'); return;}
   Ou.secret=results[0].secret;
   callback(null, [Ou]);
 }

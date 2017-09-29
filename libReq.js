@@ -243,7 +243,7 @@ strIPPrim="+JSON.stringify(strIPPrim)+";\n\
 \n\
 </script>\n\
 \n\
-<form  id=loginTraditional>\n\
+<form  id=formLogin>\n\
 <label name=email>Email</label><input type=email name=email>\n\
 <label name=password>Password</label><input type=password name=password>\n\
 <button type=submit name=submit class=highStyle value=\"Sign in\">Sign in</button> \n\

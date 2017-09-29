@@ -295,16 +295,16 @@ var mainDivExtend=function($el){
  *
  *******************************************************************************************************************
  *******************************************************************************************************************/
-var createUPop=function(IP, uRedir, nonce){
+var createUPop=function(IP, uRedir, nonce, boReauthenticate){
   var arrQ=["client_id="+site.client_id[IP], "redirect_uri="+encodeURIComponent(uRedir), "state="+nonce, "response_type=code"];
   if(IP=='fb')   arrQ.push("scope=email", "display=popup"); //
   else if(IP=='google')    arrQ.push("scope=profile,email");
   else if(IP=='idplace')    arrQ.push("scope=name,image,email");
-  //arrQ.push("auth_type=reauthenticate");
+  if(boReauthenticate) arrQ.push("auth_type=reauthenticate");
   return UrlOAuth[IP]+'?'+arrQ.join('&');
 }
-getOAuthCode=function*(flow){
-  var strQS, nonce=randomHash(), uPop=createUPop(strIPPrim, uSite+'/'+leafLoginBack, nonce);
+getOAuthCode=function*(flow, boReauthenticate=false){
+  var strQS, nonce=randomHash(), uPop=createUPop(strIPPrim, uSite+'/'+leafLoginBack, nonce, boReauthenticate);
   window.loginReturn=function(strQST){ strQS=strQST; flow.next();}
   if('wwwLoginScope' in site) document.domain = site.wwwLoginScope;
   window.open(uPop, '_blank', 'width=580,height=400'); //, '_blank', 'popup', 'width=580,height=400'
@@ -339,57 +339,48 @@ loginDivExtend=function($el){
   return $el;
 }
 
+formLoginExtend=function($el){
+  $el.setUp=function(cbLoginT){
+    cbLogin=cbLoginT;
+  }
+  var cbLogin;
+  $el.$labEmail=$el.children("label[name='email']"); $el.$inpEmail=$el.children("input[name='email']").css({'max-width':'100%'});
+  $el.$labPass=$el.children("label[name='password']"); $el.$inpPass=$el.children("input[name='password']").css({'max-width':'100%'});
+  $el.$buttLogin=$el.children("button[name='submit']").css({"margin-top": "1em"}).on('click',function(){cbLogin(); return false;});
+
+  $el.find('input[type=text],[type=email],[type=number],[type=password]').css({display:'block'}).keypress( function(e){ if(e.which==13) {
+    cbLogin(); 
+  }} );
+  return $el;
+}
 
 
 var loginMixDivExtend=function($el){
 "use strict"
   $el.toString=function(){return 'loginMixDiv';}
   $el.myToggle=function(boOn){
-    if(boOn) $el.show();else $el.hide(); if(boOn) $inpPass.focus();
+    if(boOn) $el.show();else $el.hide(); if(boOn) $formLogin.$inpPass.focus();
   }
   var login=function(){  
-    var tmp=SHA1($inpPass.val()+strSalt);
-    var vec=[['login',{email:$inpEmail.val(), password:tmp}], ['specSetup',{idApp:idApp}, $el.cb]];   majax(oAJAX,vec); 
-    $inpPass.val('');
-    return false;
+    var tmp=SHA1($formLogin.$inpPass.val()+strSalt);
+    var vec=[['login',{email:$formLogin.$inpEmail.val(), password:tmp}], ['specSetup',{idApp:idApp}, $el.cb]];   majax(oAJAX,vec); 
+    $formLogin.$inpPass.val('');
   }
   var forgotClickF=function(){ 
     $forgottPWPop.openFunc();
     return false;
   }
-  $el.setUp=function(){ $divRight.append($loginDiv);  }
+  $el.setUp=function(){ $messDiv.insertAfter($formLogin); $formLogin.setUp(login); $divRight.append($loginDiv);  }
   $el.cb=null;
   var $h1=$('<h1>').append('Sign in');
-
-  var $form=$('#loginTraditional');//.detach();
-  var $messDiv=$('<div>').css({color:'red'});
-/*  var $labEmail=$('<label>').append('Email'), $inpEmail=$('<input type=email>');
-  var $labPass=$('<label>').append('Password'); 
-  var $inpPass=$('<input type=password>'); 
-*/
-  var $labEmail=$form.children("label[name='email']"), $inpEmail=$form.children("input[name='email']").css({'max-width':'100%'});
-  var $labPass=$form.children("label[name='password']"), $inpPass=$form.children("input[name='password']").css({'max-width':'100%'});
-  var $buttLogin=$form.children("button[name='submit']").css({"margin-top": "1em"}).click(login);
-  /*$form.submit(function(event){
-    login();
-    //event.preventDefault();
-  });*/
-  //var $buttForgot=$('<button>').append('Forgot your password').click(forgotClickF);
-  var $buttForgot=$('<a>').prop({href:''}).text('Forgot your password?').click(forgotClickF);
   var cssCol={display:'inline-block','box-sizing': 'border-box',padding:'1em',flex:1}; //width:'50%',
 
+  var $messDiv=$('<div>').css({color:'red'});
+  var $buttForgot=$('<a>').prop({href:''}).text('Forgot your password?').click(forgotClickF);
   var $divForgot=$('<div>').css({'margin-top':'1em'}).append($buttForgot);
  
-  //var $buttLogin=$('<button>').append('Sign in').click(login); 
-  //var $divLeft=$('<div>').append($messDiv,    $labEmail, $inpEmail,    $labPass, $inpPass,     $buttLogin, $divForgot);
-  var $divLeft=$('<div>').append($messDiv,    $form,     $divForgot); //
-  //$divLoginTraditional.prepend($messDiv).append($buttLogin, $divForgot);
-  //$divLeft.find('input[type=text],[type=email],[type=number],[type=password]').keypress( function(e){ if(e.which==13) {login();return false;}} ).css({display:'block'});
-  $divLeft.find('input[type=text],[type=email],[type=number],[type=password]').keypress( function(e){ if(e.which==13) {
-    //login(); 
-  }} ).css({display:'block'});
-  var $divRight=$('<div>');
-  $divLeft.css(cssCol); $divRight.css(cssCol).css({'text-align':'center', 'border-left':'2px solid grey'});
+  var $divLeft=$('<div>').css(cssCol).append($messDiv,    $formLogin,     $divForgot); 
+  var $divRight=$('<div>').css(cssCol).css({'text-align':'center', 'border-left':'2px solid grey'});
   var $divRow=$('<div>').append($divLeft, $divRight).css({display: 'flex', 'justify-content':'space-around'});
   var $divCont=$('<div>').append($h1, $divRow);
   $el.append($divCont);
@@ -398,6 +389,68 @@ var loginMixDivExtend=function($el){
 }
 
 
+devAppSecretDivExtend=function($el){
+"use strict"
+  $el.toString=function(){return 'devAppSecretDiv';}
+  var ret=function(data){
+    $spanSecret.append(data.secret); $inpPass.val('')
+  }
+  $el.openFunc=function(){
+    var $r=$(this).parent().parent(); idApp=$r.data('r').idApp;
+    $spanSecret.text('');
+    doHistPush({$view:$devAppSecretDiv});
+    $el.setVis();
+    $inpPass.focus()
+  }
+  var send=function(){
+    var tmp=SHA1($inpPass.val()+strSalt);
+    var vec=[['devAppSecret',{idApp:idApp, password:tmp},ret]];   majax(oAJAX,vec);
+    
+  }
+  $el.setVis=function(){
+    $el.show(); return 1;
+  }
+  var idApp;
+ 
+    // Authenticate with password
+  var $inpPass=$('<input type=password>').keypress( function(e){ if(e.which==13) { send();   }} );
+  var $buttSend=$("<button>").append('Send').css({"margin-top": "1em"}).on('click',send);
+
+
+    // Authenticate with IdP
+  var strButtonSize='2em';
+  var $imgFb=$('<img>').prop({src:uFb}).click(function(){
+    var flow=(function*(){
+      var {err, code}=yield* getOAuthCode(flow, true); if(err) {setMess(err); return;}
+      var oT={IP:strIPPrim, fun:'getSecretFun', caller:'index', code:code, idApp:idApp};
+      var result;
+      var vec=[['loginGetGraph', oT, function(resultT){ result=resultT; flow.next(); }]];   majax(oAJAX,vec);   yield;
+      $spanSecret.append(result.resultOfFun.secret);
+    })(); flow.next();
+  });
+  var $Im=$([]).push($imgFb).css({align:'center', display:'block', 'margin-top': '0.7em'}); 
+
+
+ 
+  var $head=$('<h3>').append('Reauthenticate to see secret');
+  var $hSecret=$('<span>').css({margin:'0 .5em 0 0','font-weight': 'bold'}).append('Secret: ');
+  
+  
+  var cssCol={display:'inline-block','box-sizing': 'border-box',padding:'1em',flex:1}; //width:'50%',
+  var $divLeft=$('<div>').css(cssCol).append('Password: ', $inpPass, $buttSend);
+  var $divRight=$('<div>').css(cssCol).css({'text-align':'center', 'border-left':'2px solid grey'}).append($Im);
+  var $divRow=$('<div>').append($divLeft, $divRight).css({display: 'flex', 'justify-content':'space-around'});
+  
+  var $spanSecret=$('<span>');//.css({'font-weight': 'bold'});
+  var $p=$('<div>').append($hSecret, $spanSecret).css({margin:'0.5em 0',border:'solid 1px',background:'yellow'});
+  var $cancel=$('<button>').addClass('highStyle').html('Back').click(doHistBack).css({display:'block', margin:'1em 0em'});
+
+  var $blanket=$('<div>').addClass("blanket");
+  var $centerDiv=$('<div>').addClass("Center").append($head, $divRow, $p,$cancel).css({height:'19em', 'min-width':'17em','max-width':'25em', padding:'0.1em'}); // , 
+  if(boIE) $centerDiv.css({'width':'20em'}); 
+  $el.addClass("Center-Container").append($centerDiv,$blanket); 
+  return $el;
+}
 
 
 var createUserPreDivExtend=function($el){
@@ -1165,7 +1218,7 @@ devAppDeleteDivExtend=function($el){
   return $el;
 }
 
-
+/*
 devAppSecretDivExtend=function($el){
 "use strict"
   $el.toString=function(){return 'devAppSecretDiv';}
@@ -1192,7 +1245,7 @@ devAppSecretDivExtend=function($el){
   if(boIE) $centerDiv.css({'width':'20em'}); 
   $el.addClass("Center-Container").append($centerDiv,$blanket); 
   return $el;
-}
+}*/
 
 //idApp, name, redir_uri, imageHash, created
 devAppListExtend=function($el){
@@ -1456,7 +1509,11 @@ PropExtend=function(){
 
 
 
-
+    // email
+  $.extend(Prop.email, {
+    saveInp:function($inp){ var val=$inp.val().trim(); if(/\S+@\S+/.test(val)) return [null,val]; else return ['Invalid email'];}
+  });
+  
     //boEmailVerified 
   var tmpCrInp=function(){
     var $c=$('<span>');
@@ -1798,7 +1855,9 @@ setUp1=function(){
 
   $mainDiv=mainDivExtend($('<div>')); 
   $loginDiv=loginDivExtend($("<div>"));
+  $formLogin=formLoginExtend($('#formLogin'));
   $loginMixDiv=loginMixDivExtend($('<div>'));
+  //$loginForSecretDiv=loginForSecretDivExtend($('<div>'));
 
 
   $deleteAccountPop=deleteAccountPopExtend($('<div>'));
@@ -1933,22 +1992,21 @@ setUp1=function(){
     else history.fastBack($mainDiv);
   };
   if(boAuthReq){
-    //iterator=authFlowF.call(this);  iterator.next();
-    var authFlowObj=new authFlowT();
-    authFlowObj.continueStart();
+    //var flow=(function*(){ yield *authFlowF(flow); })(); flow.next();
+    var authFlowObj=new authFlowT();  authFlowObj.continueStart();
   }
 
   
 
 }
 /*
-authFlowF=function*(){
+authFlowF=function*(flow){
   if(Object.keys(userInfoFrDB).length==0){
     $loginMixDiv.cb=function(){
-      iterator.next();
+      flow.next();
     };
     $createUserDiv.cb=function(){
-      iterator.next();
+      flow.next();
     };
     yield;
   }
@@ -1964,7 +2022,7 @@ authFlowF=function*(){
     $consentDiv.setVis();
     $consentDiv.cb=function(boAllowT){
       boAllow=boAllowT;
-      iterator.next();
+      flow.next();
     };
     yield;
   }
@@ -1978,8 +2036,9 @@ authFlowF=function*(){
     else var uRedir=createUriRedirCodeDeny(urlIn, objQS.state);
   }
   window.location.replace(uRedir);
-}
-*/
+}*/
+
+
 authFlowT=function(){
   this.continueStart=function(){
     if(Object.keys(userInfoFrDB).length==0){
@@ -2016,9 +2075,6 @@ authFlowT=function(){
     window.location.replace(uRedir);
   }
   var boAllow=true;
-
-
-  
 }
 
 
