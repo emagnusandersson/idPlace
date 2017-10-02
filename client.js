@@ -185,6 +185,7 @@ var loginInfoExtend=function($el){
   var $logoutButt=$('<button>').text(langHtml.loginInfo.logoutButt).css({'float':'right','font-size':'90%'});
   $logoutButt.click(function(){ 
     //userInfoFrDB={}; 
+    $userAppList.boStale=1;  $devAppList.boStale=1;
     var vec=[['logout',1, $el.cb]];
     majax(oAJAX,vec);
     return false;
@@ -222,8 +223,8 @@ var mainDivExtend=function($el){
     //
 
   var $buttonSignIn=$('<button>').addClass('highStyle').append('Sign in').click(function(){
-    doHistPush({$view:$loginMixDiv});
-    $loginMixDiv.setVis();
+    doHistPush({$view:$loginPreDiv});
+    $loginPreDiv.setVis();
   });
   var $buttonCreateAccount=$('<button>').addClass('highStyle').append('Create an account').click(function(){
     doHistPush({$view:$createUserPreDiv});
@@ -311,67 +312,63 @@ getOAuthCode=function*(flow, boReauthenticate=false){
   yield;
   
   var params=parseQS(strQS.substring(1));
-  if(!('state' in params) || params.state !== nonce) {   return {err:'Invalid state parameter: '+params.state}; } 
-  if('error' in params) { return {err:params.error}; }
-  if(!('code' in params)) { return {err: 'No "code" parameter in response from IdP'}; }
-  return {err:null, code:params.code};
+  if(!('state' in params) || params.state !== nonce) {   return ['Invalid state parameter: '+params.state]; } 
+  if('error' in params) { return [params.error]; }
+  if(!('code' in params)) { return ['No "code" parameter in response from IdP']; }
+  return [null, params.code];
 }
 
 
-
+  // Used in $loginPreDiv and $createUserPreDiv
 loginDivExtend=function($el){
   var strButtonSize='2em';
   var $imgFb=$('<img>').prop({src:uFb}).click(function(){
     var flow=(function*(){
-      var {err, code}=yield* getOAuthCode(flow); if(err) {setMess(err); return;}
+      var [err, code]=yield* getOAuthCode(flow); if(err) {setMess(err); return;}
       var timeZone=new Date().toString().match(/([A-Z]+[\+-][0-9]+.*)/)[1];
       var oT={IP:strIPPrim, fun:'userFun', caller:'index', code:code, timeZone:timeZone};
       var vec=[['loginGetGraph', oT], ['specSetup',{idApp:idApp}, function(){ flow.next(); }]];   majax(oAJAX,vec);   yield;
       
-      $loginMixDiv.cb();
+      if($el.cb) $el.cb();
     })(); flow.next();
   });
   var $imgGoogle=$('<img>').prop({src:uGoogle}).click(function(){
     popupWin('google');
   });
+  $el.cb=null;
   var $Im=$([]).push($imgFb).css({align:'center', display:'block', 'margin-top': '0.7em'}); //  , $imgGoogle    position:'relative',top:'0.4em',heigth:strButtonSize,width:strButtonSize
   $el.append($Im); //,$fbHelp , $mess
   return $el;
 }
 
-formLoginExtend=function($el){
-  $el.setUp=function(cbLoginT){
-    cbLogin=cbLoginT;
-  }
-  var cbLogin;
-  $el.$labEmail=$el.children("label[name='email']"); $el.$inpEmail=$el.children("input[name='email']").css({'max-width':'100%'});
-  $el.$labPass=$el.children("label[name='password']"); $el.$inpPass=$el.children("input[name='password']").css({'max-width':'100%'});
-  $el.$buttLogin=$el.children("button[name='submit']").css({"margin-top": "1em"}).on('click',function(){cbLogin(); return false;});
-
-  $el.find('input[type=text],[type=email],[type=number],[type=password]').css({display:'block'}).keypress( function(e){ if(e.which==13) {
-    cbLogin(); 
-  }} );
-  return $el;
-}
-
-
-var loginMixDivExtend=function($el){
-"use strict"
-  $el.toString=function(){return 'loginMixDiv';}
-  $el.myToggle=function(boOn){
-    if(boOn) $el.show();else $el.hide(); if(boOn) $formLogin.$inpPass.focus();
-  }
+formLoginExtend=function($el){  
   var login=function(){  
     var tmp=SHA1($formLogin.$inpPass.val()+strSalt);
     var vec=[['login',{email:$formLogin.$inpEmail.val(), password:tmp}], ['specSetup',{idApp:idApp}, $el.cb]];   majax(oAJAX,vec); 
     $formLogin.$inpPass.val('');
+    return false;
+  }
+  $el.cb=null;
+  $el.$labEmail=$el.children("label[name='email']"); $el.$inpEmail=$el.children("input[name='email']").css({'max-width':'100%'});
+  $el.$labPass=$el.children("label[name='password']"); $el.$inpPass=$el.children("input[name='password']").css({'max-width':'100%'});
+  $el.$buttLogin=$el.children("button[name='submit']").css({"margin-top": "1em"}).on('click',login);
+
+  $el.find('input[type=text],[type=email],[type=number],[type=password]').css({display:'block'}).keypress( function(e){ if(e.which==13) { login(); }} );
+  return $el;
+}
+
+
+var loginPreDivExtend=function($el){
+"use strict"
+  $el.toString=function(){return 'loginPreDiv';}
+  $el.myToggle=function(boOn){
+    if(boOn) $el.show();else $el.hide(); if(boOn) $formLogin.$inpPass.focus();
   }
   var forgotClickF=function(){ 
     $forgottPWPop.openFunc();
     return false;
   }
-  $el.setUp=function(){ $messDiv.insertAfter($formLogin); $formLogin.setUp(login); $divRight.append($loginDiv);  }
-  $el.cb=null;
+  $el.setUp=function(){ $messDiv.insertAfter($formLogin); $divRight.append($loginDiv);  }
   var $h1=$('<h1>').append('Sign in');
   var cssCol={display:'inline-block','box-sizing': 'border-box',padding:'1em',flex:1}; //width:'50%',
 
@@ -421,7 +418,7 @@ devAppSecretDivExtend=function($el){
   var strButtonSize='2em';
   var $imgFb=$('<img>').prop({src:uFb}).click(function(){
     var flow=(function*(){
-      var {err, code}=yield* getOAuthCode(flow, true); if(err) {setMess(err); return;}
+      var [err, code]=yield* getOAuthCode(flow, true); if(err) {setMess(err); return;}
       var oT={IP:strIPPrim, fun:'getSecretFun', caller:'index', code:code, idApp:idApp};
       var result;
       var vec=[['loginGetGraph', oT, function(resultT){ result=resultT; flow.next(); }]];   majax(oAJAX,vec);   yield;
@@ -456,7 +453,7 @@ devAppSecretDivExtend=function($el){
 var createUserPreDivExtend=function($el){
 "use strict"
   $el.toString=function(){return 'createUserPreDiv';}
-  $el.setUp=function(){ $divRight.append($loginDiv);  }
+  $el.setUp=function(){ $divRight.append($loginDiv);   }
   var cssCol={display:'inline-block','box-sizing': 'border-box',padding:'1em',flex:1}; //width:'50%',
   var $buttonCreateAccount=$('<button>').addClass('highStyle').append('Create an account').click(function(){
     doHistPush({$view:$createUserDiv});
@@ -1030,7 +1027,7 @@ userAppDeleteDivExtend=function($el){
 userAppListExtend=function($el){
 "use strict"
   $el.toString=function(){return 'userAppList';}
-  $el.setUp=function(){};
+  //$el.setUp=function(){};
   var TDProt={
     tAccess:{
       mySetVal:function(tT){ var arrT=getSuitableTimeUnit(unixNow()-tT);  $(this).text(Math.round(arrT[0])+arrT[1]);  }
@@ -1488,7 +1485,7 @@ PropExtend=function(){
     });
     $c[0].$buttFetch=$('<button>').addClass('highStyle').html('Fetch').click(function(){
       var flow=(function*(){
-        var {err, code}=yield* getOAuthCode(flow); if(err) {setMess(err); return;}
+        var [err, code]=yield* getOAuthCode(flow); if(err) {setMess(err); return;}
         var timeZone=new Date().toString().match(/([A-Z]+[\+-][0-9]+.*)/)[1];
         var oT={IP:strIPPrim, fun:'fetchFun', caller:'index', code:code, timeZone:timeZone};
         var vec=[['loginGetGraph', oT], ['specSetup',{idApp:idApp}, function(){ flow.next(); }]];   majax(oAJAX,vec);   yield;
@@ -1856,7 +1853,7 @@ setUp1=function(){
   $mainDiv=mainDivExtend($('<div>')); 
   $loginDiv=loginDivExtend($("<div>"));
   $formLogin=formLoginExtend($('#formLogin'));
-  $loginMixDiv=loginMixDivExtend($('<div>'));
+  $loginPreDiv=loginPreDivExtend($('<div>'));
   //$loginForSecretDiv=loginForSecretDivExtend($('<div>'));
 
 
@@ -1884,7 +1881,7 @@ setUp1=function(){
   $consentDiv=consentDivExtend($('<div>'));
   
  
-  StrMainDiv=['loginInfo', 'H1', 'mainDiv', 'loginMixDiv', 'createUserPreDiv', 'createUserDiv', 'userSettingDiv', 'consentDiv', 'deleteAccountPop', 'verifyEmailPop', 'forgottPWPop', 'changePWPop', 'uploadImageDiv',
+  StrMainDiv=['loginInfo', 'H1', 'mainDiv', 'loginPreDiv', 'createUserPreDiv', 'createUserDiv', 'userSettingDiv', 'consentDiv', 'deleteAccountPop', 'verifyEmailPop', 'forgottPWPop', 'changePWPop', 'uploadImageDiv',
  'devAppList', 'devAppSetDiv', 'devAppDeleteDiv', 'devAppSecretDiv', 'userAppSetDiv', 'userAppDeleteDiv', 'userAppList'];  
 
 
@@ -1911,7 +1908,7 @@ setUp1=function(){
     //$tmp.$divCont.css({'margin-bottom':285+'px'});
     return true;
   }
-  $loginMixDiv.setVis=function(){
+  $loginPreDiv.setVis=function(){
     var $tmp=this;  $mainDivsTogglable.not($tmp).hide(); $tmp.show();
     $tmp.setUp();
     //$tmp.$divCont.css({'margin-bottom':285+'px'});
@@ -1987,28 +1984,35 @@ setUp1=function(){
   $(window).scroll(setBottomMargin);
   $body.click(setBottomMargin);
 
-  $loginMixDiv.cb=$loginInfo.cb=$createUserDiv.cb=function(){
+    // In normal case: go back to mainDiv after successfull login/logout/createUser
+  $loginDiv.cb=$formLogin.cb=$createUserDiv.cb=$loginInfo.cb=function(){
     if(history.StateMy[history.state.ind].$view===$mainDiv) {$mainDiv.setVis();}
     else history.fastBack($mainDiv);
   };
   if(boAuthReq){
-    //var flow=(function*(){ yield *authFlowF(flow); })(); flow.next();
-    var authFlowObj=new authFlowT();  authFlowObj.continueStart();
+    var flow=(function*(){ yield *authFlowF(flow); })(); flow.next();
+    //var authFlowObj=new authFlowT();  authFlowObj.continueStart();
   }
-
-  
-
 }
-/*
+
+//$mainDiv
+//  $loginPreDiv  ($loginDiv, $formLogin)
+//  $createUserPreDiv  ($loginDiv)
+//    $createUserDiv
+
 authFlowF=function*(flow){
   if(Object.keys(userInfoFrDB).length==0){
-    $loginMixDiv.cb=function(){
+    $loginDiv.cb=function(){
+      flow.next();
+    };
+    $formLogin.cb=function(){
       flow.next();
     };
     $createUserDiv.cb=function(){
       flow.next();
     };
     yield;
+    $loginDiv.cb=null;$formLogin.cb=null; $createUserDiv.cb=null;
   }
   var tmpScopeGranted=objUApp?objUApp.scope:'';
   var boScopeOK=isScopeOK(tmpScopeGranted, scopeAsked);
@@ -2036,17 +2040,19 @@ authFlowF=function*(flow){
     else var uRedir=createUriRedirCodeDeny(urlIn, objQS.state);
   }
   window.location.replace(uRedir);
-}*/
+}
 
-
+/*
 authFlowT=function(){
   this.continueStart=function(){
     if(Object.keys(userInfoFrDB).length==0){
-      $loginMixDiv.cb=continueGotUser;
+      $loginDiv.cb=continueGotUser;
+      $formLogin.cb=continueGotUser;
       $createUserDiv.cb=continueGotUser;
     } else continueGotUser();
   }
   var continueGotUser=function(){
+    $loginDiv.cb=null;$formLogin.cb=null; $createUserDiv.cb=null;
     var tmpScopeGranted=objUApp?objUApp.scope:'';
     var boScopeOK=isScopeOK(tmpScopeGranted, scopeAsked);
     var boRerequest=objQS.auth_type=='rerequest';
@@ -2076,7 +2082,7 @@ authFlowT=function(){
   }
   var boAllow=true;
 }
-
+*/
 
 //window.onload=function(){  setUp1(); };
 $(function(){

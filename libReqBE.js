@@ -3,108 +3,99 @@
 /******************************************************************************
  * ReqBE
  ******************************************************************************/
-var ReqBE=app.ReqBE=function(req, res, callback){
-  this.req=req; this.res=res; this.callback=callback||function(){}; this.site=req.site;  this.Str=[]; 
-  this.Out={GRet:{}, dataArr:[]}; this.GRet=this.Out.GRet; 
+//var ReqBE=app.ReqBE=function(req, res){
+  //this.req=req; this.res=res; this.site=req.site;  this.Str=[]; 
+  //this.Out={GRet:{}, dataArr:[]}; this.GRet=this.Out.GRet; 
+//}
+var ReqBE=app.ReqBE=function(req, res){
+  this.req=req; this.res=res; this.site=req.site;  this.Str=[]; 
+  this.Out={GRet:{userInfoFrDBUpd:{}}, dataArr:[]}; this.GRet=this.Out.GRet; 
 }
 
 
-
-
-
+  // Method "mesO" and "mesEO" are only called from "go". Method "mes" can be called from any method.
 ReqBE.prototype.mes=function(str){ this.Str.push(str); }
-ReqBE.prototype.mesO=function(str){
-  var GRet=this.GRet;
-  if(str) this.Str.push(str);
-  GRet.strMessageText=this.Str.join(', '); 
-  if('tMod' in GRet) GRet.tMod=GRet.tMod.toUnix();
-  if('tModCache' in GRet) GRet.tModCache=GRet.tModCache.toUnix();
-  this.res.end(JSON.stringify(this.Out));	
-}
-ReqBE.prototype.mesEO=function(errIn){
-  var GRet=this.GRet;
-  var boString=typeof errIn=='string';
-  var err=errIn; 
-  if(boString) { this.Str.push('E: '+errIn); err=new MyError(errIn); } 
-  else{  var tmp=err.syscal||''; this.Str.push('E: '+tmp+' '+err.code);  }
-  console.log(err.stack);
-  //var error=new MyError(err); console.log(error.stack);
-  GRet.strMessageText=this.Str.join(', ');
-  if('tMod' in GRet) GRet.tMod=GRet.tMod.toUnix();
-  if('tModCache' in GRet) GRet.tModCache=GRet.tModCache.toUnix();
+ReqBE.prototype.mesO=function(e){
+    // Prepare an error-message for the browser.
+  var strEBrowser;
+  if(typeof e=='string'){strEBrowser=e; }
+  else if(typeof e=='object'){
+    if(e instanceof Error) {strEBrowser='message: ' + e.message; }
+    else { strEBrowser=e.toString(); }
+  }
+  
+    // Write message (and other data) to browser
+  this.Str.push(strEBrowser);
+  this.GRet.strMessageText=this.Str.join(', '); 
+  
 
-  this.res.writeHead(500, {"Content-Type": "text/plain"}); 
-  this.res.end(JSON.stringify(this.Out));	
+  this.res.end(JSON.stringify(this.Out));
 }
 
-
-
-
-
-ReqBE.prototype.go=function(){
-  var self=this, req=this.req, res=this.res, sessionID=req.sessionID;
-
-  getSessionMain.call(this); // sets this.sessionMain
-  if(!this.sessionMain || typeof this.sessionMain!='object') { resetSessionMain.call(this); }  
-  var redisVar=this.req.sessionID+'_Main', tmp=wrapRedisSendCommand('expire',[redisVar,maxUnactivity]);
+ReqBE.prototype.mesEO=function(e){
+    // Prepare an error-message for the browser and one for the error log.
+  var StrELog=[], strEBrowser;
+  if(typeof e=='string'){strEBrowser=e; StrELog.push(e);}
+  else if(typeof e=='object'){
+    if('syscal' in e) StrELog.push('syscal: '+e.syscal);
+    if(e instanceof Error) {strEBrowser='name: '+e.name+', code: '+e.code+', message: ' + e.message; }
+    else { strEBrowser=e.toString(); StrELog.push(strEBrowser); }
+  }
     
+  var strELog=StrELog.join('\n'); console.error(strELog);  // Write message to the error log
+  if(e instanceof Error) { console.error(e);}
+  
+    // Write message (and other data) to browser
+  this.Str.push(strEBrowser);
+  this.GRet.strMessageText=this.Str.join(', ');
+  
+  this.res.writeHead(500, {"Content-Type": "text/plain"}); 
+  this.res.end(JSON.stringify(this.Out));
+}
+
+
+
+ReqBE.prototype.go=function*(){
+  var req=this.req, flow=req.flow, res=this.res, sessionID=req.sessionID;
+  
+  
+    // Extract input data either 'POST' or 'GET'
+  var jsonInput;
   if(req.method=='POST'){ 
     if('x-type' in req.headers ){ //&& req.headers['x-type']=='single'
       var form = new formidable.IncomingForm();
       form.multiples = true;  
       //form.uploadDir='tmp';
       
-      //var fT=thisChangedWArg(this.myStoreF, this, null);
-      //var myStore=concat(fT);
-      //form.onPart = function(part) { debugger
-      //  if(!part.filename){  form.handlePart(part);  }  // let formidable handle all non-file parts
-      //  //part.pipe(myStore);
-      // }
+      var err, fields, files;
+      form.parse(req, function(errT, fieldsT, filesT) { err=errT; fields=fieldsT; files=filesT; flow.next();  });  yield;
+      if(err){ this.mesEO(err);  return; } 
+      
+      this.File=files['fileToUpload[]'];
+      if('kind' in fields) this.kind=fields.kind; else this.kind='u';
+      if('captcha' in fields) this.captchaIn=fields.captcha; else this.captchaIn='';
+      if('strName' in fields) this.strName=fields.strName; else this.strName='';
+      if(!(this.File instanceof Array)) this.File=[this.File];
+      jsonInput=fields.vec;
 
-      form.parse(req, function(err, fields, files) {
-        if(err){self.mesEO(err);  return; } 
-        else{
-          self.File=files['fileToUpload[]'];
-          if('kind' in fields) self.kind=fields.kind; else self.kind='u';
-          if('captcha' in fields) self.captchaIn=fields.captcha; else self.captchaIn='';
-          if('strName' in fields) self.strName=fields.strName; else self.strName='';
-          if(!(self.File instanceof Array)) self.File=[self.File];
-          self.jsonInput=fields.vec;
-          Fiber( function(){ self.interpretInput.call(self); }).run();
-          //self.interpretInput.call(self);
-        }
-      });
-
-    }else{  
-      var myConcat=concat(function(buf){
-        self.jsonInput=buf.toString();
-        Fiber( function(){ self.interpretInput.call(self); }).run();
-        //self.interpretInput.call(self);
-      });
-      req.pipe(myConcat);
+    }else{
+      var buf, myConcat=concat(function(bufT){ buf=bufT; flow.next();  });    req.pipe(myConcat);    yield;
+      jsonInput=buf.toString();
     }
   }
+  else if(1){ this.mesEO('send me a POST'); return; }
   else if(req.method=='GET'){
-    var objUrl=url.parse(req.url), qs=objUrl.query||''; self.jsonInput=urldecode(qs);
-    Fiber( function(){ self.interpretInput.call(self); }).run();
-    //self.interpretInput.call(self);
+    var objUrl=url.parse(req.url), qs=objUrl.query||''; jsonInput=urldecode(qs);
   }
-}
-
-
-
-
-
-ReqBE.prototype.interpretInput=function(){
-  var self=this, req=this.req, res=this.res, sessionID=req.sessionID;
-
- 
-  var jsonInput=this.jsonInput;
-  try{ var beArr=JSON.parse(jsonInput); }catch(e){ console.log(e); res.out500('Error in JSON.parse, '+e); debugger; return; }
-
+  
+  try{ var beArr=JSON.parse(jsonInput); }catch(e){ this.mesEO(e);  return; }
+  
+  var redisVar=req.sessionID+'_Main'; this.sessionMain=yield *getRedis(flow, redisVar, true);
+  if(!this.sessionMain || typeof this.sessionMain!='object') { this.sessionMain={};  this.GRet.userInfoFrDB={};  var tmp=yield* cmdRedis(flow, 'del',[redisVar]); }  
+  else { yield* expireRedis(flow, redisVar); }
+  
 
   res.setHeader("Content-type", "application/json");
-
 
     // Remove 'CSRFCode' and 'caller' form beArr
   var CSRFIn, caller='index';
@@ -118,8 +109,7 @@ ReqBE.prototype.interpretInput=function(){
   var len=beArr.length;
   var StrInFunc=Array(len); for(var i=0;i<len;i++){StrInFunc[i]=beArr[i][0];}
   var arrCSRF, arrNoCSRF, allowed, boCheckCSRF, boSetNewCSRF;
-
-
+  
   if(caller=='index'){
     arrCSRF=['loginGetGraph', 'deleteExtId', 'uploadUser', 'UUpdate', 'createUser', 'UDelete', 'login', 'devAppListGet', 'devAppSecret', 'devAppSet', 'devAppDelete', 'setConsent', 'userAppListGet', 'userAppSet', 'userAppDelete', 'changePW', 'verifyEmail', 'verifyPWReset', 'deleteImage', 'uploadImage'];  // Functions that changes something must check and refresh CSRF-code
     arrNoCSRF=['specSetup','logout'];  // ,'testA','testB'
@@ -142,51 +132,43 @@ ReqBE.prototype.interpretInput=function(){
     if(StrComp(StrInFunc,['specSetup'])){ boCheckCSRF=0; boSetNewCSRF=1; }
 
   }else {debugger; }
-
-
+  
     // cecking/set CSRF-code
-  var redisVar=this.req.sessionID+'_CSRFCode'+ucfirst(caller), CSRFCode;
+  var redisVar=req.sessionID+'_CSRFCode'+ucfirst(caller), CSRFCode;
   if(boCheckCSRF){
-    if(!CSRFIn){ var tmp='CSRFCode not set (try reload page)', error=new MyError(tmp); self.mesO(tmp); return;}
-    var tmp=wrapRedisSendCommand('get',[redisVar]);
-    if(CSRFIn!==tmp){ var tmp='CSRFCode err (try reload page)', error=new MyError(tmp); self.mesO(tmp); return;}
+    if(!CSRFIn){ this.mesO('CSRFCode not set (try reload page)'); return; }
+    var tmp=yield* getRedis(flow, redisVar);
+    if(CSRFIn!==tmp){ this.mesO('CSRFCode err (try reload page)'); return;}
   }
-  if(boSetNewCSRF) {
+  if(boSetNewCSRF){
     var CSRFCode=randomHash();
-    var tmp=wrapRedisSendCommand('set',[redisVar,CSRFCode]);   var tmp=wrapRedisSendCommand('expire',[redisVar,maxUnactivity]);
-    self.GRet.CSRFCode=CSRFCode;
+    var tmp=yield* setRedis(flow, redisVar, CSRFCode, maxUnactivity);
+    this.GRet.CSRFCode=CSRFCode;
   }
-
+  
+  
   var Func=[];
   for(var k=0; k<beArr.length; k++){
-    var strFun=beArr[k][0]; 
-    if(in_array(strFun,allowed)) { 
-      var inObj=beArr[k][1],     tmpf; if(strFun in self) tmpf=self[strFun]; else tmpf=global[strFun];     
-      //var fT=thisChangedWArg(tmpf, self, inObj);   Func.push(fT);
+    var strFun=beArr[k][0];
+    if(in_array(strFun,allowed)) {
+      var inObj=beArr[k][1],     tmpf; if(strFun in this) tmpf=this[strFun]; else tmpf=global[strFun];
       var fT=[tmpf,inObj];   Func.push(fT);
     }
   }
 
-  var fiber=Fiber.current; 
+
   for(var k=0; k<Func.length; k++){
-    var Tmp=Func[k], func=Tmp[0], inObj=Tmp[1];
-    var semY=0, semCB=0, boDoExit=0;
-    func.call(self, function(err, results) {
-        if(err){ 
-          boDoExit=1;
-          if(err!='exited') { debugger; res.out500(err); }
-        }
-        else {
-          self.Out.dataArr.push(results);
-        }      
-        if(semY) { fiber.run(); } semCB=1;
-      }
-      , inObj
-    );      
-    if(!semCB) { semY=1; Fiber.yield();}
-    if(boDoExit==1) return;
+    var [func,inObj]=Func[k],   [err, result]=yield* func.call(this, inObj);
+    //if(typeof objT=='object') {    if('err' in objT) err=objT.err; else err=objT;    }    else if(typeof objT=='undefined') err='Error when calling BE-fun: '+k;    else err=objT;
+    
+    if(res.finished) return;
+    else if(err){
+      if(typeof err=='object' && err.name=='ErrorClient') this.mesO(err); else this.mesEO(err);     return;
+    }
+    else this.Out.dataArr.push(result);
   }
-  self.mesO();
+  this.mesO();
+  
 }
 
 
@@ -195,12 +177,11 @@ ReqBE.prototype.interpretInput=function(){
 /******************************************************************************
  * loginGetGraph
  ******************************************************************************/
-ReqBE.prototype.loginGetGraph=function(callback,inObj){
-  var self=this, req=this.req, res=this.res, site=req.site, sessionID=req.sessionID, objQS=req.objQS;
-  var fiber=Fiber.current;
+ReqBE.prototype.loginGetGraph=function*(inObj){
+  var req=this.req, flow=req.flow, res=this.res, site=req.site, sessionID=req.sessionID, objQS=req.objQS;
   var strFun=inObj.fun;
   var Ou={};
-  //if(!this.sessionMain.userInfoFrDB){ this.sessionMain.userInfoFrDB=extend({},specialistDefault); setSessionMain.call(this);  }
+  //if(!this.sessionMain.userInfoFrDB){ this.sessionMain.userInfoFrDB=extend({},specialistDefault); yield* setRedis(flow, req.sessionID+'_Main', this.sessionMain, maxUnactivity); }
   
 
   var strIP=inObj.IP;
@@ -218,19 +199,13 @@ ReqBE.prototype.loginGetGraph=function(callback,inObj){
 
   var arrT = Object.keys(objForm).map(function (key) { return key+'='+objForm[key]; }), strQuery=arrT.join('&'); 
   //if(strQuery.length) uToGetToken+='?'+strQuery;
-  //var reqStream=requestMod.get(uToGetToken).on('error', function(err) { if(err) console.log(err);  })
-  var reqStream=requestMod.post({url:uToGetToken, form: objForm},  function(err) { if(err) console.log(err);  })
-  var semCB=0, semY=0, boDoExit=0, buf;
-  var myConcat=concat(function(bufT){ 
-    buf=bufT
-    if(semY)fiber.run(); semCB=1;
-  });
-  reqStream.pipe(myConcat);
-  if(!semCB){semY=1; Fiber.yield();}  if(boDoExit==1) {callback('exited'); return; }
+  var semY=0, semCB=0, err, response, body;
+  var reqStream=requestMod.post({url:uToGetToken, form: objForm},  function(errT, responseT, bodyT) { err=errT; response=responseT; body=bodyT; if(semY)flow.next(); semCB=1;  }); if(!semCB){semY=1; yield;}
+  var buf=body;
 
  
-  try{ var objT=JSON.parse(buf.toString()); }catch(e){ console.log(e); res.out500('Error in JSON.parse, '+e);  callback('exited'); debugger; return; }
-  if('error' in objT) { var m=objT.error.message; console.log(m); res.out500(m);  callback('exited'); debugger; return; }
+  try{ var objT=JSON.parse(buf.toString()); }catch(e){ return [e]; }
+  if('error' in objT) { var m=objT.error.message; return [new Error(m)]; }
   var access_token=this.access_token=objT.access_token;
   //var access_token=this.access_token=inObj.access_token;
 
@@ -249,26 +224,20 @@ ReqBE.prototype.loginGetGraph=function(callback,inObj){
   } 
   var arrT = Object.keys(objForm).map(function (key) { return key+'='+objForm[key]; }), strQuery=arrT.join('&'); 
   if(strQuery.length) uGraph+='?'+strQuery;
-  var reqStream=requestMod.get(uGraph).on('error', function(err) { if(err) console.log(err);  });
-  //var reqStream=requestMod.post({url:uGraph, form: objForm},  function(err) { if(err) console.log(err);  })
-  var semCB=0, semY=0, boDoExit=0, buf;
-  var myConcat=concat(function(bufT){ 
-    buf=bufT
-    if(semY)fiber.run(); semCB=1;
-  });
-  reqStream.pipe(myConcat);
-  if(!semCB){semY=1; Fiber.yield();}  if(boDoExit==1) {callback('exited'); return; }
+  var semY=0, semCB=0, err, response, body;
+  var reqStream=requestMod.get(uGraph,  function(errT, responseT, bodyT) { err=errT; response=responseT; body=bodyT; if(semY)flow.next(); semCB=1;  }); if(!semCB){semY=1; yield;}
+  var buf=body;
+  
 
-  //var tmp=JSON.myParse(buf.toString()), err=tmp[0], objGraph=tmp[1];    if(err) { console.log(err); res.out500('Error in JSON.parse, '+err); callback('exited'); debugger; return; }
-  try{ var objGraph=JSON.parse(buf.toString()); }catch(e){ console.log(e); res.out500('Error in JSON.parse, '+e);  callback('exited'); debugger; return; }
-  self.objGraph=objGraph;
+  try{ var objGraph=JSON.parse(buf.toString()); }catch(e){ return [e]; }
+  this.objGraph=objGraph;
 
     // interpretGraph
-  if('error' in objGraph) {console.log('Error accessing data from ID provider: '+objGraph.error.type+' '+objGraph.error.message+'<br>');  debugger; return; }
+  if('error' in objGraph) {var {type,message}=objGraph.error, tmp='Error accessing data from ID provider: '+type+' '+message+'<br>';  return [new Error(tmp)]; }
 
 
   if(strIP=='fb'){ 
-    if(!objGraph.verified) { var tmp="Your facebook account is not verified. Try search internet for  \"How to verify facebook account\".";  res.out500(tmp);   return; }
+    if(!objGraph.verified) { var tmp="Your facebook account is not verified. Try search internet for  \"How to verify facebook account\".";    return [new ErrorClient(tmp)]; }
     var IP='fb', idIP=objGraph.id, nameIP=objGraph.name, image=objGraph.picture.data.url, email=objGraph.email;
   }else if(strIP=='google'){
     var IP='google', idIP=objGraph.id, nameIP=objGraph.name.givenName+' '+objGraph.name.familyName, image=objGraph.image.url;
@@ -277,26 +246,21 @@ ReqBE.prototype.loginGetGraph=function(callback,inObj){
     //var IP='idplace', idIP=objGraph.idUser, nameIP=objGraph.name, image='';
   }
 
-  if(typeof idIP=='undefined') {console.log("Error idIP is empty");}  else if(typeof nameIP=='undefined' ) {nameIP=idIP;}
+  if(typeof idIP=='undefined') { return [new Error("Error idIP is empty")];}
+  if(typeof nameIP=='undefined' ) {nameIP=idIP;}
   extend(this,{IP:IP, idIP:idIP, nameIP:nameIP, image:image, email:email, timeZone:inObj.timeZone});
-
-
+  
   if(['userFun', 'fetchFun', 'getSecretFun'].indexOf(strFun)!=-1){
-    var  semCB=0, semY=0, err, result; 
-    this[strFun](function(errT,resultT){ err=errT; result=resultT;  if(semY)fiber.run(); semCB=1;  }, inObj);  if(!semCB){semY=1; Fiber.yield();}
-    if(err){ if(err!='exited') res.out500(err); callback('exited'); return; }
+    var [err, result]=yield *this[strFun](inObj);  if(err) return [err];
     if(result) Ou.resultOfFun=result;
   }
 
-
-
-
-  callback(null,[Ou]);
+  return [null, [Ou]];
 }
 
 
-ReqBE.prototype.userFun=function(callback,inObj){
-  var self=this, req=this.req, res=this.res, site=req.site,  siteName=site.siteName, userTab=site.TableName.userTab;
+ReqBE.prototype.userFun=function*(inObj){
+  var req=this.req, flow=req.flow, res=this.res, site=req.site,  siteName=site.siteName, userTab=site.TableName.userTab;
   var Ou={}; 
    
   var password=randomHash();
@@ -304,28 +268,22 @@ ReqBE.prototype.userFun=function(callback,inObj){
   Sql.push("CALL "+siteName+"loginWExternalIP(?,?,?,?,?);"); Val.push(this.idIP, this.nameIP, this.image, this.email, this.timeZone);
 
   var sql=Sql.join('\n');
-  var fiber = Fiber.current, semCB=0, semY=0, boDoExit=0, results; 
-  myQueryF(sql, Val, mysqlPool, function(err, resultsT) {
-    if(err){ res.out500(err); boDoExit=1; return; }
-    results=resultsT;
-    if(semY)fiber.run(); semCB=1;
-  });
-  if(!semCB){semY=1; Fiber.yield();}  if(boDoExit==1) {callback('exited'); return; }
-
+  var [err, results]=yield* myQueryGen(flow, sql, Val, mysqlPool); if(err) return [err];
+  
   var messA=results[0][0].mess;
   var boOK=messA=='ok';
-  if(!boOK) {this.mesO(messA); callback('exited'); return; }
+  if(!boOK) { return [new Error(messA)]; }
   var idUser=Number(results[1][0].idUser);
-  self.sessionMain.idUser=idUser;
-  setSessionMain.call(self);
-  callback(null, Ou);
+  this.sessionMain.idUser=idUser;
+  yield* setRedis(flow, req.sessionID+'_Main', this.sessionMain, maxUnactivity);
+  return [null, Ou];
 }
 
-ReqBE.prototype.fetchFun=function(callback,inObj){
-  var self=this, req=this.req, res=this.res, site=req.site,  siteName=site.siteName, userTab=site.TableName.userTab;
+ReqBE.prototype.fetchFun=function*(inObj){
+  var req=this.req, flow=req.flow, res=this.res, site=req.site,  siteName=site.siteName, userTab=site.TableName.userTab;
   var Ou={}; 
    
-  if(typeof this.sessionMain!='object' || !('idUser' in this.sessionMain)) { self.mes('No session'); callback(null,[Ou]); return;}
+  if(typeof this.sessionMain!='object' || !('idUser' in this.sessionMain)) { return [new ErrorClient('No session')];}
   var idUser=this.sessionMain.idUser;
 
   var password=randomHash();
@@ -345,73 +303,65 @@ Val.push(this.idIP, this.nameIP, this.image, this.email, this.email);
 Val.push(this.idIP, this.nameIP, this.image, this.email);
 Val.push(this.idIP, this.nameIP, this.image, this.email, this.timeZone, idUser);
   var sql=Sql.join('\n');
-  var fiber = Fiber.current, semCB=0, semY=0, boDoExit=0, results; 
-  myQueryF(sql, Val, mysqlPool, function(err, resultsT) {
-    if(err){ res.out500(err); boDoExit=1; return; }
-    results=resultsT;
-    if(semY)fiber.run(); semCB=1;
-  });
-  if(!semCB){semY=1; Fiber.yield();}  if(boDoExit==1) {callback('exited'); return; }
+  var [err, results]=yield* myQueryGen(flow, sql, Val, mysqlPool); if(err) return [err];
 
   var c=results.affectedRows, boOK, mestmp; 
   if(c>0) {boOK=1; mestmp="Data changed"; } else {boOK=1; mestmp="Nothing changed"; }
-  self.mes(mestmp);
+  this.mes(mestmp);
   Ou.boOK=boOK; 
-  callback(null, Ou);
+  return [null, Ou];
 }
-ReqBE.prototype.getSecretFun=function(callback,inObj){
-  var self=this, req=this.req, res=this.res, site=req.site,  siteName=site.siteName, userTab=site.TableName.userTab;
+ReqBE.prototype.getSecretFun=function*(inObj){
+  var req=this.req, flow=req.flow, res=this.res, site=req.site,  siteName=site.siteName, userTab=site.TableName.userTab;
   var Ou={};
   var appTab=site.TableName.appTab
    
-  if(typeof this.sessionMain!='object' || !('idUser' in this.sessionMain)) { self.mes('No session'); callback(null,[Ou]); return;}
+  if(typeof this.sessionMain!='object' || !('idUser' in this.sessionMain)) { return [new ErrorClient('No session')];}
   var idUser=this.sessionMain.idUser;
 
-  var sql="SELECT secret FROM "+appTab+" WHERE idOwner=? AND idApp=?;";
-  var Val=[idUser, inObj.idApp];
-  var fiber = Fiber.current, semCB=0, semY=0, err, results; 
-  myQueryF(sql, Val, mysqlPool, function(errT, resultsT) { err=errT;  results=resultsT;    if(semY)fiber.run(); semCB=1;  });  if(!semCB){semY=1; Fiber.yield();} 
-  if(err){ self.mesEO(err); callback('exited');  return;  }
-  Ou.secret=results[0].secret;
-  //callback(null,0);
-  callback(null, Ou);
+  var Sql=[], Val=[]; 
+  Sql.push("SELECT @idUser:=idUser FROM "+userTab+" WHERE idFB=?;");
+  Sql.push("SELECT @idUser AS idUser;");     Val.push(this.idIP);
+  Sql.push("SELECT secret FROM "+appTab+" WHERE idOwner=@idUser AND idApp=?;");    Val.push(inObj.idApp);
+  //var sql="SELECT idUser, secret FROM "+userTab+" u JOIN "+appTab+" a ON u.idUser=a.idOwner WHERE u.idFB=? AND a.idApp=?;";
+  //var Val=[this.idIP, inObj.idApp];
+  var sql=Sql.join('\n');
+  var [err, results]=yield* myQueryGen(flow, sql, Val, mysqlPool); if(err) return [err];
+  //if(results.length!=1) {  return [new ErrorClient('results.length='+results.length)]; }
+  if(results[1][0].idUser!=idUser) return [new ErrorClient('Wrong user')];
+  if(results[2].length!=1) return [new Error('Found '+results[2].length+' results')];
+  Ou.secret=results[2][0].secret;
+  return [null, Ou];
 }
 
 
 
-ReqBE.prototype.deleteExtId=function(callback,inObj){ // Remove link to the external IP
-  var self=this, req=this.req, res=this.res, site=req.site,  siteName=site.siteName, userTab=site.TableName.userTab;
+ReqBE.prototype.deleteExtId=function*(inObj){ // Remove link to the external IP
+  var req=this.req, flow=req.flow, res=this.res, site=req.site,  siteName=site.siteName, userTab=site.TableName.userTab;
    
   var Ou={}; 
-  if(typeof this.sessionMain!='object' || !('idUser' in this.sessionMain)) { self.mes('No session'); callback(null,[Ou]); return;}
+  if(typeof this.sessionMain!='object' || !('idUser' in this.sessionMain)) {return [new ErrorClient('No session')]; }
   var idUser=this.sessionMain.idUser;
 
   var Sql=[], Val=[]; 
   Sql.push("UPDATE "+userTab+" SET idFB=NULL, image='', tIdFB=now(), tImage=IF(imageHash IS NULL, now(), tImage) WHERE idUser=?"); Val.push(idUser);
 
   var sql=Sql.join('\n');
-  var fiber = Fiber.current, semCB=0, semY=0, boDoExit=0, results; 
-  myQueryF(sql, Val, mysqlPool, function(err, resultsT) {
-    if(err){ self.mesEO(err); boDoExit=1; return; }
-    results=resultsT;
-    if(semY)fiber.run(); semCB=1;
-  });
-  if(!semCB){semY=1; Fiber.yield();}  if(boDoExit==1) {callback('exited'); return; }
+  var [err, results]=yield* myQueryGen(flow, sql, Val, mysqlPool); if(err) return [err];
 
   var c=results.affectedRows, boOK, mestmp; 
   if(c>0) {boOK=1; mestmp="Data deleted"; } else {boOK=1; mestmp="Nothing changed"; }
-  self.mes(mestmp);
+  this.mes(mestmp);
   Ou.boOK=boOK;      
-  callback(null, [Ou]);
+  return [null, [Ou]];
 
 }
 
 
-ReqBE.prototype.specSetup=function(callback,inObj){
-  var self=this, req=this.req, site=req.site,  siteName=site.siteName, Ou={};
+ReqBE.prototype.specSetup=function*(inObj){
+  var req=this.req, flow=req.flow, site=req.site,  siteName=site.siteName, Ou={};
   var userTab=site.TableName.userTab;
-  if(typeof this.sessionMain!='object' || !('idUser' in this.sessionMain)) { self.mes('No session'); callback(null,[Ou]); return;}
-  var fiber = Fiber.current, boDoExit=0;
+  if(typeof this.sessionMain!='object' || !('idUser' in this.sessionMain)) { return [new ErrorClient('No session')];}
 
 
   var idApp=inObj.idApp||null;
@@ -419,67 +369,58 @@ ReqBE.prototype.specSetup=function(callback,inObj){
   var Sql=[], Val=[];
   Sql.push("CALL "+siteName+"getUserAppInfo(?,?);"); Val.push(this.sessionMain.idUser, idApp);
 
-  var sql=Sql.join('\n'), results;
-  myQueryF(sql, Val, mysqlPool, function(err, resultsT) {
-    if(err){self.mesEO(err); boDoExit=1;} 
-    else{ 
-      results=resultsT;
-    }
-    fiber.run();
-  });
-  Fiber.yield();  if(boDoExit==1) {callback('exited'); return; }
+  var sql=Sql.join('\n');
+  var [err, results]=yield* myQueryGen(flow, sql, Val, mysqlPool); if(err) return [err];
 
 
-  self.GRet.userInfoFrDB={};
+  //this.GRet.userInfoFrDB={};
   if(results[0].length)  {  
     delete results[0][0].idUser;
-    self.GRet.userInfoFrDB=results[0][0];
-    //if(results[1].length) self.GRet.userInfoFrDB.imageHash=results[1][0].imageHash;
+    this.GRet.userInfoFrDB=results[0][0];
+    //if(results[1].length) this.GRet.userInfoFrDB.imageHash=results[1][0].imageHash;
   } else{
-    if(idUser!==null) { resetSessionMain.call(this); idUser=null;}
-    //res.out500("User not found (try reload)");  return;
+    if(idUser!==null) { 
+      this.sessionMain={};  this.GRet.userInfoFrDB={};  var tmp=yield* cmdRedis(flow, 'del',[req.sessionID+'_Main']);
+      idUser=null;
+    }
+    // return [new Error("User not found?!? (try reload)")];
   }
   
   
-  var objApp=null; if(results[1].length) self.GRet.objApp=results[1][0];  // name, created, redir_uri, imageHash
-  var objUApp=null; if(results[2].length) self.GRet.objUApp=results[2][0];  //scope, tAccess, access_token, maxUnactivityToken, code
+  var objApp=null; if(results[1].length) this.GRet.objApp=results[1][0];  // name, created, redir_uri, imageHash
+  var objUApp=null; if(results[2].length) this.GRet.objUApp=results[2][0];  //scope, tAccess, access_token, maxUnactivityToken, code
 
-  callback(null,[Ou]);
+  return [null, [Ou]];
 }
 
-ReqBE.prototype.logout=function(callback,inObj){
-  var self=this, req=this.req;
-  resetSessionMain.call(this); 
-  this.GRet.userInfoFrDB={};
-  self.mes('Logged out'); callback(null,[0]); return;
+ReqBE.prototype.logout=function*(inObj){
+  var req=this.req, flow=req.flow, Ou={};
+  this.sessionMain={};  this.GRet.userInfoFrDB={};  var tmp=yield* cmdRedis(flow, 'del',[req.sessionID+'_Main']);
+  this.mes('Logged out'); return [null, [Ou]];
 }
-ReqBE.prototype.login=function(callback,inObj){
-  var self=this, req=this.req, site=req.site, Ou={};
+
+ReqBE.prototype.login=function*(inObj){
+  var req=this.req, flow=req.flow, site=req.site, Ou={};
   var userTab=site.TableName.userTab;
-  var fiber = Fiber.current, boDoExit=0;
   var Sql=[], Val=[];
-  var tmp='email'; if(!(tmp in inObj)) { this.mesO('The parameter: '+tmp+' is required'); callback('exited'); return; }
-  var tmp='password'; if(!(tmp in inObj)) { this.mesO('The parameter: '+tmp+' is required'); callback('exited'); return; }
+  var StrRequired=['email', 'password'];
+  for(var i=0; i<StrRequired.length; i++){      var tmp=StrRequired[i]; if(!(tmp in inObj)) { return [new ErrorClient('The parameter: '+tmp+' is required')]; }     }
   
 
   Sql.push("SELECT idUser, password FROM "+userTab+" WHERE email=?");
   Val.push(inObj.email);
 
-  var sql=Sql.join('\n'), results;
-  myQueryF(sql, Val, mysqlPool, function(err, resultsT) {
-    if(err){self.mesEO(err); boDoExit=1;} 
-    else{ results=resultsT;    }
-    fiber.run();
-  });
-  Fiber.yield();  if(boDoExit==1) {callback('exited'); return; }
-  if(results.length==0) {this.mesO('Email not found'); callback('exited'); return; }
+  var sql=Sql.join('\n');
+  var [err, results]=yield* myQueryGen(flow, sql, Val, mysqlPool); if(err) return [err];
+  
+  if(results.length==0) return [new ErrorClient('Email not found')];
   var objT=results[0];
-  if(objT.password!==inObj.password) {this.mesO('Wrong password'); callback('exited'); return; }
-  //self.GRet.userInfoFrDB=objT;
-  var idUser=self.sessionMain.idUser=Number(objT.idUser);
-  setSessionMain.call(this);
+  if(objT.password!==inObj.password) { return [new ErrorClient('Wrong password')]; }
+  //this.GRet.userInfoFrDB=objT;
+  var idUser=this.sessionMain.idUser=Number(objT.idUser);
+  yield* setRedis(flow, req.sessionID+'_Main', this.sessionMain, maxUnactivity);
 
-  callback(null,[Ou]);
+  return [null, [Ou]];
 }
 
 
@@ -488,14 +429,14 @@ ReqBE.prototype.login=function(callback,inObj){
  * User-functions
  *********************************************************************************************/
 
-ReqBE.prototype.UUpdate=function(callback,inObj){ // writing needSession
-  var self=this, req=this.req, site=req.site, siteName=site.siteName;
+ReqBE.prototype.UUpdate=function*(inObj){ // writing needSession
+  var req=this.req, flow=req.flow, site=req.site, siteName=site.siteName;
   var userTab=site.TableName.userTab;
   var Ou={}; 
-  if(typeof this.sessionMain!='object' || !('idUser' in this.sessionMain)) { self.mes('No session'); callback(null,[Ou]); return;}
+  if(typeof this.sessionMain!='object' || !('idUser' in this.sessionMain)) { return [new ErrorClient('No session')];}
   var idUser=this.sessionMain.idUser;
 
-  if(!/\S+@\S+/.test(inObj.email)) { self.mesEO('Invalid email'); callback('exited'); return; }
+  if(!/\S+@\S+/.test(inObj.email)) return [new ErrorClient('Invalid email')];
     
 
   var Sql=[], Val=[];
@@ -559,35 +500,34 @@ WHERE idUser=?;");
   Val=Val.concat(idUser);
 
   var sql=Sql.join('\n');
-  myQueryF(sql, Val, mysqlPool, function(err, results) {
-    if(err){self.mesEO(err); callback('exited');  return; } 
-    else{
-      self.mes('Data updated');      
-      callback(null, [Ou]);
-    }
-  });
+  var [err, results]=yield* myQueryGen(flow, sql, Val, mysqlPool); if(err) return [err];
+  this.mes('Data updated');      
+  return [null, [Ou]];
 }
 //'name', 'password', 'image', 'email', 'telephone',    'country', 'federatedState', 'county', 'city', 'zip', 'address',    'fb', 'google', 'idNational', 'birthdate', 'motherTongue', 'gender' 
 
 
-ReqBE.prototype.createUser=function(callback,inObj){ // writing needSession
-  var self=this, req=this.req, site=req.site;
+ReqBE.prototype.createUser=function*(inObj){ // writing needSession
+  var req=this.req, flow=req.flow, site=req.site;
   var userTab=site.TableName.userTab;
   var Ou={}; //debugger
-  var fiber = Fiber.current;
 
   //var tmp=this.sessionMain.userInfoFrIP, IP=tmp.IP, idIP=tmp.idIP, nameIP=tmp.nameIP, image=tmp.image;
 
     // Check reCaptcha with google
   var uGogCheck = "https://www.google.com/recaptcha/api/siteverify"; 
   var objForm={  secret:strReCaptchaSecretKey, response:inObj['g-recaptcha-response'], remoteip:req.connection.remoteAddress  };
-  var reqStream=requestMod.post({url:uGogCheck, form: objForm},  function(err) { if(err) console.log(err);  });
-  var buf, myConcat=concat(function(bufT){ buf=bufT; fiber.run(); });  reqStream.pipe(myConcat); Fiber.yield();
-  var data = JSON.parse(buf.toString());
-  //console.log('Data: ', data);
-  if(!data.success) { self.mesEO('reCaptcha test not successfull'); callback('exited'); return; }
+  //var reqStream=requestMod.post({url:uGogCheck, form: objForm},  function(err) { if(err) console.log(err);  });
+  //var buf, myConcat=concat(function(bufT){ buf=bufT; flow.next(); });  reqStream.pipe(myConcat); yield;
   
-  if(!/\S+@\S+/.test(inObj.email)) { self.mesEO('Invalid email'); callback('exited'); return; }
+  var semY=0, semCB=0, err, response, body;
+  var reqStream=requestMod.post({url:uGogCheck, form: objForm},  function(errT, responseT, bodyT) { err=errT; response=responseT; body=bodyT; if(semY)flow.next(); semCB=1;  }); if(!semCB){semY=1; yield;}
+  var buf=body;
+  try{ var data = JSON.parse(buf.toString()); }catch(e){ return [e]; }
+  //console.log('Data: ', data);
+  if(!data.success) return [new ErrorClient('reCaptcha test not successfull')];
+  
+  if(!/\S+@\S+/.test(inObj.email)) return [new ErrorClient('Invalid email')]; 
   
   var Sql=[]; 
   Sql.push("INSERT INTO "+userTab+" SET name=?, password=?, email=?, telephone=?, country=?, federatedState=?, county=?, city=?, zip=?, address=?, timeZone=?, idNational=?, birthdate=?, motherTongue=?, gender=?,\n\
@@ -597,32 +537,28 @@ ReqBE.prototype.createUser=function(callback,inObj){ // writing needSession
   //Sql.push("UPDATE "+userTab+" SET imageHash=LAST_INSERT_ID()%32 WHERE idUser=LAST_INSERT_ID();");
 
   var sql=Sql.join('\n');
-  var boDoExit=0;
-  myQueryF(sql, Val, mysqlPool, function(err, results){
-    var boOK, mestmp;
-    if(err && (typeof err=='object') && err.code=='ER_DUP_ENTRY'){boOK=0; mestmp='dup email';}
-    else if(err){
-      self.mesEO(err); boDoExit=1;
-    }
-    else{
-      boOK=1; mestmp="Done"; 
-      var idUser=self.sessionMain.idUser=Number(results[1][0].idUser);
-    }
-    self.mes(mestmp);
-    extend(Ou, {boOK:boOK});
-    fiber.run();
-  });
-  Fiber.yield();  if(boDoExit==1) {callback('exited'); return; }
-  setSessionMain.call(this);
-  callback(null, [Ou]);
+  var [err, results]=yield* myQueryGen(flow, sql, Val, mysqlPool); 
+  
+  var boOK, mestmp;
+  if(err && (typeof err=='object') && err.code=='ER_DUP_ENTRY'){boOK=0; mestmp='dup email';}
+  else if(err) return [err];
+  else{
+    boOK=1; mestmp="Done"; 
+    var idUser=this.sessionMain.idUser=Number(results[1][0].idUser);
+  }
+  this.mes(mestmp);
+  extend(Ou, {boOK:boOK});
+  yield* setRedis(flow, req.sessionID+'_Main', this.sessionMain, maxUnactivity);
+  
+  return [null, [Ou]];
 }
 
 
-ReqBE.prototype.setConsent=function(callback,inObj){
-  var self=this, req=this.req, site=req.site, siteName=site.siteName;
+ReqBE.prototype.setConsent=function*(inObj){
+  var req=this.req, flow=req.flow, site=req.site, siteName=site.siteName;
   var appTab=site.TableName.appTab, user2AppTab=site.TableName.user2AppTab;
   var Ou={};
-  if(typeof this.sessionMain!='object' || !('idUser' in this.sessionMain)) { self.mes('No session'); callback(null,[Ou]); return;}
+  if(typeof this.sessionMain!='object' || !('idUser' in this.sessionMain)) { return [new ErrorClient('No session')];}
   var idUser=this.sessionMain.idUser;
   //var access_token=randomHash();
   //var code=randomHash();
@@ -637,82 +573,69 @@ ReqBE.prototype.setConsent=function(callback,inObj){
   //var Val=[idUser, inObj.idApp, inObj.scope, access_token, maxUnactivityToken];
   
   var sql=Sql.join('\n');
-  myQueryF(sql, Val, mysqlPool, function(err, results){
-    var boOK, mestmp;
-    //if(err && (typeof err=='object') && err.code=='ER_DUP_ENTRY'){boOK=0; mestmp='dup key';} 
-    if(err){
-      self.mesEO(err); callback('exited');  return;
-    }
-    else{
-      boOK=1; mestmp="Done";
-    }
-    self.mes(mestmp);
-    //self.GRet.objUApp={scope:inObj.scope, tAccess:tAccess, access_token:access_token, maxUnactivityToken:inObj.maxUnactivityToken};
-    extend(Ou, {boOK:boOK});
-    callback(null, [Ou]);
+  var [err, results]=yield* myQueryGen(flow, sql, Val, mysqlPool); 
+  
+  var boOK, mestmp;
+  //if(err && (typeof err=='object') && err.code=='ER_DUP_ENTRY'){boOK=0; mestmp='dup key';} 
+  if(err) return [err];
+  else{
+    boOK=1; mestmp="Done";
+  }
+  this.mes(mestmp);
+  //this.GRet.objUApp={scope:inObj.scope, tAccess:tAccess, access_token:access_token, maxUnactivityToken:inObj.maxUnactivityToken};
+  extend(Ou, {boOK:boOK});
+  return [null, [Ou]];
     
-  });
+  
 }
 
-ReqBE.prototype.UDelete=function(callback,inObj){  // writing needSession
-  var self=this, req=this.req, res=this.res, site=req.site;
+ReqBE.prototype.UDelete=function*(inObj){  // writing needSession
+  var req=this.req, flow=req.flow, res=this.res, site=req.site;
   var userTab=site.TableName.userTab;
   var Ou={};
-  if(typeof this.sessionMain!='object' || !('idUser' in this.sessionMain)) { self.mes('No session'); callback(null,[Ou]); return;}
+  if(typeof this.sessionMain!='object' || !('idUser' in this.sessionMain)) { return [new ErrorClient('No session')];}
   var idUser=this.sessionMain.idUser;
   
   var Sql=[], Val=[];
   Sql.push("DELETE FROM "+userTab+" WHERE idUser=?;"); Val.push(idUser);
   Sql.push("SELECT count(*) AS n FROM "+userTab+";");
   var sql=Sql.join('\n'); 
-  var fiber = Fiber.current, err, results; 
-  myQueryF(sql, Val, mysqlPool, function(errT, resultsT) {
-    err=errT;  results=resultsT;
-    fiber.run();  
-  });
-  Fiber.yield();
-  if(err){self.mesEO(err); callback('exited');  return; } 
+  var [err, results]=yield* myQueryGen(flow, sql, Val, mysqlPool); if(err) return [err];
 
   var c=results[0].affectedRows, boOK, mestmp; 
-  if(c==0) {self.mesEO("Nothing changed"); callback('exited');  return; }
-  self.mes("Entry deleted");  
+  if(c==0) return [new Error("Nothing changed")];
+  this.mes("Entry deleted");  
   //site.boNUserChanged=1; // variabel should be called boNUsers changed or something..
-  site.nUser=Number(results[1][0].n);  
-  resetSessionMain.call(this);
-  this.GRet.userInfoFrDB={};
-  callback(null, [Ou]);
+  site.nUser=Number(results[1][0].n);
+  this.sessionMain={};  this.GRet.userInfoFrDB={};  var tmp=yield* cmdRedis(flow, 'del',[req.sessionID+'_Main']);
+  return [null, [Ou]];
 }
 
 
 /********************************************************************************
  * userAppList
  ********************************************************************************/
-ReqBE.prototype.userAppListGet=function(callback,inObj){ 
-  var self=this, req=this.req, site=req.site;
+ReqBE.prototype.userAppListGet=function*(inObj){ 
+  var req=this.req, flow=req.flow, site=req.site;
   var appTab=site.TableName.appTab, user2AppTab=site.TableName.user2AppTab;
-  if(typeof this.sessionMain!='object' || !('idUser' in this.sessionMain)) { self.mes('No session'); callback(null,[Ou]); return;}
+  if(typeof this.sessionMain!='object' || !('idUser' in this.sessionMain)) { return [new ErrorClient('No session')];}
   var idUser=this.sessionMain.idUser;
 
   var sql="SELECT a.idApp AS idApp, a.name AS appName, scope, UNIX_TIMESTAMP(tAccess) AS tAccess, imageHash FROM "+user2AppTab+" ua JOIN  "+appTab+" a ON ua.idApp=a.idApp WHERE idUser=?;";
 
   var Val=[idUser];
-  var fiber=Fiber.current, semY=0, semCB=0, err, results;
-  myQueryF(sql, Val, mysqlPool, function(errT, resultsT) {
-    err=errT;  results=resultsT;
-    if(semY) { fiber.run(); } semCB=1;
-  });
-  if(!semCB) { semY=1; Fiber.yield();}
-  if(err){ self.mesEO(err); callback('exited');  return;  }
+  var [err, results]=yield* myQueryGen(flow, sql, Val, mysqlPool); if(err) return [err];
+  
   var Ou=arrObj2TabNStrCol(results); 
-  self.mes("Got "+results.length+" entries"); 
+  this.mes("Got "+results.length+" entries"); 
   extend(Ou, {boOK:1,nEntry:results.length});
-  callback(null, [Ou]);
+  return [null, [Ou]];
 }
   //idUser, idApp, scope, tAccess, access_token, maxUnactivityToken
-ReqBE.prototype.userAppSet=function(callback,inObj){
-  var self=this, req=this.req, site=req.site;
+ReqBE.prototype.userAppSet=function*(inObj){
+  var req=this.req, flow=req.flow, site=req.site;
   var appTab=site.TableName.appTab, user2AppTab=site.TableName.user2AppTab;
-  if(typeof this.sessionMain!='object' || !('idUser' in this.sessionMain)) { self.mes('No session'); callback(null,[Ou]); return;}
+  if(typeof this.sessionMain!='object' || !('idUser' in this.sessionMain)) { return [new ErrorClient('No session')];}
   var idUser=this.sessionMain.idUser;
   var Ou={};
   var access_token=randomHash();
@@ -724,91 +647,78 @@ ReqBE.prototype.userAppSet=function(callback,inObj){
   //var sql="INSERT INTO "+user2AppTab+" (idUser, idApp, scope, tAccess, access_token, maxUnactivityToken) VALUES (?, ?, ?, now(), ?, ?);";
   //var Val=[idUser, inObj.idApp, inObj.scope, access_token, maxUnactivityToken];
   
-  myQueryF(sql, Val, mysqlPool, function(err, results){
-    var boOK, mestmp;
-    //if(err && (typeof err=='object') && err.code=='ER_DUP_ENTRY'){boOK=0; mestmp='dup key';} 
-    if(err){
-      self.mesEO(err); callback('exited');  return;
-    }
-    else{
-      boOK=1; mestmp="Done";
-    }
-    self.mes(mestmp);
-    //self.GRet.objUApp={scope:inObj.scope, tAccess:tAccess, access_token:access_token, maxUnactivityToken:inObj.maxUnactivityToken};
-    extend(Ou, {boOK:boOK});
-    callback(null, [Ou]);
+  var [err, results]=yield* myQueryGen(flow, sql, Val, mysqlPool);
+  
+  var boOK, mestmp;
+  //if(err && (typeof err=='object') && err.code=='ER_DUP_ENTRY'){boOK=0; mestmp='dup key';} 
+  if(err) return [err];
+  else{
+    boOK=1; mestmp="Done";
+  }
+  this.mes(mestmp);
+  //this.GRet.objUApp={scope:inObj.scope, tAccess:tAccess, access_token:access_token, maxUnactivityToken:inObj.maxUnactivityToken};
+  extend(Ou, {boOK:boOK});
+  return [null, [Ou]];
     
-  });
 }
-ReqBE.prototype.userAppDelete=function(callback,inObj){ 
-  var self=this, req=this.req, site=req.site;
+ReqBE.prototype.userAppDelete=function*(inObj){ 
+  var req=this.req, flow=req.flow, site=req.site;
   var appTab=site.TableName.appTab, user2AppTab=site.TableName.user2AppTab;
-  if(typeof this.sessionMain!='object' || !('idUser' in this.sessionMain)) { self.mes('No session'); callback(null,[Ou]); return;}
+  if(typeof this.sessionMain!='object' || !('idUser' in this.sessionMain)) { return [new ErrorClient('No session')];}
   var idUser=this.sessionMain.idUser;
   var Ou={};
   
   //var sql="DELETE au FROM "+user2AppTab+" ua JOIN  "+appTab+" a ON ua.idApp=a.idApp WHERE au.idUser=?;";
   var sql="DELETE FROM "+user2AppTab+" WHERE idUser=? AND idApp=?;";
   var Val=[idUser, inObj.idApp];
-  myQueryF(sql, Val, mysqlPool, function(err, results) {
-    if(err){self.mesEO(err); callback('exited');  return; } 
-    else{
-      var c=results.affectedRows, boOK, mestmp; 
-      if(c>0) {boOK=1; mestmp="Entry deleted"; } else {boOK=1; mestmp="Nothing changed"; }
-      self.mes(mestmp);
-      Ou.boOK=boOK;      
-      callback(null, [Ou]);
-    }
-  });
+  var [err, results]=yield* myQueryGen(flow, sql, Val, mysqlPool); if(err) return [err];
+  
+  var c=results.affectedRows, boOK, mestmp; 
+  if(c>0) {boOK=1; mestmp="Entry deleted"; } else {boOK=1; mestmp="Nothing changed"; }
+  this.mes(mestmp);
+  Ou.boOK=boOK;      
+  return [null, [Ou]];
+  
+  
 }
 
 
-ReqBE.prototype.devAppListGet=function(callback,inObj){ 
-  var self=this, req=this.req, site=req.site;
+ReqBE.prototype.devAppListGet=function*(inObj){ 
+  var req=this.req, flow=req.flow, site=req.site;
   var appTab=site.TableName.appTab;
-  if(typeof this.sessionMain!='object' || !('idUser' in this.sessionMain)) { self.mes('No session'); callback(null,[Ou]); return;}
+  if(typeof this.sessionMain!='object' || !('idUser' in this.sessionMain)) { return [new ErrorClient('No session')];}
   var idUser=this.sessionMain.idUser;
 
   var GRet=this.GRet;
   var sql="SELECT idApp, name AS appName, redir_uri, imageHash, UNIX_TIMESTAMP(created) AS created FROM "+appTab+" WHERE idOwner=?;";
   var Val=[idUser];
-  var fiber=Fiber.current, semY=0, semCB=0, err, results;
-  myQueryF(sql, Val, mysqlPool, function(errT, resultsT) {
-    err=errT;  results=resultsT;
-    if(semY) { fiber.run(); } semCB=1;
-  });
-  if(!semCB) { semY=1; Fiber.yield();}
-  if(err){ self.mesEO(err); callback('exited');  return;  }
+  var [err, results]=yield* myQueryGen(flow, sql, Val, mysqlPool); if(err) return [err];
+  
   var Ou=arrObj2TabNStrCol(results);
-  self.mes("Got "+results.length+" entries"); 
+  this.mes("Got "+results.length+" entries"); 
   extend(Ou, {boOK:1,nEntry:results.length});
-  callback(null, [Ou]);
+  return [null, [Ou]];
 }
-ReqBE.prototype.devAppSecret=function(callback,inObj){ 
-  var self=this, req=this.req, site=req.site;
+ReqBE.prototype.devAppSecret=function*(inObj){ 
+  var req=this.req, flow=req.flow, site=req.site;
   var appTab=site.TableName.appTab, userTab=site.TableName.userTab;
-  if(typeof this.sessionMain!='object' || !('idUser' in this.sessionMain)) { self.mes('No session'); callback(null,[Ou]); return;}
+  if(typeof this.sessionMain!='object' || !('idUser' in this.sessionMain)) { return [new ErrorClient('No session')];}
   var idUser=this.sessionMain.idUser;
 
   var Ou={};
   //var sql="SELECT secret FROM "+appTab+" WHERE idOwner=? AND idApp=?;";
   var sql="SELECT password, secret FROM "+userTab+" u JOIN "+appTab+" a ON u.idUser=a.idOwner WHERE u.idUser=? AND a.idApp=?;";
   var Val=[idUser, inObj.idApp];
-  var fiber=Fiber.current, semY=0, semCB=0, err, results;
-  myQueryF(sql, Val, mysqlPool, function(errT, resultsT) {
-    err=errT;  results=resultsT;
-    if(semY) { fiber.run(); } semCB=1;
-  });
-  if(!semCB) { semY=1; Fiber.yield();}
-  if(err){ self.mesEO(err); callback('exited');  return;  }
-  if(results[0].password!=inObj.password) {this.mesO('password missmatch'); callback('exited'); return;}
+  var [err, results]=yield* myQueryGen(flow, sql, Val, mysqlPool); if(err) return [err];
+  if(results.length!=1){ debugger;  return [new Error('results.length='+results.length)];}
+  if(results[0].password!=inObj.password) return [new ErrorClient('password missmatch')];
   Ou.secret=results[0].secret;
-  callback(null, [Ou]);
+  return [null, [Ou]];
 }
-ReqBE.prototype.devAppSet=function(callback,inObj){
-  var self=this, req=this.req, site=req.site;
+ReqBE.prototype.devAppSet=function*(inObj){
+  var req=this.req, flow=req.flow, site=req.site;
   var appTab=site.TableName.appTab;
-  if(typeof this.sessionMain!='object' || !('idUser' in this.sessionMain)) { self.mes('No session'); callback(null,[Ou]); return;}
+  if(typeof this.sessionMain!='object' || !('idUser' in this.sessionMain)) { return [new ErrorClient('No session')];}
   var idUser=this.sessionMain.idUser;
   var GRet=this.GRet;
   var Ou={};
@@ -829,59 +739,56 @@ ReqBE.prototype.devAppSet=function(callback,inObj){
   }
   
   var sql=Sql.join('\n');
-  myQueryF(sql, Val, mysqlPool, function(err, results){
-    var mestmp, idApp=inObj.idApp, imageHash;
-    if(err && (typeof err=='object') && err.code=='ER_DUP_ENTRY'){boOK=0; mestmp='dup key';}
-    else if(err){
-      self.mesEO(err); callback('exited'); 
-      Ou.boOK=0; return;
+  var [err, results]=yield* myQueryGen(flow, sql, Val, mysqlPool);
+  
+  
+  var mestmp, idApp=inObj.idApp, imageHash;
+  if(err && (typeof err=='object') && err.code=='ER_DUP_ENTRY'){boOK=0; mestmp='dup key';}
+  else if(err) return [err];
+  else{
+    mestmp="Done"; Ou.boOK=1;
+    if(!boUpd){
+      //extend(Ou, results[3][0]);
+      extend(Ou, results[1][0]);
     }
-    else{
-      mestmp="Done"; Ou.boOK=1;
-      if(!boUpd){
-        //extend(Ou, results[3][0]);
-        extend(Ou, results[1][0]);
-      }
-    }
-    self.mes(mestmp);
-    callback(null, [Ou]);
+  }
+  this.mes(mestmp);
+  return [null, [Ou]];
     
-  });
+  
 }
-ReqBE.prototype.devAppDelete=function(callback,inObj){ 
-  var self=this, req=this.req, site=req.site;
+ReqBE.prototype.devAppDelete=function*(inObj){ 
+  var req=this.req, flow=req.flow, site=req.site;
   var appTab=site.TableName.appTab;
-  if(typeof this.sessionMain!='object' || !('idUser' in this.sessionMain)) { self.mes('No session'); callback(null,[Ou]); return;}
+  if(typeof this.sessionMain!='object' || !('idUser' in this.sessionMain)) { return [new ErrorClient('No session')];}
   var idUser=this.sessionMain.idUser;
   var GRet=this.GRet;
   var Ou={};
   var sql="DELETE FROM "+appTab+" WHERE idOwner=? AND idApp=?";
   var Val=[idUser, inObj.idApp];
-  myQueryF(sql, Val, mysqlPool, function(err, results) {
-    if(err){self.mesEO(err); callback('exited');  return; } 
-    else{
-      var c=results.affectedRows, boOK, mestmp; 
-      if(c>0) {boOK=1; mestmp="Entry deleted"; } else {boOK=1; mestmp="Nothing changed"; }
-      self.mes(mestmp);
-      Ou.boOK=boOK;      
-      callback(null, [Ou]);
-    }
-  });
+  var [err, results]=yield* myQueryGen(flow, sql, Val, mysqlPool); if(err) return [err];
+  
+  var c=results.affectedRows, boOK, mestmp; 
+  if(c>0) {boOK=1; mestmp="Entry deleted"; } else {boOK=1; mestmp="Nothing changed"; }
+  this.mes(mestmp);
+  Ou.boOK=boOK;      
+  return [null, [Ou]];
+  
+  
 }
 
 
 
-ReqBE.prototype.changePW=function(callback,inObj){ 
-  var self=this, req=this.req, site=req.site, siteName=site.siteName;
+ReqBE.prototype.changePW=function*(inObj){ 
+  var req=this.req, flow=req.flow, site=req.site, siteName=site.siteName;
   var userTab=site.TableName.userTab;
   var Ou={boOK:0};
-  if(typeof this.sessionMain!='object' || !('idUser' in this.sessionMain)) { self.mes('No session'); callback(null,[Ou]); return;}
+  if(typeof this.sessionMain!='object' || !('idUser' in this.sessionMain)) { return [new ErrorClient('No session')];}
   var idUser=this.sessionMain.idUser
   var passwordOld=inObj.passwordOld;
   var passwordNew=inObj.passwordNew;
 
 
-  var fiber=Fiber.current;
 
   var Sql=[], Val=[];
   //Sql.push("UPDATE "+userTab+" SET password=? WHERE password=? AND idUser=?;");
@@ -889,52 +796,37 @@ ReqBE.prototype.changePW=function(callback,inObj){
   Sql.push("CALL "+siteName+"setPassword(?,?,?);"); Val.push(idUser, passwordOld, passwordNew);
 
   var sql=Sql.join('\n');
-  var boDoExit=0, results;
-  myQueryF(sql, Val, mysqlPool, function(err, resultsT) {
-    if(err){self.mesEO(err); boDoExit=1;} 
-    else{ results=resultsT;    }
-    fiber.run();
-  });
-  Fiber.yield();  if(boDoExit==1) {callback('exited'); return; }
+  var [err, results]=yield* myQueryGen(flow, sql, Val, mysqlPool); if(err) return [err];
 
   var mess=results[0][0].mess;
   if(mess=='Password changed') Ou.boOK=1;
-  self.mes(mess); 
+  this.mes(mess); 
   
-  callback(null,[Ou]);
+  return [null, [Ou]];
 }
 
-ReqBE.prototype.verifyEmail=function(callback,inObj){ 
-  var self=this, req=this.req, site=req.site;
+ReqBE.prototype.verifyEmail=function*(inObj){ 
+  var req=this.req, flow=req.flow, site=req.site;
   var userTab=site.TableName.userTab;
-  if(typeof this.sessionMain!='object' || !('idUser' in this.sessionMain)) { self.mes('No session'); callback(null,[Ou]); return;}
+  if(typeof this.sessionMain!='object' || !('idUser' in this.sessionMain)) { return [new ErrorClient('No session')];}
   var idUser=this.sessionMain.idUser;
 
   var expirationTime=600;
 
   var code=randomHash()+randomHash();
   var redisVar=code+'_verifyEmail';
-  var tmp=wrapRedisSendCommand('set',[redisVar,idUser]);
-  var tmp=wrapRedisSendCommand('expire',[redisVar,expirationTime]);
+  var tmp=yield* setRedis(flow, redisVar, idUser, expirationTime);
   var Ou={};
 
-  var fiber=Fiber.current;
 
   var Sql=[], Val=[];
   Sql.push("SELECT email FROM "+userTab+" WHERE idUser=?;");
   Val.push(idUser);
 
   var sql=Sql.join('\n');
-  var boDoExit=0, results;
-  myQueryF(sql, Val, mysqlPool, function(err, resultsT) {
-    if(err){self.mesEO(err); boDoExit=1;} 
-    else{ results=resultsT;    }
-    fiber.run();
-  });
-  Fiber.yield();  if(boDoExit==1) {callback('exited'); return; }
+  var [err, results]=yield* myQueryGen(flow, sql, Val, mysqlPool); if(err) return [err];
 
-
-  if(results.length==0) { self.mes('No such idUser in the database'); callback(null,[Ou]); return;}
+  if(results.length==0) { this.mes('No such idUser in the database'); return [null, [Ou]];}
   var email=results[0].email;
   var wwwSite=req.wwwSite;
   var uVerification=req.strSchemeLong+wwwSite+'/'+leafVerifyEmailReturn+'?code='+code;
@@ -951,55 +843,36 @@ ReqBE.prototype.verifyEmail=function(callback,inObj){
     html: strTxt,
   };
   sgMail.send(msg);
-  //var semCB=0, semY=0, boDoExit=0;
-  //objSendgrid.send({
-    //to:       email,
-    //from:     sendgridName,
-    //subject:  'Email verification',
-    //html:     strTxt
-  //}, function(err, json) {
-    //if(err){self.mesEO(err); boDoExit=1;} 
-    //if(semY)fiber.run(); semCB=1;
-  //});
-  //if(!semCB){semY=1; Fiber.yield();}  if(boDoExit==1) {callback('exited'); return; }
-  self.mes('Email sent');
+  this.mes('Email sent');
   Ou.boOK=1;
-  callback(null, [Ou]);
+  return [null, [Ou]];
 
 }
 
 
-ReqBE.prototype.verifyPWReset=function(callback,inObj){ 
-  var self=this, req=this.req, site=req.site;
+ReqBE.prototype.verifyPWReset=function*(inObj){ 
+  var req=this.req, flow=req.flow, site=req.site;
   var userTab=site.TableName.userTab;
   var Ou={boOK:0};
 
-  var tmp='email'; if(!(tmp in inObj)) { self.mes('The parameter '+tmp+' is required'); callback(null,[Ou]); return;}
+  var tmp='email'; if(!(tmp in inObj)) { this.mes('The parameter '+tmp+' is required'); return [null, [Ou]];}
   var email=inObj.email;
 
-  var fiber=Fiber.current;
 
   var Sql=[], Val=[];
   Sql.push("SELECT email FROM "+userTab+" WHERE email=?;");
   Val.push(email);
 
   var sql=Sql.join('\n');
-  var boDoExit=0, results;
-  myQueryF(sql, Val, mysqlPool, function(err, resultsT) {
-    if(err){self.mesEO(err); boDoExit=1;} 
-    else{ results=resultsT;    }
-    fiber.run();
-  });
-  Fiber.yield();  if(boDoExit==1) {callback('exited'); return; }
+  var [err, results]=yield* myQueryGen(flow, sql, Val, mysqlPool); if(err) return [err];
 
-  if(results.length==0) { self.mes('No such email in the database'); callback(null,[Ou]); return;}
+  if(results.length==0) { this.mes('No such email in the database'); return [null, [Ou]];}
 
   var expirationTime=600;
 
   var code=randomHash()+randomHash();
   var redisVar=code+'_verifyPWReset';
-  var tmp=wrapRedisSendCommand('set',[redisVar,email]);
-  var tmp=wrapRedisSendCommand('expire',[redisVar,expirationTime]);
+  var tmp=yield* setRedis(flow, redisVar, email, expirationTime);
 
 
   var wwwSite=req.wwwSite;
@@ -1019,29 +892,17 @@ ReqBE.prototype.verifyPWReset=function(callback,inObj){
     html: strTxt,
   };
   sgMail.send(msg);
-  //var semCB=0, semY=0, boDoExit=0;
-  //objSendgrid.send({
-    //to:       email,
-    //from:     sendgridName,
-    //subject:  'Password reset request',
-    //html:     strTxt
-  //}, function(err, json) {
-    //if(err){self.mesEO(err); boDoExit=1;} 
-    //if(semY)fiber.run(); semCB=1;
-  //});
-  //if(!semCB){semY=1; Fiber.yield();}  if(boDoExit==1) {callback('exited'); return; }
-  self.mes('Email sent'); Ou.boOK=1;
-  callback(null, [Ou]);
+  this.mes('Email sent'); Ou.boOK=1;
+  return [null, [Ou]];
 
 }
 
 
-ReqBE.prototype.deleteImage=function(callback,inObj){
-  var self=this, req=this.req, res=this.res, site=req.site, siteName=site.siteName;
+ReqBE.prototype.deleteImage=function*(inObj){
+  var req=this.req, flow=req.flow, res=this.res, site=req.site, siteName=site.siteName;
   var Ou={};   
-  if(typeof this.sessionMain!='object' || !('idUser' in this.sessionMain)) { self.mes('No session'); callback(null,[Ou]); return;}
+  if(typeof this.sessionMain!='object' || !('idUser' in this.sessionMain)) { return [new ErrorClient('No session')];}
   var idUser=this.sessionMain.idUser;
-  var fiber = Fiber.current;
 
   var Sql=[], Val=[];
   if(inObj.kind=='u'){
@@ -1051,13 +912,8 @@ ReqBE.prototype.deleteImage=function(callback,inObj){
   }
 
 
-  var sql=Sql.join('\n'), boDoExit=0, results; 
-  myQueryF(sql, Val, mysqlPool, function(err, resultsT) {
-    if(err){self.mesEO(err); callback('exited');  return; } 
-    results=resultsT;
-    fiber.run(); 
-  });
-  Fiber.yield();  if(boDoExit==1) { return; }
+  var sql=Sql.join('\n');
+  var [err, results]=yield* myQueryGen(flow, sql, Val, mysqlPool); if(err) return [err];
 
   if(inObj.kind=='u'){ 
     Ou.strMessage="Done";
@@ -1070,54 +926,47 @@ ReqBE.prototype.deleteImage=function(callback,inObj){
     }
   }
   //var nDel=results.affectedRows; 
-  //if(nDel==1) {self.mes('Image deleted'); } else { self.mes(nDel+" images deleted");}
+  //if(nDel==1) {this.mes('Image deleted'); } else { this.mes(nDel+" images deleted");}
 
-  callback(null, [Ou]);
+  return [null, [Ou]];
 }
 
-ReqBE.prototype.uploadImage=function(callback,inObj){
-  var self=this, req=this.req, res=this.res, site=req.site, siteName=site.siteName;
+ReqBE.prototype.uploadImage=function*(inObj){
+  var self=this, req=this.req, flow=req.flow, res=this.res, site=req.site, siteName=site.siteName;
   var Ou={};
-  if(typeof this.sessionMain!='object' || !('idUser' in this.sessionMain)) { self.mes('No session'); callback(null,[Ou]); return;}
+  if(typeof this.sessionMain!='object' || !('idUser' in this.sessionMain)) { return [new ErrorClient('No session')];}
   var idUser=this.sessionMain.idUser;
-  var fiber = Fiber.current;
   var regImg=RegExp("^(png|jpeg|jpg|gif|svg)$");
 
-  var File=self.File;
-  var n=File.length; self.mes("nFile: "+n);
+  var File=this.File;
+  var n=File.length; this.mes("nFile: "+n);
 
   var file=File[0], tmpname=file.path, fileName=file.name; 
   var Match=RegExp('\\.(\\w{1,3})$').exec(fileName); 
-  if(!Match){ Ou.strMessage="The file name should have an extension: \".xxx\""; callback(null,[Ou]); return; }
-  var type=Match[1].toLowerCase(),data, boDoExit=0;
-  fs.readFile(tmpname, function(err, buf) { //, this.encRead
-    if(err){ boDoExit=1; self.mesEO(err);  }
-    else data=buf;//.toString();
-    fiber.run();
+  if(!Match){ Ou.strMessage="The file name should have an extension: \".xxx\""; return [null, [Ou]]; }
+  var type=Match[1].toLowerCase();
+  var err, buf;  fs.readFile(tmpname, function(errT, bufT) { err=errT; buf=bufT;  flow.next();  }); yield;  if(err) return [err];
+  var data=buf; 
+  if(data.length==0){ this.mes("data.length==0"); return [null, [Ou]]; }
+
+  if(!regImg.test(type)){ Ou.strMessage="Unrecognized file type: "+type; return [null, [Ou]]; }
+
+
+    // autoOrient, create thumb
+  var semY=0, semCB=0, err;
+  var myCollector=concat(function(buf){  data=buf;  if(semY) flow.next(); semCB=1;  });
+  var streamImg=gm(data).autoOrient().resize(50, 50).stream(function streamOut(errT, stdout, stderr) {
+    err=errT; if(err){ if(semY) flow.next(); semCB=1; return; }
+    stdout.pipe(myCollector);
   });
-  Fiber.yield();  if(boDoExit==1) {callback('exited'); return; }
-  if(data.length==0){ self.mes("data.length==0"); callback(null,[Ou]); return; }
-
-  if(!regImg.test(type)){ Ou.strMessage="Unrecognized file type: "+type; callback(null,[Ou]); return; }
-
-
-  var semY=0, semCB=0, boDoExit=0;
-  var myCollector=concat(function(buf){
-    data=buf;
-    if(semY) { fiber.run(); } semCB=1;
-  }); 
-  var streamImg=gm(data).autoOrient().resize(50, 50).stream(function streamOut(err, stdout, stderr) {
-    if(err){ boDoExit=1; self.mesEO(err); return; } 
-    stdout.pipe(myCollector); 
-  });
-  if(!semCB) { semY=1; Fiber.yield();}
-  if(boDoExit==1) {callback('exited'); return; }
+  if(!semCB) { semY=1; yield;}
+  if(err) return [err];
 
 
   var TableName=site.TableName, userTab=TableName.userTab, appTab=TableName.appTab;
   
   console.log('uploadImage data.length: '+data.length);
-  if(data.length==0) {self.mesEO('data.length==0');  callback('exited'); return; }
+  if(data.length==0) {  return [new Error('data.length==0')]; }
   
   var Sql=[], Val=[];
   if(this.kind=='u'){ 
@@ -1129,13 +978,8 @@ ReqBE.prototype.uploadImage=function(callback,inObj){
     Sql.push("CALL "+siteName+"setAppImage(?, ?, ?)"); Val.push(idUser, idApp, data);
   }
 
-  var sql=Sql.join('\n'), boDoExit=0, results; 
-  myQueryF(sql, Val, mysqlPool, function(err, resultsT) {
-    if(err){res.out500(err);  boDoExit=1;  } 
-    results=resultsT;
-    fiber.run(); 
-  });
-  Fiber.yield();  if(boDoExit==1) {callback('exited'); return; }
+  var sql=Sql.join('\n');
+  var [err, results]=yield* myQueryGen(flow, sql, Val, mysqlPool); if(err) return [err];
 
   if(this.kind=='u'){ 
     Ou.strMessage="Done";
@@ -1148,7 +992,7 @@ ReqBE.prototype.uploadImage=function(callback,inObj){
     }
   }
 
-  callback(null, [Ou]);
+  return [null, [Ou]];
 }
   
 

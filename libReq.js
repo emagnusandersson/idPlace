@@ -5,20 +5,20 @@
 
 
 /******************************************************************************
- * ReqIndex
+ * reqIndex
  ******************************************************************************/
-app.ReqIndex=function(req, res){
-  this.req=req; this.res=res; this.Str=[];
-}
-
-app.ReqIndex.prototype.go=function() {
-  var self=this, req=this.req, res=this.res, sessionID=req.sessionID;
+app.reqIndex=function*() {
+  var req=this.req, flow=req.flow, res=this.res, sessionID=req.sessionID;
   var objQS=req.objQS;
   var site=req.site, siteName=site.siteName, wwwSite=req.wwwSite;
 
-  getSessionMain.call(this); // sets this.sessionMain
-  if(!this.sessionMain || typeof this.sessionMain!='object') { resetSessionMain.call(this); }  
-  var redisVar=this.req.sessionID+'_Main', tmp=wrapRedisSendCommand('expire',[redisVar,maxUnactivity]);
+  var redisVar=req.sessionID+'_Main'; this.sessionMain=yield *getRedis(flow, redisVar, true);
+  if(!this.sessionMain || typeof this.sessionMain!='object') { 
+      this.sessionMain={};   var tmp=yield* cmdRedis(flow, 'del',[redisVar]);
+  }  
+  var tmp=yield* expireRedis(flow, redisVar);
+  //var tmp=yield *wrapRedisSendCommand(flow, 'expire',[redisVar,maxUnactivity]);
+   
 
   var boAuthReq=Boolean(Object.keys(objQS).length);
 
@@ -38,22 +38,12 @@ app.ReqIndex.prototype.go=function() {
   
   
   var idUser=null; if(typeof this.sessionMain=='object' && 'idUser' in this.sessionMain) idUser=this.sessionMain.idUser;
-  var fiber=Fiber.current;
 
   var Sql=[], Val=[];
   Sql.push("CALL "+siteName+"getUserAppInfo(?,?);"); Val.push(idUser, idApp);
 
   var sql=Sql.join('\n');
-  var boDoExit=0, results;
-  myQueryF(sql, Val, mysqlPool, function(err, resultsT) {
-    if(err){res.out500(err);  boDoExit=1; return; } 
-    else{
-      results=resultsT;
-      fiber.run(); 
-    }
-  });
-  Fiber.yield();  if(boDoExit==1) return;
-  
+  var [err, results]=yield* myQueryGen(flow, sql, Val, mysqlPool); if(err) {  res.out500(err); return; }
   
   var userInfoFrDB={};
   if(results[0].length)  {  
@@ -61,7 +51,10 @@ app.ReqIndex.prototype.go=function() {
     userInfoFrDB=results[0][0];
     //if(results[1].length) userInfoFrDB.imageHash=results[1][0].imageHash;
   } else{
-    if(idUser!==null) { resetSessionMain.call(this); idUser=null;}
+    if(idUser!==null) { 
+      this.sessionMain={}; var tmp=yield* cmdRedis(flow, 'del',[req.sessionID+'_Main']);
+      idUser=null;
+    }
     //res.out500("User not found (try reload)");  return;
   }
 
@@ -107,7 +100,7 @@ app.ReqIndex.prototype.go=function() {
   res.statusCode=200;
 
   var CSRFCode=randomHash(); 
-  var redisVar=sessionID+'_CSRFCodeIndex',  tmp=wrapRedisSendCommand('set',[redisVar,CSRFCode]);    tmp=wrapRedisSendCommand('expire',[redisVar,maxUnactivity]);
+  var redisVar=sessionID+'_CSRFCodeIndex', tmp=yield* setRedis(flow, redisVar, CSRFCode, maxUnactivity);
 //debugger
   
   var Str=[];
@@ -268,14 +261,10 @@ strIPPrim="+JSON.stringify(strIPPrim)+";\n\
 
 
 /******************************************************************************
- * ReqMe
+ * reqMe
  ******************************************************************************/
-app.ReqMe=function(req, res){
-  this.req=req; this.res=res; this.Str=[];
-}
-
-app.ReqMe.prototype.go=function() {
-  var self=this, req=this.req, res=this.res, sessionID=req.sessionID, site=req.site, TableName=site.TableName;
+app.reqMe=function*() {
+  var req=this.req, flow=req.flow, res=this.res, sessionID=req.sessionID, site=req.site, TableName=site.TableName;
   var user2AppTab=TableName.user2AppTab, userTab=TableName.userTab;
   var objQS=req.objQS;
   var site=req.site, siteName=site.siteName;
@@ -294,8 +283,6 @@ app.ReqMe.prototype.go=function() {
 
 
   var tmp='access_token'; if(!(tmp in objQS)) {  res.outCode(400, JSON.stringify({error:{type:'invalid_request', message:'The parameter '+tmp+' is required'}}));  return;}
-  
-  var fiber=Fiber.current;
 
   var Sql=[], Val=[]; 
   Sql.push("SELECT name, image, eTagImage, sizeImage, imageHash, LENGTH(idFB)>0 AS boFB, LENGTH(idGoogle)>0 AS boGoogle, address, zip, city, county, federatedState, country, timeZone, email, boEmailVerified, telephone, idNational, birthdate,  motherTongue, gender, \n\
@@ -327,15 +314,7 @@ FROM "+user2AppTab+" ua JOIN "+userTab+" u ON ua.idUser=u.idUser WHERE access_to
 
   
   var sql=Sql.join('\n');
-  var boDoExit=0, results;
-  myQueryF(sql, Val, mysqlPool, function(err, resultsT) {
-    if(err){res.out500(err);  boDoExit=1; return; } 
-    else{
-      results=resultsT;
-      fiber.run(); 
-    }
-  });
-  Fiber.yield();  if(boDoExit==1) return;
+  var [err, results]=yield* myQueryGen(flow, sql, Val, mysqlPool); if(err) {  res.out500(err); return; }
    
   if(results.length==0) {  res.outCode(400, JSON.stringify({error:{type:'access_denied', message:'Nothing found for that access_token'}}));  return;  }
 
@@ -404,14 +383,10 @@ app.PropAsScope.all=Object.keys(objAllTmp);
 
 
 /******************************************************************************
- * ReqToken
+ * reqToken
  ******************************************************************************/
-app.ReqToken=function(req, res){
-  this.req=req; this.res=res; this.Str=[];
-}
-
-app.ReqToken.prototype.go=function() {
-  var self=this, req=this.req, res=this.res, sessionID=req.sessionID, site=req.site, TableName=site.TableName;
+app.reqToken=function*() {
+  var req=this.req, flow=req.flow, res=this.res, sessionID=req.sessionID, site=req.site, TableName=site.TableName;
   var user2AppTab=TableName.user2AppTab, userTab=TableName.userTab, appTab=TableName.appTab;
   var objQS=req.objQS;
   var site=req.site, siteName=site.siteName, wwwSite=req.wwwSite;
@@ -420,18 +395,16 @@ app.ReqToken.prototype.go=function() {
   res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate, post-check=0, pre-check=0"); // no-cache
   res.setHeader('Content-Type', 'application/json');
 
-  var fiber=Fiber.current;
-
   if (req.method == 'POST') {
     var body = '', boDoExit=0;
     req.on('data', function (data) {
-      body+=data;  if(body.length > 1000)  { req.connection.destroy(); console.log('Aborting when '+body.length+' bytes data was received!!'); boDoExit=1; fiber.run(); }
+      body+=data;  if(body.length > 1000)  { req.connection.destroy(); console.log('Aborting when '+body.length+' bytes data was received!!'); boDoExit=1; flow.next(); }
     });
     req.on('end', function () {
       objQS=querystring.parse(body); 
-      fiber.run(); 
+      flow.next(); 
     });
-    Fiber.yield();  if(boDoExit==1)  return;
+    yield;  if(boDoExit==1)  return;
   }
 
 
@@ -469,15 +442,7 @@ FROM "+user2AppTab+" ua JOIN "+userTab+" u ON ua.idUser=u.idUser JOIN "+appTab+"
 
   
   var sql=Sql.join('\n');
-  var boDoExit=0, results;
-  myQueryF(sql, Val, mysqlPool, function(err, resultsT) {
-    if(err){res.out500(err);  boDoExit=1; return; } 
-    else{
-      results=resultsT;
-      fiber.run(); 
-    }
-  });
-  Fiber.yield();  if(boDoExit==1) return;
+  var [err, results]=yield* myQueryGen(flow, sql, Val, mysqlPool); if(err) {  res.out500(err); return; }
    
   if(results.length==0) {  res.outCode(400, JSON.stringify({error:{type:'access_denied', message:'Nothing found for that authentication code'}}));  return;  }
 
@@ -510,14 +475,11 @@ FROM "+user2AppTab+" ua JOIN "+userTab+" u ON ua.idUser=u.idUser JOIN "+appTab+"
 
 
 /******************************************************************************
- * ReqLoginBack
+ * reqLoginBack
  ******************************************************************************/
-var ReqLoginBack=app.ReqLoginBack=function(req, res){
-  this.req=req; this.res=res; this.site=req.site; this.mess=[];  this.Str=[];
-}
-ReqLoginBack.prototype.go=function(){
-  var self=this, req=this.req, res=this.res, objQS=req.objQS;
-  var wwwLoginScopeTmp=null; if('wwwLoginScope' in this.site) wwwLoginScopeTmp=this.site.wwwLoginScope;
+app.reqLoginBack=function*() {
+  var req=this.req, flow=req.flow, res=this.res, objQS=req.objQS;
+  var wwwLoginScopeTmp=null; if('wwwLoginScope' in req.site) wwwLoginScopeTmp=req.site.wwwLoginScope;
   var uSite=req.strSchemeLong+req.wwwSite;
 
   var Str=[];
@@ -544,13 +506,10 @@ window.close();\n\
 
 
 /******************************************************************************
- * ReqImage
+ * reqImage
  ******************************************************************************/
-app.ReqImage=function(req, res){
-  this.req=req; this.res=res; this.site=req.site;
-}
-app.ReqImage.prototype.go=function() {
-  var self=this, req=this.req, res=this.res;
+app.reqImage=function*() {
+  var req=this.req, flow=req.flow, res=this.res;
   var site=req.site, objQS=req.objQS, wwwSite=req.wwwSite, siteName=req.siteName, pathName=req.pathName;
   var TableName=site.TableName;
   var uSite=req.strSchemeLong+wwwSite;
@@ -578,57 +537,42 @@ app.ReqImage.prototype.go=function() {
   else {
     var sql = "SELECT data FROM "+TableName.imageAppTab+" i JOIN "+TableName.appTab+" a ON i.idApp=a.idApp WHERE imageHash=?", Val=[imageHash];
   }
-  myQueryF(sql, Val, mysqlPool, function(err, results) {
-    if(err) { res.out500(err); return;}
-    if(results.length>0){
-      var strData=results[0].data;
-      var eTag=crypto.createHash('md5').update(strData).digest('hex'); 
-      ETagImage[keyCache]=eTag;  if(eTag===this.eTagIn) { res.out304(); return; }
-      var maxAge=3600*8760, mimeType=MimeType.jpg;
-      res.writeHead(200, {"Content-Type": mimeType, "Content-Length":strData.length, ETag: eTag, "Cache-Control":"public, max-age="+maxAge}); // "Last-Modified": maxModTime.toUTCString(),
-      res.end(strData);
-    }else{
-      //res.setHeader("Content-type", "image/png");
-      var uNew=uSite+"/lib/image/anonHashNotInDB.png";
-      res.writeHead(302, {'Location': uNew});   res.end();
-    }
-  });
+  var [err, results]=yield* myQueryGen(flow, sql, Val, mysqlPool); if(err) {  res.out500(err); return; }
+  
+  if(results.length>0){
+    var strData=results[0].data;
+    var eTag=crypto.createHash('md5').update(strData).digest('hex'); 
+    ETagImage[keyCache]=eTag;  if(eTag===this.eTagIn) { res.out304(); return; }
+    var maxAge=3600*8760, mimeType=MimeType.jpg;
+    res.writeHead(200, {"Content-Type": mimeType, "Content-Length":strData.length, ETag: eTag, "Cache-Control":"public, max-age="+maxAge}); // "Last-Modified": maxModTime.toUTCString(),
+    res.end(strData);
+  }else{
+    //res.setHeader("Content-type", "image/png");
+    var uNew=uSite+"/lib/image/anonHashNotInDB.png";
+    res.writeHead(302, {'Location': uNew});   res.end();
+  }
 }
 
 
 /******************************************************************************
- * ReqVerifyEmailReturn
+ * reqVerifyEmailReturn
  ******************************************************************************/
-app.ReqVerifyEmailReturn=function(req, res){
-  this.req=req; this.res=res; this.Str=[];
-}
-app.ReqVerifyEmailReturn.prototype.go=function(){
-  var self=this, req=this.req, res=this.res, site=req.site, sessionID=req.sessionID;
+app.reqVerifyEmailReturn=function*() {
+  var req=this.req, flow=req.flow, res=this.res, site=req.site, sessionID=req.sessionID;
   var userTab=site.TableName.userTab;
   var objQS=req.objQS;
   var tmp='code'; if(!(tmp in objQS)) { res.out200('The parameter '+tmp+' is required'); return;}
   var codeIn=objQS.code;
-  var redisVar=codeIn+'_verifyEmail';
-  var idUser=wrapRedisSendCommand('get',[redisVar]);
+  var redisVar=codeIn+'_verifyEmail', idUser=yield* getRedis(flow, redisVar);
   
   if(idUser===null) { res.out200('No such code'); return;}
-
-  var fiber=Fiber.current;
 
   var Sql=[], Val=[];
   Sql.push("UPDATE "+userTab+" SET boEmailVerified=1 WHERE idUser=?;");
   Val.push(idUser);
 
   var sql=Sql.join('\n');
-  var boDoExit=0, results;
-  myQueryF(sql, Val, mysqlPool, function(err, resultsT) {
-    if(err){res.out500(err);  boDoExit=1; return; } 
-    else{
-      results=resultsT;
-      fiber.run(); 
-    }
-  });
-  Fiber.yield();  if(boDoExit==1) return;
+  var [err, results]=yield* myQueryGen(flow, sql, Val, mysqlPool); if(err) {  res.out500(err); return; }
 
   var c=results.affectedRows, mestmp; 
   if(c==1) { mestmp="Email verified"; } else {mestmp="Error (Nothing done)"; }
@@ -640,41 +584,27 @@ app.ReqVerifyEmailReturn.prototype.go=function(){
 
 
 /******************************************************************************
- * ReqVerifyPWResetReturn
+ * reqVerifyPWResetReturn
  ******************************************************************************/
-app.ReqVerifyPWResetReturn=function(req, res){
-  this.req=req; this.res=res; this.Str=[];
-}
-app.ReqVerifyPWResetReturn.prototype.go=function(){
-  var self=this, req=this.req, res=this.res, site=req.site, sessionID=req.sessionID;
+app.reqVerifyPWResetReturn=function*() {
+  var req=this.req, flow=req.flow, res=this.res, site=req.site, sessionID=req.sessionID;
   var userTab=site.TableName.userTab;
   var objQS=req.objQS;
   var tmp='code'; if(!(tmp in objQS)) { res.out200('The parameter '+tmp+' is required'); return;}
   var codeIn=objQS.code;
-  var redisVar=codeIn+'_verifyPWReset';
-  var email=wrapRedisSendCommand('get',[redisVar]);
+  var redisVar=codeIn+'_verifyPWReset', email=yield* getRedis(flow, redisVar);
   
   if(email===null) { res.out200('No such code'); return;}
 
   var password=randomHash();
   var passwordHash=SHA1(password+strSalt);
 
-  var fiber=Fiber.current;
-
   var Sql=[], Val=[];
   Sql.push("UPDATE "+userTab+" SET password=? WHERE email=?;");
   Val.push(passwordHash, email);
 
   var sql=Sql.join('\n');
-  var boDoExit=0, results;
-  myQueryF(sql, Val, mysqlPool, function(err, resultsT) {
-    if(err){res.out500(err);  boDoExit=1; return; } 
-    else{
-      results=resultsT;
-      fiber.run(); 
-    }
-  });
-  Fiber.yield();  if(boDoExit==1) return;
+  var [err, results]=yield* myQueryGen(flow, sql, Val, mysqlPool); if(err) {  res.out500(err); return; }
 
   var c=results.affectedRows, mestmp; 
   if(c!=1) { res.out500("Error ("+c+" affectedRows)"); return; }
@@ -692,17 +622,6 @@ app.ReqVerifyPWResetReturn.prototype.go=function(){
     html: strTxt,
   };
   sgMail.send(msg);
-  //var semCB=0, semY=0, boDoExit=0;
-  //objSendgrid.send({
-    //to:       email,
-    //from:     sendgridName,
-    //subject:  'Password reset',
-    //html:     strTxt
-  //}, function(err, json) {
-    //if(err){self.mesEO(err); boDoExit=1;} 
-    //if(semY)fiber.run(); semCB=1;
-  //});
-  //if(!semCB){semY=1; Fiber.yield();}  if(boDoExit==1) {callback('exited'); return; }
 
   res.end("A new password has been generated and sent to your email address.");
 }
@@ -711,23 +630,21 @@ app.ReqVerifyPWResetReturn.prototype.go=function(){
 
 
 /******************************************************************************
- * ReqStatic
+ * reqStatic
  ******************************************************************************/
-var ReqStatic=app.ReqStatic=function(req, res){
-  this.req=req; this.res=res;  this.Str=[];
-}
-ReqStatic.prototype.go=function() {
-  var self=this, req=this.req, res=this.res;
+app.reqStatic=function*() {
+  var req=this.req, flow=req.flow, res=this.res;
   var pathName=req.pathName;
 
-  var fiber = Fiber.current; 
   var eTagIn=getETag(req.headers);
   var keyCache=pathName; //if(pathName==='/'+leafSiteSpecific) keyCache=req.strSite+keyCache; 
   if(!(keyCache in CacheUri)){
-    var filename=pathName.substr(1);    
-    var err=readFileToCache(filename);
+    var filename=pathName.substr(1);
+    var err=yield *readFileToCache(flow, filename);
     if(err) {
       if(err.code=='ENOENT') {res.out404(); return;}
+      if('host' in req.headers) console.log('Faulty request from'+req.headers.host);
+      if('Referer' in req.headers) console.log(req.headers.Referer);
       res.out500(err); return;
     }
   }
@@ -748,18 +665,14 @@ ReqStatic.prototype.go=function() {
 
 
 
+
 /******************************************************************************
- * ReqCaptcha
+ * reqCaptcha
  ******************************************************************************/
-app.ReqCaptcha=function(req, res){
-  this.req=req; this.res=res; this.Str=[];
-}
-app.ReqCaptcha.prototype.go=function(){
-  var self=this, req=this.req, res=this.res, sessionID=req.sessionID;
-  var strCaptcha=parseInt(Math.random()*9000+1000);
-  var redisVar=sessionID+'_captcha';
-  var tmp=wrapRedisSendCommand('set',[redisVar,strCaptcha]);
-  var tmp=wrapRedisSendCommand('expire',[redisVar,3600]);
+app.reqCaptcha=function*() {
+  var req=this.req, flow=req.flow, res=this.res, sessionID=req.sessionID;
+  var strCaptcha=parseInt(Math.random()*9000+1000).toString();
+  var redisVar=sessionID+'_captcha', tmp=yield* setRedis(flow, redisVar, strCaptcha, 3600);
   var p = new captchapng(80,30,strCaptcha); // width,height,numeric captcha
   p.color(0, 0, 0, 0);  // First color: background (red, green, blue, alpha)
   p.color(80, 80, 80, 255); // Second color: paint (red, green, blue, alpha)
@@ -777,13 +690,10 @@ app.ReqCaptcha.prototype.go=function(){
 
 
 /******************************************************************************
- * ReqMonitor
+ * reqMonitor
  ******************************************************************************/
-app.ReqMonitor=function(req, res){
-  this.req=req; this.res=res;   this.Str=[];
-}
-app.ReqMonitor.prototype.go=function(){
-  var self=this, req=this.req, res=this.res;
+app.reqMonitor=function*() {
+  var req=this.req, flow=req.flow, res=this.res;
 
   if(!objOthersActivity){  //  && boPageBUNeeded===null && boImageBUNeeded===null
     var Sql=[];
@@ -797,15 +707,7 @@ app.ReqMonitor.prototype.go=function(){
 
 
     var sql=Sql.join('\n'), Val=[];
-    var fiber = Fiber.current, boDoExit=0, results;
-    myQueryF(sql, Val, mysqlPool, function(err, resultsT) {
-      if(err){res.out500(err);  boDoExit=1; return; } 
-      else{
-        results=resultsT;
-        fiber.run(); 
-      }
-    });
-    Fiber.yield();  if(boDoExit==1) return;
+    var [err, results]=yield* myQueryGen(flow, sql, Val, mysqlPool); if(err) {  res.out500(err); return; }
 
     var resP=results[0], nEdit=results[1][0].n, pageName=nEdit==1?resP[0].siteName+':'+resP[0].pageName:nEdit;
     var resI=results[2], nImage=results[3][0].n, imageName=nImage==1?resI[0].imageName:nImage;
@@ -831,13 +733,10 @@ app.ReqMonitor.prototype.go=function(){
 
 
 /******************************************************************************
- * ReqStat
+ * reqStat
  ******************************************************************************/
-app.ReqStat=function(req, res){
-  this.req=req; this.res=res; this.Str=[];
-}
-app.ReqStat.prototype.go=function(){
-  var self=this, req=this.req, res=this.res;
+app.reqStat=function*() {
+  var req=this.req, flow=req.flow, res=this.res;
 
   var Sql=[]; 
   Sql.push("SELECT count(*) AS n FROM "+versionTab+";"); 
@@ -853,82 +752,83 @@ app.ReqStat.prototype.go=function(){
    LEFT JOIN "+videoTab+" vid ON f.idFile=vid.idFile");
 
   var sql=Sql.join('\n'), Val=[];
-  myQueryF(sql, Val, mysqlPool, function(err, results){
-    if(err){res.out500(err); callback(err); return; }
-    var nVersion=results[0][0].n, nImage=results[1][0].n, nThumb=results[2][0].n, nVideo=results[3][0].n, nFile=results[4][0].n, resT=results[5];
+  var [err, results]=yield* myQueryGen(flow, sql, Val, mysqlPool); if(err) {  res.out500(err); return; }
+    
+
+  var nVersion=results[0][0].n, nImage=results[1][0].n, nThumb=results[2][0].n, nVideo=results[3][0].n, nFile=results[4][0].n, resT=results[5];
 
 
-    var Str=[]; 
-    Str.push('<!DOCTYPE html>\n\
-    <html><head>\n\
-    <meta name="robots" content="noindex">\n\
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" >\n\
-    <meta name="viewport" id="viewportMy" content="initial-scale=1" />');
+  var Str=[]; 
+  Str.push('<!DOCTYPE html>\n\
+  <html><head>\n\
+  <meta name="robots" content="noindex">\n\
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" >\n\
+  <meta name="viewport" id="viewportMy" content="initial-scale=1" />');
 
 
-    var uSite=req.strSchemeLong+wwwSite;
-    //var uJQuery='https://code.jquery.com/jquery-latest.min.js';    if(boDbg) uJQuery=uSite+'/'+flFoundOnTheInternetFolder+"/jquery-latest.js";      Str.push("<script src='"+uJQuery+"'></script>");
-    var uJQuery='https://code.jquery.com/jquery-3.2.1.min.js';    if(boDbg) uJQuery=uSite+'/'+flFoundOnTheInternetFolder+"/jquery-3.2.1.min.js";
-    Str.push('<script src="'+uJQuery+'" integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4=" crossorigin="anonymous"></script>');
- 
-      // If boDbg then set vTmp=0 so that the url is the same, this way the debugger can reopen the file between changes
+  var uSite=req.strSchemeLong+wwwSite;
+  //var uJQuery='https://code.jquery.com/jquery-latest.min.js';    if(boDbg) uJQuery=uSite+'/'+flFoundOnTheInternetFolder+"/jquery-latest.js";      Str.push("<script src='"+uJQuery+"'></script>");
+  var uJQuery='https://code.jquery.com/jquery-3.2.1.min.js';    if(boDbg) uJQuery=uSite+'/'+flFoundOnTheInternetFolder+"/jquery-3.2.1.min.js";
+  Str.push('<script src="'+uJQuery+'" integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4=" crossorigin="anonymous"></script>');
 
-      // Include stylesheets
-    var pathTmp='/stylesheets/style.css', vTmp=CacheUri[pathTmp].eTag; if(boDbg) vTmp=0;    Str.push('<link rel="stylesheet" href="'+uSite+pathTmp+'?v='+vTmp+'" type="text/css">');
+    // If boDbg then set vTmp=0 so that the url is the same, this way the debugger can reopen the file between changes
 
-      // Include site specific JS-files
-    //var uSite=req.strSchemeLong+req.wwwSite;
-    //var keyCache=req.strSite+'/'+leafSiteSpecific, vTmp=CacheUri[keyCache].eTag; if(boDbg) vTmp=0;  Str.push('<script src="'+uSite+'/'+leafSiteSpecific+'?v='+vTmp+'"></script>');
+    // Include stylesheets
+  var pathTmp='/stylesheets/style.css', vTmp=CacheUri[pathTmp].eTag; if(boDbg) vTmp=0;    Str.push('<link rel="stylesheet" href="'+uSite+pathTmp+'?v='+vTmp+'" type="text/css">');
 
-      // Include JS-files
-    var StrTmp=['lib.js', 'libClient.js'];
-    for(var i=0;i<StrTmp.length;i++){
-      var pathTmp='/'+StrTmp[i], vTmp=CacheUri[pathTmp].eTag; if(boDbg) vTmp=0;    Str.push('<script src="'+uSite+pathTmp+'?v='+vTmp+'"></script>');
-    }
+    // Include site specific JS-files
+  //var uSite=req.strSchemeLong+req.wwwSite;
+  //var keyCache=req.strSite+'/'+leafSiteSpecific, vTmp=CacheUri[keyCache].eTag; if(boDbg) vTmp=0;  Str.push('<script src="'+uSite+'/'+leafSiteSpecific+'?v='+vTmp+'"></script>');
 
-    Str.push('<script src="'+uSite+'/lib/foundOnTheInternet/sortable.js"></script>');
+    // Include JS-files
+  var StrTmp=['lib.js', 'libClient.js'];
+  for(var i=0;i<StrTmp.length;i++){
+    var pathTmp='/'+StrTmp[i], vTmp=CacheUri[pathTmp].eTag; if(boDbg) vTmp=0;    Str.push('<script src="'+uSite+pathTmp+'?v='+vTmp+'"></script>');
+  }
 
-    Str.push("</head>");
-    Str.push('<body style="margin:0">');
+  Str.push('<script src="'+uSite+'/lib/foundOnTheInternet/sortable.js"></script>');
 
-    Str.push('<h3>Comparing tables</h3>');
+  Str.push("</head>");
+  Str.push('<body style="margin:0">');
+
+  Str.push('<h3>Comparing tables</h3>');
 
 
-    Str.push("<p>nFile: <b>"+nFile+"</b>");
-    Str.push("<br><br>");
+  Str.push("<p>nFile: <b>"+nFile+"</b>");
+  Str.push("<br><br>");
 
-    Str.push("<p>nImage:"+nImage);
-    Str.push("<p>nVersion:"+nVersion+" (*2) (each creates 2 files)");
-    Str.push("<p>nThumb:"+nThumb);
-    Str.push("<p>nVideo:"+nVideo);
-    Str.push("<p>---------------");
-    var sum=2*nVersion+nImage+nThumb+nVideo;  Str.push("<p>Sum: <b>"+sum+'</b>, ');
-    var diff=nFile-nVersion*2-nImage-nThumb-nVideo;  Str.push("(diff="+diff+")");
+  Str.push("<p>nImage:"+nImage);
+  Str.push("<p>nVersion:"+nVersion+" (*2) (each creates 2 files)");
+  Str.push("<p>nThumb:"+nThumb);
+  Str.push("<p>nVideo:"+nVideo);
+  Str.push("<p>---------------");
+  var sum=2*nVersion+nImage+nThumb+nVideo;  Str.push("<p>Sum: <b>"+sum+'</b>, ');
+  var diff=nFile-nVersion*2-nImage-nThumb-nVideo;  Str.push("(diff="+diff+")");
 
-    var tmp="<br>";    if(diff<0) tmp=" (fileTab contains too few entries)<br>";    else if(diff>0) tmp=" (fileTab contains too many entries)<br>";
-    Str.push(tmp);
+  var tmp="<br>";    if(diff<0) tmp=" (fileTab contains too few entries)<br>";    else if(diff>0) tmp=" (fileTab contains too many entries)<br>";
+  Str.push(tmp);
+
+  var arrHead=['idFile','Src [idPage]','Cache [idPage]','Image','Thumb [idImage]','Video','Diff'];
+  var strHead='<tr style="font-weight:bold"><td>'+arrHead.join('</td><td>')+'</td></tr>';
+
+  var arrSum=[nFile,nVersion,nVersion,nImage,nThumb,nVideo,diff];
+  var strSum='<tr style="font-weight:bold"><td>'+arrSum.join('</td><td>')+'</td></tr>';
+
+
+  var arrR=[strHead,strSum]; 
+  for(var i=0;i<resT.length;i++){
+    var r=resT[i];
+             // 'file' will be on each row. Other than that, each row should have one other entry. (that is 2 entries per row), (rows with a single entry are marked red) 
+    var strD='', col='red'; for(var name in r){var d=r[name]; if(d==null) d=''; strD+="<td>"+d+"</td>"; if(d && name!='file') col='';} 
+    if(col.length) col="style=\"background-color:"+col+"\"";
+    arrR.push("<tr "+col+">"+strD+"</tr>\n");
+  }
+  var strR=arrR.join('');
+  Str.push("<table style=\"  border: solid 1px;border-collapse:collapse\">\n"+strR+"</table>");
+
+  var str=Str.join('\n');  // res.writeHead(200, "OK", {'Content-Type': 'text/html'}); 
+  res.end(str);  
   
-    var arrHead=['idFile','Src [idPage]','Cache [idPage]','Image','Thumb [idImage]','Video','Diff'];
-    var strHead='<tr style="font-weight:bold"><td>'+arrHead.join('</td><td>')+'</td></tr>';
-
-    var arrSum=[nFile,nVersion,nVersion,nImage,nThumb,nVideo,diff];
-    var strSum='<tr style="font-weight:bold"><td>'+arrSum.join('</td><td>')+'</td></tr>';
-
-
-    var arrR=[strHead,strSum]; 
-    for(var i=0;i<resT.length;i++){
-      var r=resT[i];
-               // 'file' will be on each row. Other than that, each row should have one other entry. (that is 2 entries per row), (rows with a single entry are marked red) 
-      var strD='', col='red'; for(var name in r){var d=r[name]; if(d==null) d=''; strD+="<td>"+d+"</td>"; if(d && name!='file') col='';} 
-      if(col.length) col="style=\"background-color:"+col+"\"";
-      arrR.push("<tr "+col+">"+strD+"</tr>\n");
-    }
-    var strR=arrR.join('');
-    Str.push("<table style=\"  border: solid 1px;border-collapse:collapse\">\n"+strR+"</table>");
-
-    var str=Str.join('\n');  // res.writeHead(200, "OK", {'Content-Type': 'text/html'}); 
-    res.end(str);  
-  });
   
 }
 
@@ -1426,7 +1326,7 @@ app.SetupSql.prototype.truncate=function(SiteName){
 
 
   // Called when --sql command line option is used
-app.SetupSql.prototype.doQuery=function(strCreateSql){
+app.SetupSql.prototype.doQuery=function*(flow, strCreateSql){
   //var StrValidSqlCalls=['createTable', 'dropTable', 'createFunction', 'dropFunction', 'truncate', 'createDummy', 'createDummies'];
   if(StrValidSqlCalls.indexOf(strCreateSql)==-1){var tmp=strCreateSql+' is not valid input, try any of these: '+StrValidSqlCalls.join(', '); console.log(tmp); return; }
   var Match=RegExp("^(drop|create)?(.*?)$").exec(strCreateSql);
@@ -1437,14 +1337,10 @@ app.SetupSql.prototype.doQuery=function(strCreateSql){
   else if(Match[1]=='create')  { strMeth='create'+strMeth; }
   
   var SqlA=this[strMeth](SiteName, boDropOnly); 
-  var strDelim=';', sql=SqlA.join(strDelim+'\n')+strDelim, Val=[], boDoExit=0;  
-  var fiber = Fiber.current;
-  myQueryF(sql, Val, mysqlPool, function(err, results){ 
-    var tmp=createMessTextOfMultQuery(SqlA, err, results);  console.log(tmp); 
-    if(err){            boDoExit=1;  debugger;         } 
-    fiber.run();
-  });
-  Fiber.yield();  if(boDoExit==1) return;
+  var strDelim=';', sql=SqlA.join(strDelim+'\n')+strDelim, Val=[];
+  var [err, results]=yield* myQueryGen(flow, sql, Val, mysqlPool);
+  var tmp=createMessTextOfMultQuery(SqlA, err, results);  console.log(tmp);
+  if(err) { debugger;  return; }
 }
 
 

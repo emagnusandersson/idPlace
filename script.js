@@ -23,8 +23,8 @@ atob = require('atob');
 childProcess = require('child_process');
 zlib = require('zlib');
 imageSize = require('image-size');
-Fiber = require('fibers');
-Future = require('fibers/future');
+//Fiber = require('fibers');
+//Future = require('fibers/future');
 NodeZip=require('node-zip');
 //redis = require("then-redis");
 redis = require("redis");
@@ -37,6 +37,7 @@ require('./lib.js');
 require('./libServerGeneral.js');
 require('./libServer.js');
 require('./lib/foundOnTheInternet/sha1.js');
+
 
 strAppName='idPlace';
 app=(typeof window==='undefined')?global:window;
@@ -98,8 +99,10 @@ if(  (urlRedis=process.env.REDISTOGO_URL)  || (urlRedis=process.env.REDISCLOUD_U
 
 
 
-Fiber( function(){
-  var fiber=Fiber.current;
+//Fiber( function(){
+  //var fiber=Fiber.current;
+
+var flow=( function*(){
 
 
     // Default config variables
@@ -111,29 +114,26 @@ Fiber( function(){
   leafLoginBack="loginBack.html";
   interpretArgv();
 
+
   var strConfig;
   if(boHeroku){ 
-    if(!process.env.jsConfig) { console.log('jsConfig-environment-variable is not set'); process.exit(1);}
+    if(!process.env.jsConfig) { console.error('jsConfig-environment-variable is not set'); return;} //process.exit(1);
     strConfig=process.env.jsConfig||'';
   }
   else{
-    fs.readFile('./config.js', function(errT, bufT) { //, this.encRead
-      if(errT){  console.log(errT); }
-      strConfig=bufT.toString();
-      fiber.run();
-    });
-    Fiber.yield();
+    var err, buf; fs.readFile('./config.js', function(errT, bufT) { err=errT;  buf=bufT;  flow.next();  });  yield;     if(err) {console.error(err); return;}
+    strConfig=buf.toString();
     //require('./config.js');    //require('./config.example.js');
   } 
-
   var strMd5Config=md5(strConfig);
   eval(strConfig);
   var redisVar='str'+ucfirst(strAppName)+'Md5Config';
-  var tmp=wrapRedisSendCommand('get',[redisVar]);
+  var tmp=yield *getRedis(flow, redisVar);
   var boNewConfig=strMd5Config!==tmp; 
-  if(boNewConfig) { var tmp=wrapRedisSendCommand('set',[redisVar,strMd5Config]);  }
+  if(boNewConfig) { var tmp=yield *setRedis(flow, redisVar, strMd5Config);  }
 
   if('levelMaintenance' in process.env) levelMaintenance=process.env.levelMaintenance;
+
 
   sgMail.setApiKey(apiKeySendGrid);
   //objSendgrid  = sendgrid(sendgridName, sendgridPassword);
@@ -150,7 +150,7 @@ Fiber( function(){
     // Do db-query if --sqlXXXX was set in the argument
   if(typeof strCreateSql!='undefined'){
     var tTmp=new Date().getTime();
-    var objSetupSql=new SetupSql(); objSetupSql.doQuery(strCreateSql);
+    var objSetupSql=new SetupSql(); yield *objSetupSql.doQuery(flow, strCreateSql);
     console.log('Time elapsed: '+(new Date().getTime()-tTmp)/1000+' s'); 
     process.exit(0);
   }
@@ -165,15 +165,18 @@ Fiber( function(){
 
 
   StrFilePreCache=['lib.js', 'libClient.js', 'client.js', 'stylesheets/style.css'];
+  
+  
+  
   if(boDbg){
     fs.watch('.',function (ev,filename) {
       var StrFile=['client.js'];
         //console.log(filename+' changed: '+ev);
       if(StrFile.indexOf(filename)!=-1){
         console.log(filename+' changed: '+ev);
-        Fiber( function(){ 
-          var err=readFileToCache(filename); if(err) console.log(err.message);
-        }).run();
+        var flow=( function*(){ 
+          var err=yield* readFileToCache(flow, filename); if(err) console.log(err.message);
+        })(); flow.next();
       }
     });
     fs.watch('stylesheets',function (ev,filename) {
@@ -181,24 +184,26 @@ Fiber( function(){
         //console.log(filename+' changed: '+ev);
       if(StrFile.indexOf(filename)!=-1){
         console.log(filename+' changed: '+ev);
-        Fiber( function(){ 
-          var err=readFileToCache('stylesheets/'+filename); if(err) console.log(err.message);
-        }).run();
+        var flow=( function*(){ 
+          var err=yield* readFileToCache(flow, 'stylesheets/'+filename); if(err) console.log(err.message);
+        })(); flow.next();
       }
     });
   }
 
+
   CacheUri=new CacheUriT();
   for(var i=0;i<StrFilePreCache.length;i++) {
     var filename=StrFilePreCache[i];
-    var err=readFileToCache(filename); if(err) {  console.log(err.message);  return;}
+    var err=yield *readFileToCache(flow, filename); if(err) {  console.log(err.message);  return;}
   }
 
    
 
   handler=function(req, res){
-    Fiber( function(){
-      var fiber=Fiber.current; 
+    //Fiber( function(){
+      //var fiber=Fiber.current; 
+    req.flow=(function*(){
       if(typeof isRedirAppropriate!='undefined'){ 
         var tmpUrl=isRedirAppropriate(req); if(tmpUrl) { res.out301(tmpUrl); return; }
       }
@@ -214,16 +219,15 @@ Fiber( function(){
 
 
         // get intCount
-      var semY=0, semCB=0, intCount;
-      //var tmp=redisClient.send('eval',[luaCountFunc, 3, redisVarSession, redisVarCounter, redisVarCounterIP, tDDOSBan]).then(function(intCountT){
-      var tmp=redisClient.send_command('eval',[luaCountFunc, 3, redisVarSession, redisVarCounter, redisVarCounterIP, tDDOSBan], function(err,intCountT){
-        intCount=intCountT;
-        if(semY) { fiber.run(); } semCB=1;
+      var semY=0, semCB=0, err, intCount;
+      var tmp=redisClient.send_command('eval',[luaCountFunc, 3, redisVarSession, redisVarCounter, redisVarCounterIP, tDDOSBan], function(errT,intCountT){
+        err=errT; intCount=intCountT; if(semY) { req.flow.next(); } semCB=1;
       });
-      if(!semCB) { semY=1; Fiber.yield();}
-      if(intCount>intDDOSMax) {res.outCode(429,"Too Many Requests, wait "+tDDOSBan+"s\n"); return; }
-
-
+      if(!semCB) { semY=1; yield;}
+      if(err) {console.log(err); return;}
+      if(intCount>intDDOSMax) {res.outCode(429,"Too Many Requests ("+intCount+"), wait "+tDDOSBan+"s\n"); return; }
+  
+      
       var domainName=req.headers.host; 
       var objUrl=url.parse(req.url), qs=objUrl.query||'', objQS=querystring.parse(qs),  pathNameOrg=objUrl.pathname;
       var wwwReq=domainName+pathNameOrg;
@@ -249,7 +253,7 @@ Fiber( function(){
       req.sessionID=sessionID; req.objUrl=objUrl; req.objQS=objQS; req.strSchemeLong=strSchemeLong;   req.site=site;  req.pathName=pathName;     req.siteName=siteName;
       req.rootDomain=RootDomain[site.strRootDomain];
 
-
+      var objReqRes={req:req, res:res};
       if(pathName.substr(0,5)=='/sql/'){
         if(!boDbg && !boAllowSql){ res.out200('Set boAllowSql=1 (or boDbg=1) in the config.js-file');  return }
         var reqSql=new ReqSql(req, res),  objSetupSql=new SetupSql();
@@ -259,25 +263,25 @@ Fiber( function(){
       }
       else {
         if(levelMaintenance){res.outCode(503, "Down for maintenance, try again in a little while."); return;}
-        if(pathName=='/'+leafBE){  var reqBE=new ReqBE(req, res);  reqBE.go();    }
-        else if(pathName=='/' ){  var reqIndex=new ReqIndex(req, res);    reqIndex.go();    }
-        else if(pathName.indexOf('/image/')==0){  var reqImage=new ReqImage(req, res); reqImage.go();   } //RegExp('^/image/').test(pathName)
-        else if(pathName=='/captcha.png'){  var reqCaptcha=new ReqCaptcha(req, res);    reqCaptcha.go();    }
-        else if(regexpLib.test(pathName) || regexpLooseJS.test(pathName)  || pathName=='/conversion.html'){   var reqStatic=new ReqStatic(req, res);      reqStatic.go();   }
-        else if(pathName=='/'+leafLoginBack){    var reqLoginBack=new ReqLoginBack(req, res);  reqLoginBack.go();    }
-        else if(pathName=='/access_token' ){  var reqToken=new ReqToken(req, res);    reqToken.go();    }
-        else if(pathName=='/me' ){  var reqMe=new ReqMe(req, res);    reqMe.go();    }
-        else if(pathName=='/'+leafVerifyEmailReturn ){  var reqT=new ReqVerifyEmailReturn(req, res);    reqT.go();    }
-        else if(pathName=='/'+leafVerifyPWResetReturn ){  var reqT=new ReqVerifyPWResetReturn(req, res);    reqT.go();    }
-        //else if(pathName=='/auth' ){  var reqAuth=new ReqAuth(req, res);    reqAuth.go();    }
-        else if(pathName=='/monitor.html'){  var reqMonitor=new ReqMonitor(req, res);      reqMonitor.go();  }
-        else if(pathName=='/stat.html'){  var reqStat=new ReqStat(req, res);      reqStat.go();  }
+        if(pathName=='/'+leafBE){  var reqBE=new ReqBE(req, res);  yield* reqBE.go();    }
+        else if(pathName=='/' ){  yield* reqIndex.call(objReqRes);    }
+        else if(pathName.indexOf('/image/')==0){  yield* reqImage.call(objReqRes);   } //RegExp('^/image/').test(pathName)
+        else if(pathName=='/captcha.png'){  yield* reqCaptcha.call(objReqRes);   }
+        else if(regexpLib.test(pathName) || regexpLooseJS.test(pathName)  || pathName=='/conversion.html'){   yield* reqStatic.call(objReqRes);   }
+        else if(pathName=='/'+leafLoginBack){    yield* reqLoginBack.call(objReqRes);   }
+        else if(pathName=='/access_token' ){  yield* reqToken.call(objReqRes);   }
+        else if(pathName=='/me' ){  yield* reqMe.call(objReqRes);   }
+        else if(pathName=='/'+leafVerifyEmailReturn ){  yield* reqVerifyEmailReturn.call(objReqRes);   }
+        else if(pathName=='/'+leafVerifyPWResetReturn ){  yield* reqVerifyPWResetReturn.call(objReqRes);   }
+        else if(pathName=='/monitor.html'){  yield* reqMonitor.call(objReqRes);   }
+        else if(pathName=='/stat.html'){  yield* reqStat.call(objReqRes);   }
         else if(pathName=='/createDumpCommand'){  var str=createDumpCommand(); res.out200(str);     }
         else if(pathName=='/debug'){    debugger;  res.end();}
         else if(pathName=='/'+googleSiteVerification) res.end('google-site-verification: '+googleSiteVerification);
         else {res.out404("404 Not Found\n"); return; }
       }
-    }).run();
+    })(); req.flow.next();
+    //}).run();
   }
 
 
@@ -285,7 +289,8 @@ Fiber( function(){
 
   http.createServer(handler).listen(port);   console.log("Listening to HTTP requests at port " + port);
 
-}).run();
+})(); flow.next();
+//}).run();
 
 
 

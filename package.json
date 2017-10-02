@@ -10,7 +10,7 @@
   "author": "Magnus Andersson",
   "license": "BSD-2-Clause",
   "dependencies": {
-    "@sendgrid/mail": "^6.1.3",
+    "@sendgrid/mail": "^6.1.4",
     "async": "2.5.x",
     "atob": "^2.0.3",
     "captchapng": "0.0.1",
@@ -21,14 +21,14 @@
     "image-size": "0.6.x",
     "imagemagick": "0.1.x",
     "ip": "^1.1.5",
-    "mysql": "2.14.x",
+    "mysql": "^2.15.0",
     "node-rsa": "0.4.x",
     "node-zip": "^1.1.1",
     "redis": "2.8.x",
-    "request": "2.81.x",
+    "request": "^2.83.0",
     "through": "2.3.x",
     "tmp": "0.0.33",
-    "uglify-js": "^3.1.1"
+    "uglify-js": "^3.1.3"
   },
   "devDependencies": {},
   "private": true,
