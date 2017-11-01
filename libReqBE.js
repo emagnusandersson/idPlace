@@ -1,3 +1,100 @@
+
+// idplace:
+//   client.js
+//     $createUserSelectorDiv
+//       $createUserDiv (calls createUser) (creates user with email and password)
+//     $loginSelectorDiv
+//       $formLogin (calls loginWEmail, setupById)
+//       $idPLoginDiv (calls loginGetGraph, setupById)
+//     $changePWPop (calls changePW)
+//     $verifyEmailPop (calls verifyEmail)
+//     $forgottPWPop (calls verifyPWReset)
+//   libReqBE.js
+//     createUser 
+//     loginWEmail
+//     changePW
+//     verifyEmail (Sends an email)
+//     verifyPWReset (Sends an email)
+//   libReq.js
+//     reqVerifyEmailReturn (Return from email)
+//     reqVerifyPWResetReturn (Return from email)
+
+
+// closebymarket:
+//   client.js
+//     $loginWLinkDiv (calls sendLoginLink)
+//     $loginWEmailDiv (calls loginWEmail)
+//   libReqBE.js
+//     sendLoginLink (from $loginWLinkDiv, Sends an email)
+//     loginWEmail (from $loginWEmailDiv)
+//     createUser
+//   libReq.js
+//     reqLoginWLink (Return from email)
+
+
+
+// closebymarketNew:
+//   client.js
+//     $loginWLinkDiv (calls sendLoginLink)
+//     $loginSelectorDiv
+//       $createUserDiv (calls createUser) (creates user with email and password)
+//       $formLogin (calls loginWEmail) 
+//     $changePWPop (calls changePW)
+//     $verifyEmailPop (calls verifyEmail)
+//     $forgottPWPop (calls verifyPWReset)
+//   libReqBE.js
+//     sendLoginLink ( Sends an email)
+//     createUser 
+//     loginWEmail
+//     changePW
+//     verifyEmail (Sends an email)
+//     verifyPWReset (Sends an email)
+//   libReq.js
+//     reqLoginWLink (Return from email)
+//     reqVerifyEmailReturn (Return from email)
+//     reqVerifyPWResetReturn (Return from email)
+
+
+
+//           Sign in                               Create account
+// [email]/[PW] [forgotPW]  | [FB]      Using password   |  Using Facebook
+
+
+// $loginSelectorDiv
+//       Sign in / Create account
+// Using external |    Using                 
+// ID-provider    | email/password
+// (recommended)  |
+//                |
+//                |[email]
+//                |[PW][Login]
+//                |[forgotPW]
+//                |---------------
+//     [FB]       |Create account
+//                |[Full name]
+//                |[email]
+//                |[PW]
+//                |[PW Again]
+
+
+//        Sign in / Create account
+//                | If you used to login with password
+//     [FB]       | (not available for new accounts)    
+//                |    [email]
+//                |    [sendLoginLink]
+//                |
+//
+
+//        Sign in / Create account
+//                | If you used to login with idPlace or password
+//     [FB]       | (not available for new accounts)    
+//                |    [email]
+//                |    [sendLoginLink]
+//                |
+//
+
+
+
 "use strict"
 
 /******************************************************************************
@@ -111,25 +208,25 @@ ReqBE.prototype.go=function*(){
   var arrCSRF, arrNoCSRF, allowed, boCheckCSRF, boSetNewCSRF;
   
   if(caller=='index'){
-    arrCSRF=['loginGetGraph', 'deleteExtId', 'uploadUser', 'UUpdate', 'createUser', 'UDelete', 'login', 'devAppListGet', 'devAppSecret', 'devAppSet', 'devAppDelete', 'setConsent', 'userAppListGet', 'userAppSet', 'userAppDelete', 'changePW', 'verifyEmail', 'verifyPWReset', 'deleteImage', 'uploadImage'];  // Functions that changes something must check and refresh CSRF-code
-    arrNoCSRF=['specSetup','logout'];  // ,'testA','testB'
+    arrCSRF=['loginGetGraph', 'deleteExtId', 'uploadUser', 'UUpdate', 'createUser', 'UDelete', 'loginWEmail', 'devAppListGet', 'devAppSecret', 'devAppSet', 'devAppDelete', 'setConsent', 'userAppListGet', 'userAppSet', 'userAppDelete', 'changePW', 'verifyEmail', 'verifyPWReset', 'deleteImage', 'uploadImage'];  // Functions that changes something must check and refresh CSRF-code
+    arrNoCSRF=['setupById','logout'];  // ,'testA','testB'
     allowed=arrCSRF.concat(arrNoCSRF);
 
       // Assign boCheckCSRF and boSetNewCSRF
     boCheckCSRF=0; boSetNewCSRF=0;   for(var i=0; i<beArr.length; i++){ var row=beArr[i]; if(in_array(row[0],arrCSRF)) {  boCheckCSRF=1; boSetNewCSRF=1;}  }    
-    if(StrComp(StrInFunc,['specSetup'])){ boCheckCSRF=0; boSetNewCSRF=1; }
+    if(StrComp(StrInFunc,['setupById'])){ boCheckCSRF=0; boSetNewCSRF=1; }
   }else if(caller=='pubKeyStore'){
-    arrCSRF=['pubKeyStore','loginGetGraph'];   arrNoCSRF=['specSetup','logout'];   allowed=arrCSRF.concat(arrNoCSRF);
+    arrCSRF=['pubKeyStore','loginGetGraph'];   arrNoCSRF=['setupById','logout'];   allowed=arrCSRF.concat(arrNoCSRF);
 
       // Assign boCheckCSRF and boSetNewCSRF
     boCheckCSRF=0; boSetNewCSRF=0;   for(var i=0;i<beArr.length; i++){ var row=beArr[i]; if(in_array(row[0],arrCSRF)) {  boCheckCSRF=1; boSetNewCSRF=1;}  }
-    if(StrComp(StrInFunc,['specSetup'])){ boCheckCSRF=0; boSetNewCSRF=1; }
+    if(StrComp(StrInFunc,['setupById'])){ boCheckCSRF=0; boSetNewCSRF=1; }
   }else if(caller=='mergeID'){
-    arrCSRF=['mergeID','loginGetGraph'];   arrNoCSRF=['specSetup','logout'];   allowed=arrCSRF.concat(arrNoCSRF);
+    arrCSRF=['mergeID','loginGetGraph'];   arrNoCSRF=['setupById','logout'];   allowed=arrCSRF.concat(arrNoCSRF);
 
       // Assign boCheckCSRF and boSetNewCSRF
     boCheckCSRF=0; boSetNewCSRF=0;   for(var i=0;i<beArr.length; i++){ var row=beArr[i]; if(in_array(row[0],arrCSRF)) {  boCheckCSRF=1; boSetNewCSRF=1;}  }
-    if(StrComp(StrInFunc,['specSetup'])){ boCheckCSRF=0; boSetNewCSRF=1; }
+    if(StrComp(StrInFunc,['setupById'])){ boCheckCSRF=0; boSetNewCSRF=1; }
 
   }else {debugger; }
   
@@ -170,8 +267,6 @@ ReqBE.prototype.go=function*(){
   this.mesO();
   
 }
-
-
 
 
 /******************************************************************************
@@ -312,9 +407,8 @@ Val.push(this.idIP, this.nameIP, this.image, this.email, this.timeZone, idUser);
   return [null, Ou];
 }
 ReqBE.prototype.getSecretFun=function*(inObj){
-  var req=this.req, flow=req.flow, res=this.res, site=req.site,  siteName=site.siteName, userTab=site.TableName.userTab;
+  var req=this.req, flow=req.flow, res=this.res, site=req.site,  siteName=site.siteName, {userTab, appTab}=site.TableName;;
   var Ou={};
-  var appTab=site.TableName.appTab
    
   if(typeof this.sessionMain!='object' || !('idUser' in this.sessionMain)) { return [new ErrorClient('No session')];}
   var idUser=this.sessionMain.idUser;
@@ -358,7 +452,7 @@ ReqBE.prototype.deleteExtId=function*(inObj){ // Remove link to the external IP
 }
 
 
-ReqBE.prototype.specSetup=function*(inObj){
+ReqBE.prototype.setupById=function*(inObj){
   var req=this.req, flow=req.flow, site=req.site,  siteName=site.siteName, Ou={};
   var userTab=site.TableName.userTab;
   if(typeof this.sessionMain!='object' || !('idUser' in this.sessionMain)) { return [new ErrorClient('No session')];}
@@ -399,7 +493,7 @@ ReqBE.prototype.logout=function*(inObj){
   this.mes('Logged out'); return [null, [Ou]];
 }
 
-ReqBE.prototype.login=function*(inObj){
+ReqBE.prototype.loginWEmail=function*(inObj){
   var req=this.req, flow=req.flow, site=req.site, Ou={};
   var userTab=site.TableName.userTab;
   var Sql=[], Val=[];
@@ -517,9 +611,7 @@ ReqBE.prototype.createUser=function*(inObj){ // writing needSession
     // Check reCaptcha with google
   var uGogCheck = "https://www.google.com/recaptcha/api/siteverify"; 
   var objForm={  secret:strReCaptchaSecretKey, response:inObj['g-recaptcha-response'], remoteip:req.connection.remoteAddress  };
-  //var reqStream=requestMod.post({url:uGogCheck, form: objForm},  function(err) { if(err) console.log(err);  });
-  //var buf, myConcat=concat(function(bufT){ buf=bufT; flow.next(); });  reqStream.pipe(myConcat); yield;
-  
+
   var semY=0, semCB=0, err, response, body;
   var reqStream=requestMod.post({url:uGogCheck, form: objForm},  function(errT, responseT, bodyT) { err=errT; response=responseT; body=bodyT; if(semY)flow.next(); semCB=1;  }); if(!semCB){semY=1; yield;}
   var buf=body;
@@ -555,8 +647,7 @@ ReqBE.prototype.createUser=function*(inObj){ // writing needSession
 
 
 ReqBE.prototype.setConsent=function*(inObj){
-  var req=this.req, flow=req.flow, site=req.site, siteName=site.siteName;
-  var appTab=site.TableName.appTab, user2AppTab=site.TableName.user2AppTab;
+  var req=this.req, flow=req.flow, site=req.site, siteName=site.siteName, {appTab, user2AppTab}=site.TableName;
   var Ou={};
   if(typeof this.sessionMain!='object' || !('idUser' in this.sessionMain)) { return [new ErrorClient('No session')];}
   var idUser=this.sessionMain.idUser;
@@ -616,8 +707,7 @@ ReqBE.prototype.UDelete=function*(inObj){  // writing needSession
  * userAppList
  ********************************************************************************/
 ReqBE.prototype.userAppListGet=function*(inObj){ 
-  var req=this.req, flow=req.flow, site=req.site;
-  var appTab=site.TableName.appTab, user2AppTab=site.TableName.user2AppTab;
+  var req=this.req, flow=req.flow, site=req.site, {appTab, user2AppTab}=site.TableName;
   if(typeof this.sessionMain!='object' || !('idUser' in this.sessionMain)) { return [new ErrorClient('No session')];}
   var idUser=this.sessionMain.idUser;
 
@@ -633,8 +723,7 @@ ReqBE.prototype.userAppListGet=function*(inObj){
 }
   //idUser, idApp, scope, tAccess, access_token, maxUnactivityToken
 ReqBE.prototype.userAppSet=function*(inObj){
-  var req=this.req, flow=req.flow, site=req.site;
-  var appTab=site.TableName.appTab, user2AppTab=site.TableName.user2AppTab;
+  var req=this.req, flow=req.flow, site=req.site, {appTab, user2AppTab}=site.TableName;
   if(typeof this.sessionMain!='object' || !('idUser' in this.sessionMain)) { return [new ErrorClient('No session')];}
   var idUser=this.sessionMain.idUser;
   var Ou={};
@@ -662,8 +751,7 @@ ReqBE.prototype.userAppSet=function*(inObj){
     
 }
 ReqBE.prototype.userAppDelete=function*(inObj){ 
-  var req=this.req, flow=req.flow, site=req.site;
-  var appTab=site.TableName.appTab, user2AppTab=site.TableName.user2AppTab;
+  var req=this.req, flow=req.flow, site=req.site, {appTab, user2AppTab}=site.TableName;
   if(typeof this.sessionMain!='object' || !('idUser' in this.sessionMain)) { return [new ErrorClient('No session')];}
   var idUser=this.sessionMain.idUser;
   var Ou={};
@@ -700,8 +788,7 @@ ReqBE.prototype.devAppListGet=function*(inObj){
   return [null, [Ou]];
 }
 ReqBE.prototype.devAppSecret=function*(inObj){ 
-  var req=this.req, flow=req.flow, site=req.site;
-  var appTab=site.TableName.appTab, userTab=site.TableName.userTab;
+  var req=this.req, flow=req.flow, site=req.site, {userTab, appTab}=site.TableName;
   if(typeof this.sessionMain!='object' || !('idUser' in this.sessionMain)) { return [new ErrorClient('No session')];}
   var idUser=this.sessionMain.idUser;
 
@@ -773,8 +860,6 @@ ReqBE.prototype.devAppDelete=function*(inObj){
   this.mes(mestmp);
   Ou.boOK=boOK;      
   return [null, [Ou]];
-  
-  
 }
 
 
@@ -787,8 +872,6 @@ ReqBE.prototype.changePW=function*(inObj){
   var idUser=this.sessionMain.idUser
   var passwordOld=inObj.passwordOld;
   var passwordNew=inObj.passwordNew;
-
-
 
   var Sql=[], Val=[];
   //Sql.push("UPDATE "+userTab+" SET password=? WHERE password=? AND idUser=?;");
@@ -818,7 +901,6 @@ ReqBE.prototype.verifyEmail=function*(inObj){
   var tmp=yield* setRedis(flow, redisVar, idUser, expirationTime);
   var Ou={};
 
-
   var Sql=[], Val=[];
   Sql.push("SELECT email FROM "+userTab+" WHERE idUser=?;");
   Val.push(idUser);
@@ -836,17 +918,10 @@ ReqBE.prototype.verifyEmail=function*(inObj){
 <p><a href='+uVerification+'>'+uVerification+'</a></p>  \n\
 <p>Note! The links stops working '+expirationTime/60+' minutes after the email was sent.</p>';
   
-  const msg = {
-    to: email,
-    from: 'noreply@idplace.org',
-    subject: 'Email verification',
-    html: strTxt,
-  };
-  sgMail.send(msg);
+  const msg = { to: email, from: 'noreply@idplace.org', subject: 'Email verification', html: strTxt }; sgMail.send(msg);
   this.mes('Email sent');
   Ou.boOK=1;
   return [null, [Ou]];
-
 }
 
 
@@ -857,7 +932,6 @@ ReqBE.prototype.verifyPWReset=function*(inObj){
 
   var tmp='email'; if(!(tmp in inObj)) { this.mes('The parameter '+tmp+' is required'); return [null, [Ou]];}
   var email=inObj.email;
-
 
   var Sql=[], Val=[];
   Sql.push("SELECT email FROM "+userTab+" WHERE email=?;");
@@ -874,7 +948,6 @@ ReqBE.prototype.verifyPWReset=function*(inObj){
   var redisVar=code+'_verifyPWReset';
   var tmp=yield* setRedis(flow, redisVar, email, expirationTime);
 
-
   var wwwSite=req.wwwSite;
   var uVerification=req.strSchemeLong+wwwSite+'/'+leafVerifyPWResetReturn+'?code='+code;
   var strTxt='<h3>Password reset request on '+wwwSite+'</h3> \n\
@@ -884,17 +957,9 @@ ReqBE.prototype.verifyPWReset=function*(inObj){
 <p><a href='+uVerification+'>'+uVerification+'</a></p>  \n\
 <p>Note! The links stops working '+expirationTime/60+' minutes after the email was sent.</p>';
   
-
-  const msg = {
-    to: email,
-    from: 'noreply@idplace.org',
-    subject: 'Password reset request',
-    html: strTxt,
-  };
-  sgMail.send(msg);
+  const msg = { to: email, from: 'noreply@idplace.org', subject: 'Password reset request', html: strTxt };  sgMail.send(msg);
   this.mes('Email sent'); Ou.boOK=1;
   return [null, [Ou]];
-
 }
 
 
@@ -932,7 +997,7 @@ ReqBE.prototype.deleteImage=function*(inObj){
 }
 
 ReqBE.prototype.uploadImage=function*(inObj){
-  var self=this, req=this.req, flow=req.flow, res=this.res, site=req.site, siteName=site.siteName;
+  var self=this, req=this.req, flow=req.flow, res=this.res, site=req.site, siteName=site.siteName,  {userTab, appTab}=site.TableName;
   var Ou={};
   if(typeof this.sessionMain!='object' || !('idUser' in this.sessionMain)) { return [new ErrorClient('No session')];}
   var idUser=this.sessionMain.idUser;
@@ -963,7 +1028,6 @@ ReqBE.prototype.uploadImage=function*(inObj){
   if(err) return [err];
 
 
-  var TableName=site.TableName, userTab=TableName.userTab, appTab=TableName.appTab;
   
   console.log('uploadImage data.length: '+data.length);
   if(data.length==0) {  return [new Error('data.length==0')]; }

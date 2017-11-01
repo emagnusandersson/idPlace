@@ -266,7 +266,7 @@ var flow=( function*(){
         if(pathName=='/'+leafBE){  var reqBE=new ReqBE(req, res);  yield* reqBE.go();    }
         else if(pathName=='/' ){  yield* reqIndex.call(objReqRes);    }
         else if(pathName.indexOf('/image/')==0){  yield* reqImage.call(objReqRes);   } //RegExp('^/image/').test(pathName)
-        else if(pathName=='/captcha.png'){  yield* reqCaptcha.call(objReqRes);   }
+        //else if(pathName=='/captcha.png'){  yield* reqCaptcha.call(objReqRes);   }
         else if(regexpLib.test(pathName) || regexpLooseJS.test(pathName)  || pathName=='/conversion.html'){   yield* reqStatic.call(objReqRes);   }
         else if(pathName=='/'+leafLoginBack){    yield* reqLoginBack.call(objReqRes);   }
         else if(pathName=='/access_token' ){  yield* reqToken.call(objReqRes);   }

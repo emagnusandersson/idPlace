@@ -51,21 +51,21 @@ var print_r=function(o,boHTML){
   if(typeof(boHTML) !='undefined' && boHTML) tmp=tmp.replace(/\n/g,'<br>').replace(/\t/g,'&nbsp;&nbsp;&nbsp;'); return tmp;
 }
 
-extractLoc=function(obj,strObjName){   // Ex: eval(extractLoc(objMy,'objMy'));
-  var Str=[];  for(var key in obj) Str.push(key+'='+strObjName+'.'+key);
-  var str=''; if(Str.length) str='var '+Str.join(', ')+';';  return str;
-}
-//extract=function(obj){  for(var key in obj){  window[key]=obj[key];  }  }
-extract=function(obj,par){
-  if(typeof par=='undefined') par=app; for(var key in obj){
-    par[key]=obj[key];
-  }
-}
-extractLocSome=function(strObjName,arrSome){  // Ex: eval(extractLocSome('objMy',['a','b']));
-  if(typeof arrSome=='string') arrSome=[arrSome];
-  var len=arrSome.length, Str=Array(len);  for(var i=0;i<len;i++) { var key=arrSome[i]; Str[i]=key+'='+strObjName+'.'+key; }
-  return 'var '+Str.join(', ')+';';
-}
+//extractLoc=function(obj,strObjName){   // Ex: eval(extractLoc(objMy,'objMy'));
+  //var Str=[];  for(var key in obj) Str.push(key+'='+strObjName+'.'+key);
+  //var str=''; if(Str.length) str='var '+Str.join(', ')+';';  return str;
+//}
+////extract=function(obj){  for(var key in obj){  window[key]=obj[key];  }  }
+//extract=function(obj,par){
+  //if(typeof par=='undefined') par=app; for(var key in obj){
+    //par[key]=obj[key];
+  //}
+//}
+//extractLocSome=function(strObjName,arrSome){  // Ex: eval(extractLocSome('objMy',['a','b']));
+  //if(typeof arrSome=='string') arrSome=[arrSome];
+  //var len=arrSome.length, Str=Array(len);  for(var i=0;i<len;i++) { var key=arrSome[i]; Str[i]=key+'='+strObjName+'.'+key; }
+  //return 'var '+Str.join(', ')+';';
+//}
 
 
 

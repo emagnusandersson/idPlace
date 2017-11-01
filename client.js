@@ -223,12 +223,12 @@ var mainDivExtend=function($el){
     //
 
   var $buttonSignIn=$('<button>').addClass('highStyle').append('Sign in').click(function(){
-    doHistPush({$view:$loginPreDiv});
-    $loginPreDiv.setVis();
+    doHistPush({$view:$loginSelectorDiv});
+    $loginSelectorDiv.setVis();
   });
   var $buttonCreateAccount=$('<button>').addClass('highStyle').append('Create an account').click(function(){
-    doHistPush({$view:$createUserPreDiv});
-    $createUserPreDiv.setVis();
+    doHistPush({$view:$createUserSelectorDiv});
+    $createUserSelectorDiv.setVis();
   });
   var $signInDiv=$('<div>').css(cssCol).append($buttonSignIn);
   var $createAccountDiv=$('<div>').css(cssCol).css({'border-left':'2px solid grey','vertical-align':'top'}).append($buttonCreateAccount);
@@ -319,15 +319,15 @@ getOAuthCode=function*(flow, boReauthenticate=false){
 }
 
 
-  // Used in $loginPreDiv and $createUserPreDiv
-loginDivExtend=function($el){
+  // Used in $loginSelectorDiv and $createUserSelectorDiv
+idPLoginDivExtend=function($el){
   var strButtonSize='2em';
   var $imgFb=$('<img>').prop({src:uFb}).click(function(){
     var flow=(function*(){
       var [err, code]=yield* getOAuthCode(flow); if(err) {setMess(err); return;}
       var timeZone=new Date().toString().match(/([A-Z]+[\+-][0-9]+.*)/)[1];
       var oT={IP:strIPPrim, fun:'userFun', caller:'index', code:code, timeZone:timeZone};
-      var vec=[['loginGetGraph', oT], ['specSetup',{idApp:idApp}, function(){ flow.next(); }]];   majax(oAJAX,vec);   yield;
+      var vec=[['loginGetGraph', oT], ['setupById',{idApp:idApp}, function(){ flow.next(); }]];   majax(oAJAX,vec);   yield;
       
       if($el.cb) $el.cb();
     })(); flow.next();
@@ -344,7 +344,7 @@ loginDivExtend=function($el){
 formLoginExtend=function($el){  
   var login=function(){  
     var tmp=SHA1($formLogin.$inpPass.val()+strSalt);
-    var vec=[['login',{email:$formLogin.$inpEmail.val(), password:tmp}], ['specSetup',{idApp:idApp}, $el.cb]];   majax(oAJAX,vec); 
+    var vec=[['loginWEmail',{email:$formLogin.$inpEmail.val(), password:tmp}], ['setupById',{idApp:idApp}, $el.cb]];   majax(oAJAX,vec); 
     $formLogin.$inpPass.val('');
     return false;
   }
@@ -358,9 +358,9 @@ formLoginExtend=function($el){
 }
 
 
-var loginPreDivExtend=function($el){
+var loginSelectorDivExtend=function($el){
 "use strict"
-  $el.toString=function(){return 'loginPreDiv';}
+  $el.toString=function(){return 'loginSelectorDiv';}
   $el.myToggle=function(boOn){
     if(boOn) $el.show();else $el.hide(); if(boOn) $formLogin.$inpPass.focus();
   }
@@ -368,7 +368,7 @@ var loginPreDivExtend=function($el){
     $forgottPWPop.openFunc();
     return false;
   }
-  $el.setUp=function(){ $messDiv.insertAfter($formLogin); $divRight.append($loginDiv);  }
+  $el.setUp=function(){ $messDiv.insertAfter($formLogin); $divRight.append($idPLoginDiv);  }
   var $h1=$('<h1>').append('Sign in');
   var cssCol={display:'inline-block','box-sizing': 'border-box',padding:'1em',flex:1}; //width:'50%',
 
@@ -450,10 +450,10 @@ devAppSecretDivExtend=function($el){
 }
 
 
-var createUserPreDivExtend=function($el){
+var createUserSelectorDivExtend=function($el){
 "use strict"
-  $el.toString=function(){return 'createUserPreDiv';}
-  $el.setUp=function(){ $divRight.append($loginDiv);   }
+  $el.toString=function(){return 'createUserSelectorDiv';}
+  $el.setUp=function(){ $divRight.append($idPLoginDiv);   }
   var cssCol={display:'inline-block','box-sizing': 'border-box',padding:'1em',flex:1}; //width:'50%',
   var $buttonCreateAccount=$('<button>').addClass('highStyle').append('Create an account').click(function(){
     doHistPush({$view:$createUserDiv});
@@ -461,13 +461,9 @@ var createUserPreDivExtend=function($el){
   });
   var $divCont=$el.$divCont=$('<div>').css({padding:'0 0.3em 0 0', overflow:'hidden', 'max-width':menuMaxWidth+'px', 'text-align':'left', margin:'1em auto'});
   
-
-
   var $h1=$('<h1>').append('Create account');
   var $headUN=$('<h2>').append('Using password');
   var $headFB=$('<h2>').append('Using Facebook');
-
-
 
   var $divLeft=$('<div>').append($headUN, $buttonCreateAccount);
   var $divRight=$('<div>').append($headFB);
@@ -522,7 +518,7 @@ var createUserDivExtend=function($el){
     var strTmp=grecaptcha.getResponse(); if(!strTmp) {setMess("Captcha response is empty"); return; }
     $.extend(o, {password:SHA1($inpPass.val().trim()+strSalt),  'g-recaptcha-response': grecaptcha.getResponse()});
 
-    var vec=[['createUser',o,$el.setUp], ['specSetup',{idApp:idApp}, $el.cb]];   majax(oAJAX,vec); 
+    var vec=[['createUser',o], ['setupById',{idApp:idApp}, $el.cb]];   majax(oAJAX,vec); 
     $inpPass.val(''); $inpPassB.val('');
     setMess('',null,true); 
   }
@@ -545,11 +541,16 @@ var createUserDivExtend=function($el){
     $divCont.append($divReCaptcha);
   }
   $el.setUp=function(){
-    $Inp.each(function(i){
-      var $inp=$(this), strName=$inp.attr('name'); Prop[strName].setInp($inp);
-    });
+    //$divReCaptchaW.append($divReCaptcha);
+    grecaptcha.render($divReCaptcha[0], {sitekey:strReCaptchaSiteKey})
     return true; 
   }
+  //$el.setUp=function(){
+    //$Inp.each(function(i){
+      //var $inp=$(this), strName=$inp.attr('name'); Prop[strName].setInp($inp);
+    //});
+    //return true; 
+  //}
   $el.cb=null;
 
   var $Inp=$([]);
@@ -557,7 +558,7 @@ var createUserDivExtend=function($el){
 
   var $divCont=$el.$divCont=$('<div>').css({padding:'0 0.3em 0 0', overflow:'hidden', 'max-width':menuMaxWidth+'px', 'text-align':'left', margin:'1em auto'});
   
-  var $divReCaptcha=$('<div class="g-recaptcha" data-sitekey="'+strReCaptchaSiteKey+'">');
+  var $divReCaptcha=$('<div>');
   
   var $h1=$('<h1>').append('Create account');  
   $el.$divDisclaimerW=$('<div>').css({'margin':'0em', 'padding':'0em'});
@@ -603,6 +604,54 @@ var deleteAccountPopExtend=function($el){
   var $blanket=$('<div>').addClass("blanket");
   var $centerDiv=$('<div>').append($h1,'<br>',$cancel,$yes);
   $centerDiv.addClass("Center").css({'width':'20em', height:'9em', padding:'1.1em'})
+  if(boIE) $centerDiv.css({'width':'20em'}); 
+  $el.addClass("Center-Container").append($centerDiv,$blanket); //
+
+  return $el;
+}
+
+var changePWPopExtend=function($el){
+"use strict"
+  $el.toString=function(){return 'changePWPop';}
+  var save=function(){ 
+    resetMess();
+    $messDiv.html('');
+    if($inpPass.val().trim()!==$inpPassB.val().trim()) { setMess('The new password fields are not equal'); return; }
+    var lTmp=boDbg?2:6; if($inpPass.val().trim().length<lTmp) { setMess('The password must be at least '+lTmp+' characters long'); return; }
+
+    var o={passwordOld:SHA1($inpPassOld.val().trim()+strSalt), passwordNew:SHA1($inpPass.val().trim()+strSalt)};
+
+    var vec=[['changePW',o,changePWRet]];   majax(oAJAX,vec); 
+    setMess('',null,true); 
+  }
+
+  $el.openFunc=function(){
+    doHistPush({$view:$changePWPop});
+    $el.setVis();
+    $inpPassOld.val(''); $inpPass.val(''); $inpPassB.val('');
+  }
+  $el.setVis=function(){
+    $el.show();   
+    return true;
+  }
+  var changePWRet=function(data){
+    if(data.boOK) { $inpPassOld.val(''); $inpPass.val(''); $inpPassB.val('');  doHistBack(); }
+  }
+
+  var $h1=$('<h3>').append('Change your password');
+  var $blanket=$('<div>').addClass("blanket");
+  var $messDiv=$('<div>').css({color:'red'});
+  var $labPassOld=$('<label>').append('Old password'), $labPass=$('<label>').append('New password'),  $labPassB=$('<label>').append('New password again');  
+  var $inpPassOld=$('<input type=password>'), $inpPass=$('<input type=password placeholder="at least 6 characters">'),  $inpPassB=$('<input type=password>');
+
+  $([]).push($inpPassOld, $inpPass, $inpPassB).css({display:'block', 'margin-bottom':'0.5em'}).keypress( function(e){ if(e.which==13) {okF();return false;}} );
+
+  var $ok=$('<button>').html(langHtml.OK).addClass('highStyle').click(save);
+  var $cancel=$('<button>').html(langHtml.Cancel).addClass('highStyle').click(doHistBack);
+  var $divBottom=$('<div>').append($cancel,$ok);  //$buttonCancel,
+
+  var $centerDiv=$('<div>').append($h1, $messDiv,   $labPassOld, $inpPassOld, $labPass, $inpPass, $labPassB, $inpPassB, $divBottom);
+  $centerDiv.addClass("Center").css({'width':'20em', height:'21em', padding:'1.1em'})
   if(boIE) $centerDiv.css({'width':'20em'}); 
   $el.addClass("Center-Container").append($centerDiv,$blanket); //
 
@@ -684,53 +733,6 @@ var forgottPWPopExtend=function($el){
 
   return $el;
 }
-var changePWPopExtend=function($el){
-"use strict"
-  $el.toString=function(){return 'changePWPop';}
-  var save=function(){ 
-    resetMess();
-    $messDiv.html('');
-    if($inpPass.val().trim()!==$inpPassB.val().trim()) { setMess('The new password fields are not equal'); return; }
-    var lTmp=boDbg?2:6; if($inpPass.val().trim().length<lTmp) { setMess('The password must be at least '+lTmp+' characters long'); return; }
-
-    var o={passwordOld:SHA1($inpPassOld.val().trim()+strSalt), passwordNew:SHA1($inpPass.val().trim()+strSalt)};
-
-    var vec=[['changePW',o,changePWRet]];   majax(oAJAX,vec); 
-    setMess('',null,true); 
-  }
-
-  $el.openFunc=function(){
-    doHistPush({$view:$changePWPop});
-    $el.setVis();
-    $inpPassOld.val(''); $inpPass.val(''); $inpPassB.val('');
-  }
-  $el.setVis=function(){
-    $el.show();   
-    return true;
-  }
-  var changePWRet=function(data){
-    if(data.boOK) { $inpPassOld.val(''); $inpPass.val(''); $inpPassB.val('');  doHistBack(); }
-  }
-
-  var $h1=$('<h3>').append('Change your password');
-  var $blanket=$('<div>').addClass("blanket");
-  var $messDiv=$('<div>').css({color:'red'});
-  var $labPassOld=$('<label>').append('Old password'), $labPass=$('<label>').append('New password'),  $labPassB=$('<label>').append('New password again');  
-  var $inpPassOld=$('<input type=password>'), $inpPass=$('<input type=password placeholder="at least 6 characters">'),  $inpPassB=$('<input type=password>');
-
-  $([]).push($inpPassOld, $inpPass, $inpPassB).css({display:'block', 'margin-bottom':'0.5em'}).keypress( function(e){ if(e.which==13) {okF();return false;}} );
-
-  var $ok=$('<button>').html(langHtml.OK).addClass('highStyle').click(save);
-  var $cancel=$('<button>').html(langHtml.Cancel).addClass('highStyle').click(doHistBack);
-  var $divBottom=$('<div>').append($cancel,$ok);  //$buttonCancel,
-
-  var $centerDiv=$('<div>').append($h1, $messDiv,   $labPassOld, $inpPassOld, $labPass, $inpPass, $labPassB, $inpPassB, $divBottom);
-  $centerDiv.addClass("Center").css({'width':'20em', height:'21em', padding:'1.1em'})
-  if(boIE) $centerDiv.css({'width':'20em'}); 
-  $el.addClass("Center-Container").append($centerDiv,$blanket); //
-
-  return $el;
-}
 var consentDivExtend=function($el){
 "use strict"
   $el.toString=function(){return 'consentDiv';}
@@ -757,9 +759,9 @@ var consentDivExtend=function($el){
     $el.cb(false);
   });
   var $buttAllow=$('<button>').addClass('highStyle').append('Allow').click(function(){
-    //var vec=[['userAppSet',{scope:scopeAsked, idApp:idApp, maxUnactivityToken:maxUnactivityToken}], ['specSetup',{idApp:idApp},$el.cb]];   majax(oAJAX,vec);
+    //var vec=[['userAppSet',{scope:scopeAsked, idApp:idApp, maxUnactivityToken:maxUnactivityToken}], ['setupById',{idApp:idApp},$el.cb]];   majax(oAJAX,vec);
     var maxUnactivityToken=objQS.response_type=='code'?60*24*3600:2*3600;
-    var vec=[['setConsent',{scope:scopeAsked, idApp:idApp, maxUnactivityToken:maxUnactivityToken}], ['specSetup',{idApp:idApp},function(data){$el.cb(true);}]];   majax(oAJAX,vec); 
+    var vec=[['setConsent',{scope:scopeAsked, idApp:idApp, maxUnactivityToken:maxUnactivityToken}], ['setupById',{idApp:idApp},function(data){$el.cb(true);}]];   majax(oAJAX,vec); 
   });
   $el.append($pA, $pOldPerm, $pB, $buttCancel, $buttAllow);
 
@@ -875,7 +877,7 @@ var userSettingDivExtend=function($el){
       var tmp=Prop[strName].saveInp($inp); if(tmp[0]) {setMess(tmp[0]); return; } else o[strName]=tmp[1];
     }); 
     if(boErr) return;
-    var vec=[['UUpdate',o], ['specSetup',{},$el.setUp]];   majax(oAJAX,vec);
+    var vec=[['UUpdate',o], ['setupById',{},$el.setUp]];   majax(oAJAX,vec);
     setMess('',null,true); 
   }
 
@@ -1481,14 +1483,14 @@ PropExtend=function(){
     var $c=$('<span>');
     $c[0].$nr=$('<span>');
     $c[0].$butDelete=$('<button>').addClass('highStyle').append('Clear').click(function(){
-      var vec=[['deleteExtId', {kind:'fb'}], ['specSetup',{}, $userSettingDiv.setUp]];   majax(oAJAX,vec); 
+      var vec=[['deleteExtId', {kind:'fb'}], ['setupById',{}, $userSettingDiv.setUp]];   majax(oAJAX,vec); 
     });
     $c[0].$buttFetch=$('<button>').addClass('highStyle').html('Fetch').click(function(){
       var flow=(function*(){
         var [err, code]=yield* getOAuthCode(flow); if(err) {setMess(err); return;}
         var timeZone=new Date().toString().match(/([A-Z]+[\+-][0-9]+.*)/)[1];
         var oT={IP:strIPPrim, fun:'fetchFun', caller:'index', code:code, timeZone:timeZone};
-        var vec=[['loginGetGraph', oT], ['specSetup',{idApp:idApp}, function(){ flow.next(); }]];   majax(oAJAX,vec);   yield;
+        var vec=[['loginGetGraph', oT], ['setupById',{idApp:idApp}, function(){ flow.next(); }]];   majax(oAJAX,vec);   yield;
         
         $userSettingDiv.setUp();
       })(); flow.next();
@@ -1555,13 +1557,13 @@ PropExtend=function(){
     var $c=$('<span>');
     $c[0].$thumb=$('<img>').css({'vertical-align':'middle'});
     $c[0].$butDeleteImg=$('<button>').addClass('highStyle').append('Clear').click(function(){
-      var vec=[['deleteImage', {kind:'u'}], ['specSetup',{}, $userSettingDiv.setUp]];   majax(oAJAX,vec); 
+      var vec=[['deleteImage', {kind:'u'}], ['setupById',{}, $userSettingDiv.setUp]];   majax(oAJAX,vec); 
     });
     var uploadCallback=function(){
       var tmpF=function(){
         var tmp=calcImageUrlUser(); $c[0].$thumb.prop({src:tmp}); doHistBack();
       };
-      var vec=[ ['specSetup',{},tmpF]];   majax(oAJAX,vec);
+      var vec=[ ['setupById',{},tmpF]];   majax(oAJAX,vec);
     }
     var $buttUploadImage=$('<button>').addClass('highStyle').html(langHtml.uploadNewImg).click(function(){$uploadImageDiv.openFunc('u',uploadCallback);});
     $c.append($c[0].$thumb, $c[0].$butDeleteImg, $buttUploadImage);  //langHtml.YourImage+': ',
@@ -1851,16 +1853,16 @@ setUp1=function(){
   
 
   $mainDiv=mainDivExtend($('<div>')); 
-  $loginDiv=loginDivExtend($("<div>"));
+  $idPLoginDiv=idPLoginDivExtend($("<div>"));
   $formLogin=formLoginExtend($('#formLogin'));
-  $loginPreDiv=loginPreDivExtend($('<div>'));
+  $loginSelectorDiv=loginSelectorDivExtend($('<div>'));
   //$loginForSecretDiv=loginForSecretDivExtend($('<div>'));
 
 
   $deleteAccountPop=deleteAccountPopExtend($('<div>'));
+  $changePWPop=changePWPopExtend($('<div>'));
   $verifyEmailPop=verifyEmailPopExtend($('<div>'));
   $forgottPWPop=forgottPWPopExtend($('<div>'));
-  $changePWPop=changePWPopExtend($('<div>'));
   $uploadImageDiv=uploadImageDivExtend($("<div>"));
 
   $devAppList=devAppListExtend($('<div>'));
@@ -1876,12 +1878,12 @@ setUp1=function(){
 
 
   $createUserDiv=createUserDivExtend($('<div>'));
-  $createUserPreDiv=createUserPreDivExtend($('<div>'));
+  $createUserSelectorDiv=createUserSelectorDivExtend($('<div>'));
   $userSettingDiv=userSettingDivExtend($('<div>'));
   $consentDiv=consentDivExtend($('<div>'));
   
  
-  StrMainDiv=['loginInfo', 'H1', 'mainDiv', 'loginPreDiv', 'createUserPreDiv', 'createUserDiv', 'userSettingDiv', 'consentDiv', 'deleteAccountPop', 'verifyEmailPop', 'forgottPWPop', 'changePWPop', 'uploadImageDiv',
+  StrMainDiv=['loginInfo', 'H1', 'mainDiv', 'loginSelectorDiv', 'createUserSelectorDiv', 'createUserDiv', 'userSettingDiv', 'consentDiv', 'deleteAccountPop', 'verifyEmailPop', 'forgottPWPop', 'changePWPop', 'uploadImageDiv',
  'devAppList', 'devAppSetDiv', 'devAppDeleteDiv', 'devAppSecretDiv', 'userAppSetDiv', 'userAppDeleteDiv', 'userAppList'];  
 
 
@@ -1908,13 +1910,13 @@ setUp1=function(){
     //$tmp.$divCont.css({'margin-bottom':285+'px'});
     return true;
   }
-  $loginPreDiv.setVis=function(){
+  $loginSelectorDiv.setVis=function(){
     var $tmp=this;  $mainDivsTogglable.not($tmp).hide(); $tmp.show();
     $tmp.setUp();
     //$tmp.$divCont.css({'margin-bottom':285+'px'});
     return true;
   }
-  $createUserPreDiv.setVis=function(){
+  $createUserSelectorDiv.setVis=function(){
     var $tmp=this;  $mainDivsTogglable.not($tmp).hide(); $tmp.show();
     $tmp.setUp();
     //$tmp.$divCont.css({'margin-bottom':285+'px'});
@@ -1924,6 +1926,7 @@ setUp1=function(){
     var $tmp=this;  $mainDivsTogglable.not($tmp).hide(); $tmp.show();
     //$tmp.$divCont.css({'margin-bottom':285+'px'}); 
     $tmp.$divDisclaimerW.append($divDisclaimer);
+    $tmp.setUp();
     return true;
   }
   $userSettingDiv.setVis=function(){
@@ -1985,7 +1988,7 @@ setUp1=function(){
   $body.click(setBottomMargin);
 
     // In normal case: go back to mainDiv after successfull login/logout/createUser
-  $loginDiv.cb=$formLogin.cb=$createUserDiv.cb=$loginInfo.cb=function(){
+  $idPLoginDiv.cb=$formLogin.cb=$createUserDiv.cb=$loginInfo.cb=function(){
     if(history.StateMy[history.state.ind].$view===$mainDiv) {$mainDiv.setVis();}
     else history.fastBack($mainDiv);
   };
@@ -1996,13 +1999,13 @@ setUp1=function(){
 }
 
 //$mainDiv
-//  $loginPreDiv  ($loginDiv, $formLogin)
-//  $createUserPreDiv  ($loginDiv)
+//  $loginSelectorDiv  ($idPLoginDiv, $formLogin)
+//  $createUserSelectorDiv  ($idPLoginDiv)
 //    $createUserDiv
 
 authFlowF=function*(flow){
   if(Object.keys(userInfoFrDB).length==0){
-    $loginDiv.cb=function(){
+    $idPLoginDiv.cb=function(){
       flow.next();
     };
     $formLogin.cb=function(){
@@ -2012,7 +2015,7 @@ authFlowF=function*(flow){
       flow.next();
     };
     yield;
-    $loginDiv.cb=null;$formLogin.cb=null; $createUserDiv.cb=null;
+    $idPLoginDiv.cb=null;$formLogin.cb=null; $createUserDiv.cb=null;
   }
   var tmpScopeGranted=objUApp?objUApp.scope:'';
   var boScopeOK=isScopeOK(tmpScopeGranted, scopeAsked);
@@ -2046,13 +2049,13 @@ authFlowF=function*(flow){
 authFlowT=function(){
   this.continueStart=function(){
     if(Object.keys(userInfoFrDB).length==0){
-      $loginDiv.cb=continueGotUser;
+      $idPLoginDiv.cb=continueGotUser;
       $formLogin.cb=continueGotUser;
       $createUserDiv.cb=continueGotUser;
     } else continueGotUser();
   }
   var continueGotUser=function(){
-    $loginDiv.cb=null;$formLogin.cb=null; $createUserDiv.cb=null;
+    $idPLoginDiv.cb=null;$formLogin.cb=null; $createUserDiv.cb=null;
     var tmpScopeGranted=objUApp?objUApp.scope:'';
     var boScopeOK=isScopeOK(tmpScopeGranted, scopeAsked);
     var boRerequest=objQS.auth_type=='rerequest';

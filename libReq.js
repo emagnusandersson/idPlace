@@ -207,7 +207,7 @@ app.reqIndex=function*() {
   }
   Str.push(strTracker);
 
-  Str.push("<script src='https://www.google.com/recaptcha/api.js'></script>");
+  Str.push("<script src='https://www.google.com/recaptcha/api.js?render=explicit'></script>");
 
 
 
@@ -264,8 +264,7 @@ strIPPrim="+JSON.stringify(strIPPrim)+";\n\
  * reqMe
  ******************************************************************************/
 app.reqMe=function*() {
-  var req=this.req, flow=req.flow, res=this.res, sessionID=req.sessionID, site=req.site, TableName=site.TableName;
-  var user2AppTab=TableName.user2AppTab, userTab=TableName.userTab;
+  var req=this.req, flow=req.flow, res=this.res, sessionID=req.sessionID, site=req.site, TableName=site.TableName, {userTab, user2AppTab}=TableName;
   var objQS=req.objQS;
   var site=req.site, siteName=site.siteName;
   var wwwSite=req.wwwSite
@@ -386,8 +385,7 @@ app.PropAsScope.all=Object.keys(objAllTmp);
  * reqToken
  ******************************************************************************/
 app.reqToken=function*() {
-  var req=this.req, flow=req.flow, res=this.res, sessionID=req.sessionID, site=req.site, TableName=site.TableName;
-  var user2AppTab=TableName.user2AppTab, userTab=TableName.userTab, appTab=TableName.appTab;
+  var req=this.req, flow=req.flow, res=this.res, sessionID=req.sessionID, site=req.site, TableName=site.TableName, {userTab, appTab, user2AppTab}=TableName;
   var objQS=req.objQS;
   var site=req.site, siteName=site.siteName, wwwSite=req.wwwSite;
   var wwwSite=req.wwwSite
@@ -505,6 +503,70 @@ window.close();\n\
 }
 
 
+
+/******************************************************************************
+ * reqVerifyEmailReturn
+ ******************************************************************************/
+app.reqVerifyEmailReturn=function*() {
+  var req=this.req, flow=req.flow, res=this.res, site=req.site, sessionID=req.sessionID;
+  var userTab=site.TableName.userTab;
+  var objQS=req.objQS;
+  var tmp='code'; if(!(tmp in objQS)) { res.out200('The parameter '+tmp+' is required'); return;}
+  var codeIn=objQS.code;
+  var redisVar=codeIn+'_verifyEmail', idUser=yield* getRedis(flow, redisVar);
+  
+  if(idUser===null) { res.out200('No such code'); return;}
+
+  var Sql=[], Val=[];
+  Sql.push("UPDATE "+userTab+" SET boEmailVerified=1 WHERE idUser=?;");
+  Val.push(idUser);
+
+  var sql=Sql.join('\n');
+  var [err, results]=yield* myQueryGen(flow, sql, Val, mysqlPool); if(err) {  res.out500(err); return; }
+
+  var c=results.affectedRows, mestmp; 
+  if(c==1) { mestmp="Email verified"; } else {mestmp="Error (Nothing done)"; }
+  res.end(mestmp);
+}
+
+
+/******************************************************************************
+ * reqVerifyPWResetReturn
+ ******************************************************************************/
+app.reqVerifyPWResetReturn=function*() {
+  var req=this.req, flow=req.flow, res=this.res, site=req.site, sessionID=req.sessionID;
+  var userTab=site.TableName.userTab;
+  var objQS=req.objQS;
+  var tmp='code'; if(!(tmp in objQS)) { res.out200('The parameter '+tmp+' is required'); return;}
+  var codeIn=objQS.code;
+  var redisVar=codeIn+'_verifyPWReset', email=yield* getRedis(flow, redisVar);
+  
+  if(email===null) { res.out200('No such code'); return;}
+
+  var password=randomHash();
+  var passwordHash=SHA1(password+strSalt);
+
+  var Sql=[], Val=[];
+  Sql.push("UPDATE "+userTab+" SET password=? WHERE email=?;");
+  Val.push(passwordHash, email);
+
+  var sql=Sql.join('\n');
+  var [err, results]=yield* myQueryGen(flow, sql, Val, mysqlPool); if(err) {  res.out500(err); return; }
+
+  var c=results.affectedRows, mestmp; 
+  if(c!=1) { res.out500("Error ("+c+" affectedRows)"); return; }
+
+
+  var wwwSite=req.wwwSite;
+  var strTxt='<h3>New password on '+wwwSite+'</h3> \n\
+<p>Your new password on '+wwwSite+' is '+password+'</p>';
+  
+  const msg = { to: email, from: 'noreply@idplace.org', subject: 'Password reset', html: strTxt }; sgMail.send(msg);
+  res.end("A new password has been generated and sent to your email address.");
+}
+
+
+
 /******************************************************************************
  * reqImage
  ******************************************************************************/
@@ -554,83 +616,9 @@ app.reqImage=function*() {
 }
 
 
-/******************************************************************************
- * reqVerifyEmailReturn
- ******************************************************************************/
-app.reqVerifyEmailReturn=function*() {
-  var req=this.req, flow=req.flow, res=this.res, site=req.site, sessionID=req.sessionID;
-  var userTab=site.TableName.userTab;
-  var objQS=req.objQS;
-  var tmp='code'; if(!(tmp in objQS)) { res.out200('The parameter '+tmp+' is required'); return;}
-  var codeIn=objQS.code;
-  var redisVar=codeIn+'_verifyEmail', idUser=yield* getRedis(flow, redisVar);
-  
-  if(idUser===null) { res.out200('No such code'); return;}
-
-  var Sql=[], Val=[];
-  Sql.push("UPDATE "+userTab+" SET boEmailVerified=1 WHERE idUser=?;");
-  Val.push(idUser);
-
-  var sql=Sql.join('\n');
-  var [err, results]=yield* myQueryGen(flow, sql, Val, mysqlPool); if(err) {  res.out500(err); return; }
-
-  var c=results.affectedRows, mestmp; 
-  if(c==1) { mestmp="Email verified"; } else {mestmp="Error (Nothing done)"; }
-  res.end(mestmp);
-}
-
-
-
-
 
 /******************************************************************************
- * reqVerifyPWResetReturn
- ******************************************************************************/
-app.reqVerifyPWResetReturn=function*() {
-  var req=this.req, flow=req.flow, res=this.res, site=req.site, sessionID=req.sessionID;
-  var userTab=site.TableName.userTab;
-  var objQS=req.objQS;
-  var tmp='code'; if(!(tmp in objQS)) { res.out200('The parameter '+tmp+' is required'); return;}
-  var codeIn=objQS.code;
-  var redisVar=codeIn+'_verifyPWReset', email=yield* getRedis(flow, redisVar);
-  
-  if(email===null) { res.out200('No such code'); return;}
-
-  var password=randomHash();
-  var passwordHash=SHA1(password+strSalt);
-
-  var Sql=[], Val=[];
-  Sql.push("UPDATE "+userTab+" SET password=? WHERE email=?;");
-  Val.push(passwordHash, email);
-
-  var sql=Sql.join('\n');
-  var [err, results]=yield* myQueryGen(flow, sql, Val, mysqlPool); if(err) {  res.out500(err); return; }
-
-  var c=results.affectedRows, mestmp; 
-  if(c!=1) { res.out500("Error ("+c+" affectedRows)"); return; }
-
-
-  var wwwSite=req.wwwSite;
-  var strTxt='<h3>New password on '+wwwSite+'</h3> \n\
-<p>Your new password on '+wwwSite+' is '+password+'</p>';
-  
-
-  const msg = {
-    to: email,
-    from: 'noreply@idplace.org',
-    subject: 'Password reset',
-    html: strTxt,
-  };
-  sgMail.send(msg);
-
-  res.end("A new password has been generated and sent to your email address.");
-}
-
-
-
-
-/******************************************************************************
- * reqStatic
+ * reqStatic (request for static files)
  ******************************************************************************/
 app.reqStatic=function*() {
   var req=this.req, flow=req.flow, res=this.res;
@@ -661,31 +649,6 @@ app.reqStatic=function*() {
   res.write(buf); //, this.encWrite
   res.end();
 }
-
-
-
-
-
-/******************************************************************************
- * reqCaptcha
- ******************************************************************************/
-app.reqCaptcha=function*() {
-  var req=this.req, flow=req.flow, res=this.res, sessionID=req.sessionID;
-  var strCaptcha=parseInt(Math.random()*9000+1000).toString();
-  var redisVar=sessionID+'_captcha', tmp=yield* setRedis(flow, redisVar, strCaptcha, 3600);
-  var p = new captchapng(80,30,strCaptcha); // width,height,numeric captcha
-  p.color(0, 0, 0, 0);  // First color: background (red, green, blue, alpha)
-  p.color(80, 80, 80, 255); // Second color: paint (red, green, blue, alpha)
-
-  var img = p.getBase64();
-  var imgbase64 = new Buffer(img,'base64');
-  res.writeHead(200, {
-      'Content-Type': 'image/png'
-  });
-  res.end(imgbase64);
-}
-
-
 
 
 
@@ -733,7 +696,7 @@ app.reqMonitor=function*() {
 
 
 /******************************************************************************
- * reqStat
+ * reqStat (request for status of the tables)
  ******************************************************************************/
 app.reqStat=function*() {
   var req=this.req, flow=req.flow, res=this.res;
@@ -847,16 +810,15 @@ app.SetupSql.prototype.createTable=function(SiteName,boDropOnly){
   for(var iSite=0;iSite<SiteName.length;iSite++){
   var siteName=SiteName[iSite]
   var site=Site[siteName]; 
-  var Prop=site.Prop, TableName=site.TableName, ViewName=site.ViewName; //, Enum=site.Enum;
-  var user2AppTab=TableName.user2AppTab, imageAppTab=TableName.imageAppTab, appTab=TableName.appTab, settingTab=TableName.settingTab, adminTab=TableName.adminTab, imageTab=TableName.imageTab, userTab=TableName.userTab;
-  //eval(extractLoc(TableName,'TableName'));  // Doesn't seem to work, perhaps because there is a number in the name one table
-  eval(extractLoc(ViewName,'ViewName'));
+  var {Prop, TableName, ViewName}=site;
+  var {user2AppTab, imageAppTab, appTab, settingTab, adminTab, imageTab, userTab}=TableName;
+  //eval(extractLoc(ViewName,'ViewName'));
 
   var StrTabName=object_values(TableName);
   var tmp=StrTabName.join(', ');
   SqlTabDrop.push("DROP TABLE IF EXISTS "+tmp);     
   SqlTabDrop.push('DROP TABLE IF EXISTS '+userTab);     
-  var tmp=object_values(ViewName).join(', ');   if(tmp.length) SqlTabDrop.push("DROP VIEW IF EXISTS "+tmp+"");
+  //var tmp=object_values(ViewName).join(', ');   if(tmp.length) SqlTabDrop.push("DROP VIEW IF EXISTS "+tmp+"");
 
 
   var collate="utf8_general_ci";
@@ -1021,10 +983,9 @@ app.SetupSql.prototype.createFunction=function(SiteName,boDropOnly){
   for(var iSite=0;iSite<SiteName.length;iSite++){
   var siteName=SiteName[iSite];
   var site=Site[siteName]; 
-  var Prop=site.Prop, TableName=site.TableName, ViewName=site.ViewName; //, Enum=site.Enum;
-  var user2AppTab=TableName.user2AppTab, imageAppTab=TableName.imageAppTab, appTab=TableName.appTab, settingTab=TableName.settingTab, adminTab=TableName.adminTab, imageTab=TableName.imageTab, userTab=TableName.userTab;
-  //eval(extractLoc(TableName,'TableName'));  // Doesn't seem to work, perhaps because there is a number in the name one table
-  eval(extractLoc(ViewName,'ViewName'));
+  var {Prop, TableName, ViewName}=site;
+  var {user2AppTab, imageAppTab, appTab, settingTab, adminTab, imageTab, userTab}=TableName;
+  //eval(extractLoc(ViewName,'ViewName'));
   
   
 
@@ -1101,7 +1062,6 @@ nName, nImage, nEmail, nTelephone, nCountry, nFederatedState, nCounty, nCity, nZ
       IF VpwOld!=IpwOld THEN SELECT 'Old password does not match' AS mess; LEAVE proc_label; END IF; \n\
       UPDATE "+userTab+" SET password=IpwNew WHERE idUser=IidUser; \n\
       SELECT 'Password changed' AS mess; \n\
- \n\
     END");  
 
 
@@ -1389,7 +1349,7 @@ app.ReqSql.prototype.createZip=function(objSetupSql){
   res.writeHead(200,objHead);
   res.end(outdata,'binary');
 }
-ReqSql.prototype.toBrowser=function(objSetupSql){
+app.ReqSql.prototype.toBrowser=function(objSetupSql){
   var req=this.req, res=this.res, StrType=this.StrType;
   var Match=RegExp("^(drop)?(.*?)(All)?$").exec(req.pathNameWOPrefix), boDropOnly=Match[1]=='drop', strMeth=Match[2].toLowerCase(), boAll=Match[3]=='All', SiteNameT=boAll?SiteName:[req.siteName];
   var StrValidMeth=['table', 'fun', 'truncate',  'dummy', 'dummies'];
