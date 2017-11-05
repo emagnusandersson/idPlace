@@ -285,7 +285,7 @@ ReqBE.prototype.loginGetGraph=function*(inObj){
     // getToken
   var objForm={grant_type:'authorization_code', client_id:objIPCred.id, redirect_uri:uRedir, client_secret:objIPCred.secret, code:inObj.code};
   if(strIP=='fb') {
-    var uToGetToken = "https://graph.facebook.com/v2.5/oauth/access_token";
+    var uToGetToken = "https://graph.facebook.com/v3.0/oauth/access_token";
   }else if(strIP=='google') {
     var uToGetToken = "https://accounts.google.com/o/oauth2/token"; 
   }else if(strIP=='idplace') {
@@ -308,8 +308,8 @@ ReqBE.prototype.loginGetGraph=function*(inObj){
 
     // Get Graph
   if(strIP=='fb') {
-    var uGraph = "https://graph.facebook.com/v2.5/me";
-    var objForm={access_token:this.access_token, fields:"id,name,verified,picture,email"};
+    var uGraph = "https://graph.facebook.com/v3.0/me";
+    var objForm={access_token:this.access_token, fields:"id,name,picture,email"};
   }else if(strIP=='google') {
     var uGraph = "https://www.googleapis.com/plus/v1/people/me";
     var objForm={access_token:this.access_token, fields:"id,name,verified,image,email"};
@@ -332,7 +332,7 @@ ReqBE.prototype.loginGetGraph=function*(inObj){
 
 
   if(strIP=='fb'){ 
-    if(!objGraph.verified) { var tmp="Your facebook account is not verified. Try search internet for  \"How to verify facebook account\".";    return [new ErrorClient(tmp)]; }
+    //if(!objGraph.verified) { var tmp="Your facebook account is not verified. Try search internet for  \"How to verify facebook account\".";    return [new ErrorClient(tmp)]; }
     var IP='fb', idIP=objGraph.id, nameIP=objGraph.name, image=objGraph.picture.data.url, email=objGraph.email;
   }else if(strIP=='google'){
     var IP='google', idIP=objGraph.id, nameIP=objGraph.name.givenName+' '+objGraph.name.familyName, image=objGraph.image.url;
@@ -341,9 +341,11 @@ ReqBE.prototype.loginGetGraph=function*(inObj){
     //var IP='idplace', idIP=objGraph.idUser, nameIP=objGraph.name, image='';
   }
 
+  if(typeof email=='undefined') { return [new ErrorClient("Email is required")];}
   if(typeof idIP=='undefined') { return [new Error("Error idIP is empty")];}
   if(typeof nameIP=='undefined' ) {nameIP=idIP;}
-  extend(this,{IP:IP, idIP:idIP, nameIP:nameIP, image:image, email:email, timeZone:inObj.timeZone});
+  var regTZ=RegExp('[-]?[0-9]+'), M=inObj.timeZone.match(regTZ), timeZone=M[0];  // timeZone converted from like "GMT+0100 (Central European Standard Time)" to "0100"
+  extend(this,{IP:IP, idIP:idIP, nameIP:nameIP, image:image, email:email, timeZone:timeZone});
   
   if(['userFun', 'fetchFun', 'getSecretFun'].indexOf(strFun)!=-1){
     var [err, result]=yield *this[strFun](inObj);  if(err) return [err];

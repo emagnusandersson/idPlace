@@ -1,37 +1,38 @@
 
 
 http = require("http");
-https = require('https');
+//https = require('https');
 url = require("url");
 path = require("path");
 fs = require("fs");
 mysql =  require('mysql');
 gm =  require('gm').subClass({ imageMagick: true });
-im = require('imagemagick');
-temporary = require('tmp');
+//im = require('imagemagick');
+//temporary = require('tmp');
 util =  require('util');
 concat = require('concat-stream');
 requestMod = require('request');
-through = require('through')
+//through = require('through')
 querystring = require('querystring');
 //async = require('async');
 formidable = require("formidable");
-NodeRSA = require('node-rsa');
+//NodeRSA = require('node-rsa');
 crypto = require('crypto');
-tls=require('tls');
-atob = require('atob');
-childProcess = require('child_process');
+//tls=require('tls');
+//atob = require('atob');
+//childProcess = require('child_process');
 zlib = require('zlib');
-imageSize = require('image-size');
+//imageSize = require('image-size');
 //Fiber = require('fibers');
 //Future = require('fibers/future');
 NodeZip=require('node-zip');
 //redis = require("then-redis");
 redis = require("redis");
-captchapng = require('captchapng');
+//captchapng = require('captchapng');
 //sendgrid  = require('sendgrid');
 sgMail = require('@sendgrid/mail');
 ip = require('ip');
+var argv = require('minimist')(process.argv.slice(2));
 //UglifyJS = require("uglify-js");
 require('./lib.js');
 require('./libServerGeneral.js');
@@ -51,34 +52,15 @@ boLocal=strInfrastructure=='local';
 boDO=strInfrastructure=='do'; 
 
 
-interpretArgv=function(){
-  var myArg=process.argv.slice(2);
-  for(var i=0;i<myArg.length;i++){
-    var Match=RegExp("^(-{1,2})([^-\\s]+)$").exec(myArg[i]);
-    if(Match[1]=='-') {
-      var tmp=Match[2][0];
-      if(tmp=='p') port=Match[2].substr(1);
-      else if(tmp=='h') helpTextExit();
-      else {console.log('Neglected option: '+myArg[i]); }
-    }else if(Match[1]=='--') {
-      var tmp=Match[2], tmpSql='sql';
-      if(tmp.slice(0,tmpSql.length)==tmpSql) strCreateSql=Match[2].substr(tmpSql.length);
-      else if(tmp=='help') helpTextExit();
-      else {console.log('Neglected option: '+myArg[i]); }
-    }
-  }
-}
-
 StrValidSqlCalls=['createTable', 'dropTable', 'createFunction', 'dropFunction', 'truncate', 'createDummy', 'createDummies'];
-  
 
 helpTextExit=function(){
   var arr=[];
   arr.push('USAGE script [OPTION]...');
-  arr.push('\t-h, --help\t\tDisplay this text');
-  arr.push('\t-p[PORT]\t\tPort number (default: 5000)');
-  arr.push('\t--sql[SQL_ACTION]\tRun a sql action.');
-  arr.push('\t\tSQL_ACTION='+StrValidSqlCalls.join('|'));
+  arr.push('  -h, --help           Display this text');
+  arr.push('  -p, --port [PORT]    Port number (default: 5000)');
+  arr.push('  --sql [SQL_ACTION]   Run a sql action.');
+  arr.push('    SQL_ACTION='+StrValidSqlCalls.join('|'));
   console.log(arr.join('\n'));
   process.exit(0);
 }
@@ -112,7 +94,9 @@ var flow=( function*(){
   maxUnactivity=3600*24;
   maxUnactivityToken=120*60;
   leafLoginBack="loginBack.html";
-  interpretArgv();
+  
+  port=argv.p||argv.port||5000;
+  if(argv.h || argv.help) {helpTextExit(); return;}
 
 
   var strConfig;
@@ -147,58 +131,34 @@ var flow=( function*(){
   setUpMysqlPool();
   SiteExtend();
 
-    // Do db-query if --sqlXXXX was set in the argument
-  if(typeof strCreateSql!='undefined'){
+    // Do db-query if --sql XXXX was set in the argument
+  if(typeof argv.sql!='undefined'){
+    if(typeof argv.sql!='string') {console.log('sql argument is not a string'); process.exit(-1); return; }
     var tTmp=new Date().getTime();
-    var objSetupSql=new SetupSql(); yield *objSetupSql.doQuery(flow, strCreateSql);
+    var objSetupSql=new SetupSql(); yield *objSetupSql.doQuery(flow, argv.sql);
     console.log('Time elapsed: '+(new Date().getTime()-tTmp)/1000+' s'); 
     process.exit(0);
   }
 
-  bootTime=new Date();  strBootTime=bootTime.toISOStringMy();
+  tIndexMod=new Date(); tIndexMod.setMilliseconds(0);
 
-  ETagUri={}; CacheUri={};
   ETagImage={};
 
   regexpLib=RegExp('^/(stylesheets|lib|Site)/');
   regexpLooseJS=RegExp('^/(lib|libClient|client|filter|common)\\.js'); //siteSpecific
 
-
-  StrFilePreCache=['lib.js', 'libClient.js', 'client.js', 'stylesheets/style.css'];
-  
-  
-  
-  if(boDbg){
-    fs.watch('.',function (ev,filename) {
-      var StrFile=['client.js'];
-        //console.log(filename+' changed: '+ev);
-      if(StrFile.indexOf(filename)!=-1){
-        console.log(filename+' changed: '+ev);
-        var flow=( function*(){ 
-          var err=yield* readFileToCache(flow, filename); if(err) console.log(err.message);
-        })(); flow.next();
-      }
-    });
-    fs.watch('stylesheets',function (ev,filename) {
-      var StrFile=['style.css'];
-        //console.log(filename+' changed: '+ev);
-      if(StrFile.indexOf(filename)!=-1){
-        console.log(filename+' changed: '+ev);
-        var flow=( function*(){ 
-          var err=yield* readFileToCache(flow, 'stylesheets/'+filename); if(err) console.log(err.message);
-        })(); flow.next();
-      }
-    });
-  }
-
-
   CacheUri=new CacheUriT();
+  StrFilePreCache=['lib.js', 'libClient.js', 'client.js', 'stylesheets/style.css'];
   for(var i=0;i<StrFilePreCache.length;i++) {
     var filename=StrFilePreCache[i];
-    var err=yield *readFileToCache(flow, filename); if(err) {  console.log(err.message);  return;}
+    var [err]=yield *readFileToCache(flow, filename); if(err) {  console.error(err);  return;}
+  }
+  
+  if(boDbg){
+    fs.watch('.', makeWatchCB('.', ['client.js','libClient.js']) );
+    fs.watch('stylesheets', makeWatchCB('stylesheets', ['style.css']) );
   }
 
-   
 
   handler=function(req, res){
     //Fiber( function(){

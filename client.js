@@ -123,7 +123,8 @@ doHistPush=function(obj){
   if((boChrome || boOpera) && !boTouch)  history.boFirstScroll=true;
 
   var indNew=history.state.ind+1;
-  history.pushState({hash:history.state.hash, ind:indNew}, strHistTitle, uCanonical);
+  stateTrans={hash:history.state.hash, ind:indNew};  // Should be called stateLast perhaps
+  history.pushState(stateTrans, strHistTitle, uCanonical);
   history.StateMy=history.StateMy.slice(0,indNew);
   history.StateMy[indNew]=obj;
 }
@@ -443,8 +444,8 @@ devAppSecretDivExtend=function($el){
   var $cancel=$('<button>').addClass('highStyle').html('Back').click(doHistBack).css({display:'block', margin:'1em 0em'});
 
   var $blanket=$('<div>').addClass("blanket");
-  var $centerDiv=$('<div>').addClass("Center").append($head, $divRow, $p,$cancel).css({height:'19em', 'min-width':'17em','max-width':'25em', padding:'0.1em'}); // , 
-  if(boIE) $centerDiv.css({'width':'20em'}); 
+  var $centerDiv=$('<div>').addClass("Center").append($head, $divRow, $p,$cancel).css({'min-width':'17em','max-width':'25em', padding:'0.1em'}); // height:'19em', 
+  //if(boIE) $centerDiv.css({'width':'20em'}); 
   $el.addClass("Center-Container").append($centerDiv,$blanket); 
   return $el;
 }
@@ -526,7 +527,7 @@ var createUserDivExtend=function($el){
   $el.createInputs=function(){
     for(var i=0;i<$el.StrProp.length;i++){
       var strName=$el.StrProp[i];
-      var $imgH=''; if(strName in helpBub ) {    var $imgH=$imgHelp.clone();   popupHoverM($imgH,helpBub[strName]);         }
+      var $imgH=''; if(strName in helpBub ) {    var $imgH=$imgHelp.clone();   popupHoverJQ($imgH,helpBub[strName]);         }
 
       var $lab=$('<label>').append(calcLabel(langHtml.label, strName));
       var $inp=Prop[strName].crInp().attr('name',strName);
@@ -541,9 +542,10 @@ var createUserDivExtend=function($el){
     $divCont.append($divReCaptcha);
   }
   $el.setUp=function(){
-    //$divReCaptchaW.append($divReCaptcha);
-    grecaptcha.render($divReCaptcha[0], {sitekey:strReCaptchaSiteKey})
-    return true; 
+    if($divReCaptcha.is(':empty')){
+      grecaptcha.render($divReCaptcha[0], {sitekey:strReCaptchaSiteKey});
+    }
+    return true;
   }
   //$el.setUp=function(){
     //$Inp.each(function(i){
@@ -603,8 +605,8 @@ var deleteAccountPopExtend=function($el){
   var $h1=$('<div>').append(langHtml.deleteBox.regret);
   var $blanket=$('<div>').addClass("blanket");
   var $centerDiv=$('<div>').append($h1,'<br>',$cancel,$yes);
-  $centerDiv.addClass("Center").css({'width':'20em', height:'9em', padding:'1.1em'})
-  if(boIE) $centerDiv.css({'width':'20em'}); 
+  $centerDiv.addClass("Center").css({padding:'1.1em'}); // 'width':'20em', height:'9em', 
+  //if(boIE) $centerDiv.css({'width':'20em'}); 
   $el.addClass("Center-Container").append($centerDiv,$blanket); //
 
   return $el;
@@ -651,8 +653,8 @@ var changePWPopExtend=function($el){
   var $divBottom=$('<div>').append($cancel,$ok);  //$buttonCancel,
 
   var $centerDiv=$('<div>').append($h1, $messDiv,   $labPassOld, $inpPassOld, $labPass, $inpPass, $labPassB, $inpPassB, $divBottom);
-  $centerDiv.addClass("Center").css({'width':'20em', height:'21em', padding:'1.1em'})
-  if(boIE) $centerDiv.css({'width':'20em'}); 
+  $centerDiv.addClass("Center").css({padding:'1.1em'}); // 'width':'20em', height:'21em', 
+  //if(boIE) $centerDiv.css({'width':'20em'}); 
   $el.addClass("Center-Container").append($centerDiv,$blanket); //
 
   return $el;
@@ -689,8 +691,8 @@ var verifyEmailPopExtend=function($el){
   var $divBottom=$('<div>').append($ok);  //$cancel,
 
   var $centerDiv=$('<div>').append($h1, $pTxt, $pBottom, $divBottom);
-  $centerDiv.addClass("Center").css({'width':'20em', height:'15em', padding:'1.1em'});
-  if(boIE) $centerDiv.css({'width':'20em'}); 
+  $centerDiv.addClass("Center").css({padding:'1.1em'});  // 'width':'20em', height:'15em', 
+  //if(boIE) $centerDiv.css({'width':'20em'}); 
   $el.addClass("Center-Container").append($centerDiv,$blanket); //
 
   return $el;
@@ -727,8 +729,8 @@ var forgottPWPopExtend=function($el){
   var $divBottom=$('<div>').append($cancel,$ok);  //$buttonCancel,
 
   var $centerDiv=$('<div>').append($h1, $labEmail, $inpEmail, $divBottom);
-  $centerDiv.addClass("Center").css({'width':'20em', height:'13em', padding:'1.1em'});
-  if(boIE) $centerDiv.css({'width':'20em'}); 
+  $centerDiv.addClass("Center").css({padding:'1.1em'}); // 'width':'20em', height:'13em', 
+  //if(boIE) $centerDiv.css({'width':'20em'}); 
   $el.addClass("Center-Container").append($centerDiv,$blanket); //
 
   return $el;
@@ -856,8 +858,8 @@ var uploadImageDivExtend=function($el){
 
   var $blanket=$('<div>').addClass("blanket");
   var $centerDiv=$('<div>').append($head, $formFile, $progress, $divMess,$menuBottom);
-  $centerDiv.addClass("Center").css({'max-width':'21em', height:'15em', padding: '0.3em 0.5em 1.2em 0.6em'})
-  if(boIE) $centerDiv.css({'width':'20em'}); 
+  $centerDiv.addClass("Center").css({'max-width':'21em', padding: '0.3em 0.5em 1.2em 0.6em'}); // , height:'15em'
+  //if(boIE) $centerDiv.css({'width':'20em'}); 
   $el.addClass("Center-Container").append($centerDiv,$blanket); //
 
   $uploadButton.click(sendFun);
@@ -884,7 +886,7 @@ var userSettingDivExtend=function($el){
   $el.createInputs=function(){
     for(var i=0;i<$el.StrProp.length;i++){      
       var strName=$el.StrProp[i];
-      var $imgH=''; if(strName in helpBub ) {    var $imgH=$imgHelp.clone();   popupHoverM($imgH,helpBub[strName]);         }
+      var $imgH=''; if(strName in helpBub ) {    var $imgH=$imgHelp.clone();   popupHoverJQ($imgH,helpBub[strName]);         }
 
       var $lab=$('<label>').append(calcLabel(langHtml.label, strName));
       var $spanLastChange=Prop[strName].crStatisticSpan().attr('name',strName);
@@ -1021,8 +1023,8 @@ userAppDeleteDivExtend=function($el){
   var $p=$('<div>').append($spanApp);
 
   var $blanket=$('<div>').addClass("blanket");
-  var $centerDiv=$('<div>').addClass("Center").append($head,$p,$ok).css({height:'10em', 'min-width':'17em','max-width':'25em', padding:'0.1em'}); //,$cancel
-  if(boIE) $centerDiv.css({'width':'20em'}); 
+  var $centerDiv=$('<div>').addClass("Center").append($head,$p,$ok).css({'min-width':'17em','max-width':'25em', padding:'0.1em'}); //,$cancel  height:'10em', 
+  // if(boIE) $centerDiv.css({'width':'20em'}); 
   $el.addClass("Center-Container").append($centerDiv,$blanket); 
   return $el;
 }
@@ -1177,8 +1179,8 @@ devAppSetDivExtend=function($el){
   var $divBottom=$('<div>').append($buttonSave);  //$buttonCancel,
 
   var $blanket=$('<div>').addClass("blanket");
-  var $centerDiv=$('<div>').addClass("Center").append($inpNLab,$divBottom).css({height:'18em', 'min-width':'17em','max-width':'30em', padding: '1.2em 0.5em 1.2em 1.2em'});
-  if(boIE) $centerDiv.css({'width':'20em'}); 
+  var $centerDiv=$('<div>').addClass("Center").append($inpNLab,$divBottom).css({'min-width':'17em','max-width':'30em', padding: '1.2em 0.5em 1.2em 1.2em'}); // height:'18em', 
+  //if(boIE) $centerDiv.css({'width':'20em'}); 
   $el.addClass("Center-Container").append($centerDiv,$blanket); 
    
   return $el;
@@ -1211,8 +1213,8 @@ devAppDeleteDivExtend=function($el){
   var $p=$('<div>').append($spanApp);
 
   var $blanket=$('<div>').addClass("blanket");
-  var $centerDiv=$('<div>').addClass("Center").append($head,$p,$ok).css({height:'10em', 'min-width':'17em','max-width':'25em', padding:'0.1em'}); //,$cancel
-  if(boIE) $centerDiv.css({'width':'20em'}); 
+  var $centerDiv=$('<div>').addClass("Center").append($head,$p,$ok).css({'min-width':'17em','max-width':'25em', padding:'0.1em'}); //,$cancel  height:'10em', 
+  //if(boIE) $centerDiv.css({'width':'20em'}); 
   $el.addClass("Center-Container").append($centerDiv,$blanket); 
   return $el;
 }
@@ -1240,8 +1242,8 @@ devAppSecretDivExtend=function($el){
   var $p=$('<div>').append($spanSecret);
 
   var $blanket=$('<div>').addClass("blanket");
-  var $centerDiv=$('<div>').addClass("Center").append($head,$p).css({height:'10em', 'min-width':'17em','max-width':'25em', padding:'0.1em'}); //,$cancel
-  if(boIE) $centerDiv.css({'width':'20em'}); 
+  var $centerDiv=$('<div>').addClass("Center").append($head,$p).css({'min-width':'17em','max-width':'25em', padding:'0.1em'}); //,$cancel  height:'10em', 
+  //if(boIE) $centerDiv.css({'width':'20em'}); 
   $el.addClass("Center-Container").append($centerDiv,$blanket); 
   return $el;
 }*/
@@ -1664,6 +1666,7 @@ helpBub={}
 setUp1=function(){
 
 
+  elHtml=document.documentElement;  elBody=document.body
   $body=$('body');  $html=$('html');
   $bodyNHtml=$body.add($html);  
   $body.css({margin:'0px'});
@@ -1785,8 +1788,9 @@ setUp1=function(){
   history.StateMy=[];
 
 
-  bindEvent(window,'popstate', function(event) {
+  window.addEventListener('popstate', function(event) {
     var dir=history.state.ind-stateTrans.ind;
+    if(Math.abs(dir)>1) alert('dir=',dir);
     var boSameHash=history.state.hash==stateTrans.hash;
     if(boSameHash){
       var tmpObj=history.state;
@@ -1848,7 +1852,7 @@ setUp1=function(){
   $H1.css({background:'#fff',border:'solid 1px',color:'black','font-size':'1.6em','font-weight':'bold','text-align':'center',
       padding:'0.4em 0em 0.4em 0em',margin:'0.3em 0em 0em 0em'}); 
 
-  $loginInfo=loginInfoExtend($('<div>'));  $loginInfo.css({padding:'0em 0em 0em 0em','font-size':'75%'});
+  $loginInfo=loginInfoExtend($('<div>'));  $loginInfo.css({padding:'0em 0em 0em 0em','font-size':'75%', height:'1em'});
   $body.prepend($loginInfo);
   
 

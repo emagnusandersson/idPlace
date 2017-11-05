@@ -90,7 +90,7 @@ app.reqIndex=function*() {
   
 
   var ua=req.headers['user-agent']||''; ua=ua.toLowerCase();
-  var boMSIE=RegExp('/msie/').test(ua), boAndroid=RegExp('/android/').test(ua), boFireFox=RegExp('/firefox/').test(ua), boIOS= RegExp('/iPhone|iPad|iPod/i').test(ua);
+  var boMSIE=RegExp('msie').test(ua), boAndroid=RegExp('android').test(ua), boFireFox=RegExp('firefox').test(ua), boIOS= RegExp('iPhone|iPad|iPod','i').test(ua);
   if(/facebookexternalhit/.test(ua)) { objQS.lang='en';  }
   if('fb_locale' in objQS) objQS.lang=objQS.fb_locale.substr(0,2);   
   var strLang='en';
@@ -122,9 +122,9 @@ app.reqIndex=function*() {
 
   Str.push('<link rel="canonical" href="'+uSite+'"/>\n');
 
-  var strTitle='idPlace - an ID provider using the OAuth standard';
-  var strH1='idPlace - an ID provider using the OAuth standard';
-  var strDescription='Open source ID provider using OAuth.';
+  var strTitle='idPlace - an ID provider using OAuth';
+  var strH1='idPlace - an ID provider using OAuth';
+  var strDescription='Open source ID provider using OAuth';
   var strKeywords=strDescription;
   var strSummary=strDescription;
 
@@ -155,8 +155,9 @@ app.reqIndex=function*() {
     FB.init({\n\
       appId      : "'+req.rootDomain.fb.id+'",\n\
       xfbml      : true,\n\
-      version    : "v2.6"\n\
+      version    : "v3.0"\n\
     });\n\
+    FB.AppEvents.logPageView(); \n\
   };\n\
 \n\
   (function(d, s, id){\n\
@@ -169,11 +170,35 @@ app.reqIndex=function*() {
 </script>\n';
   Str.push(tmp);
 
+  Str.push('<script>\n\
+  (function(){\n\
+try {\n\
+  eval("(function *(){})");\n\
+} catch(err) {\n\
+  alert("This browser does not support generators:\\n"+ err); return;\n\
+}\n\
+try {\n\
+  eval("(function(a=0){})");\n\
+} catch(err) {\n\
+  alert("This browser does not support default parameters:\\n"+ err); return;\n\
+}\n\
+var tmpf=function(){return {a:1};};\n\
+try {\n\
+  eval("var {a}=tmpf();");\n\
+} catch(err) {\n\
+  alert("This browser does not support destructuring assignment:\\n"+ err); return;\n\
+}\n\
+var tmpf=function(){return [1];}\n\
+try {\n\
+  eval("[a]=tmpf();");\n\
+} catch(err) {\n\
+  alert("This browser does not support destructuring assignment with arrays:\\n"+ err); return;\n\
+}\n\
+})();</script>');
 
-  //var uJQuery='https://code.jquery.com/jquery-latest.min.js';    if(boDbg) uJQuery=uSite+'/'+flFoundOnTheInternetFolder+"/jquery-latest.js";      Str.push("<script src='"+uJQuery+"'></script>");
-  var uJQuery='https://code.jquery.com/jquery-3.2.1.min.js';    if(boDbg) uJQuery=uSite+'/'+flFoundOnTheInternetFolder+"/jquery-3.2.1.min.js";
-  Str.push('<script src="'+uJQuery+'" integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4=" crossorigin="anonymous"></script>');
- 
+
+  var uJQuery='https://code.jquery.com/jquery-3.3.1.min.js';    if(boDbg) uJQuery=uSite+'/'+flFoundOnTheInternetFolder+"/jquery-3.3.1.min.js";
+  Str.push('<script src="'+uJQuery+'" integrity="sha384-tsQFqpEReu7ZLhBV2VZlAu7zcOV+rXbYlF2cqB8txI/8aZajjp4Bqd+V6D5IgvKT" crossorigin="anonymous"></script>');
   
   Str.push('<script src="'+uSite+'/lib/foundOnTheInternet/sha1.js"></script>');
   //Str.push('<script src="'+uSite+'/lib/foundOnTheInternet/md5.js"></script>');
@@ -471,12 +496,11 @@ FROM "+user2AppTab+" ua JOIN "+userTab+" u ON ua.idUser=u.idUser JOIN "+appTab+"
 }
 
 
-
 /******************************************************************************
  * reqLoginBack
  ******************************************************************************/
-app.reqLoginBack=function*() {
-  var req=this.req, flow=req.flow, res=this.res, objQS=req.objQS;
+app.reqLoginBack=function*(){
+  var req=this.req;
   var wwwLoginScopeTmp=null; if('wwwLoginScope' in req.site) wwwLoginScopeTmp=req.site.wwwLoginScope;
   var uSite=req.strSchemeLong+req.wwwSite;
 
@@ -628,7 +652,7 @@ app.reqStatic=function*() {
   var keyCache=pathName; //if(pathName==='/'+leafSiteSpecific) keyCache=req.strSite+keyCache; 
   if(!(keyCache in CacheUri)){
     var filename=pathName.substr(1);
-    var err=yield *readFileToCache(flow, filename);
+    var [err]=yield *readFileToCache(flow, filename);
     if(err) {
       if(err.code=='ENOENT') {res.out404(); return;}
       if('host' in req.headers) console.log('Faulty request from'+req.headers.host);
@@ -636,9 +660,8 @@ app.reqStatic=function*() {
       res.out500(err); return;
     }
   }
-  var cacheUri=CacheUri[keyCache];
-  if(cacheUri.eTag===eTagIn){ res.out304(); return; } 
-  var buf=cacheUri.buf, type=cacheUri.type,  eTag=cacheUri.eTag, boZip=cacheUri.boZip, boUglify=cacheUri.boUglify;
+  var {buf, type, eTag, boZip, boUglify}=CacheUri[keyCache];
+  if(eTag===eTagIn){ res.out304(); return; } 
   var mimeType=MimeType[type]; 
   if(typeof mimeType!='string') console.log('type: '+type+', mimeType: ', mimeType);
   if(typeof buf!='object' || !('length' in buf)) console.log('typeof buf: '+typeof buf);
@@ -730,9 +753,8 @@ app.reqStat=function*() {
 
 
   var uSite=req.strSchemeLong+wwwSite;
-  //var uJQuery='https://code.jquery.com/jquery-latest.min.js';    if(boDbg) uJQuery=uSite+'/'+flFoundOnTheInternetFolder+"/jquery-latest.js";      Str.push("<script src='"+uJQuery+"'></script>");
-  var uJQuery='https://code.jquery.com/jquery-3.2.1.min.js';    if(boDbg) uJQuery=uSite+'/'+flFoundOnTheInternetFolder+"/jquery-3.2.1.min.js";
-  Str.push('<script src="'+uJQuery+'" integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4=" crossorigin="anonymous"></script>');
+  var uJQuery='https://code.jquery.com/jquery-3.3.1.min.js';    if(boDbg) uJQuery=uSite+'/'+flFoundOnTheInternetFolder+"/jquery-3.3.1.min.js";
+  Str.push('<script src="'+uJQuery+'" integrity="sha384-tsQFqpEReu7ZLhBV2VZlAu7zcOV+rXbYlF2cqB8txI/8aZajjp4Bqd+V6D5IgvKT" crossorigin="anonymous"></script>');
 
     // If boDbg then set vTmp=0 so that the url is the same, this way the debugger can reopen the file between changes
 

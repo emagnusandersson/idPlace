@@ -52,9 +52,6 @@ ErrorClient=class extends Error {
   }
 }
 
-//MyError=Error;
-//MyError=function(){ debugger;}
-
 getETag=function(headers){var t=false, f='if-none-match'; if(f in headers) t=headers[f]; return t;}
 getRequesterTime=function(headers){if("if-modified-since" in headers) return new Date(headers["if-modified-since"]); else return false;}
 
@@ -70,7 +67,7 @@ tmp.out304=function(){  this.outCode(304);   }
 tmp.out404=function(str){ str=str||"404 Not Found\n"; this.outCode(404, str);    }
 //tmp.out500=function(e){ var eN=(e instanceof Error)?e:(new MyError(e)); console.log(error.stack); this.writeHead(500, {"Content-Type": "text/plain"});  this.end(e+ "\n");   }
 tmp.out500=function(e){
-  if(e instanceof Error) {var mess=e.name + ': ' + e.message; console.error(e.stack);} else {var mess=e; console.error(mess);} 
+  if(e instanceof Error) {var mess=e.name + ': ' + e.message; console.error(e);} else {var mess=e; console.error(mess);} 
   this.writeHead(500, {"Content-Type": "text/plain"});  this.end(mess+ "\n");
 }
 tmp.out501=function(){ this.outCode(501, "Not implemented\n");   }
@@ -103,7 +100,7 @@ getBrowserLang=function(req){
   var strLang='en';
   for(var i=0; i<Lang.length; i++){
     var lang=Lang[i][0];
-	  if(lang.substr(0,2)=='sv'){  strLang='sv';  } 
+    if(lang.substr(0,2)=='sv'){  strLang='sv';  } 
   }
   return strLang;
 }
@@ -141,7 +138,6 @@ genRandomString=function(len) {
 md5=function(str){return crypto.createHash('md5').update(str).digest('hex');}
 
 
-
   // Redis
 cmdRedis=function*(flow, strCommand,arr){
   var value;
@@ -163,9 +159,6 @@ expireRedis=function*(flow, strVar, tExpire=maxUnactivity){
 delRedis=function*(flow, strVar){
   var tmp=yield* cmdRedis(flow, 'del',[strVar]);
 }
-
-
-
 
 
 getIP=function(req){
@@ -203,78 +196,8 @@ end;\n\
 return c";
 
 
-
-/*
-var regFileType=RegExp('\\.([a-z0-9]+)$','i'),    regZip=RegExp('^(css|js|txt|html)$'),   regUglify=RegExp('^js$');
-readFileToCache=function(strFileName) {
-  var type, Match=regFileType.exec(strFileName);    if(Match && Match.length>1) type=Match[1]; else type='txt';
-  var boZip=regZip.test(type),  boUglify=regUglify.test(type);
-  var buf, fiber=Fiber.current;
-  var err=null;
-  fs.readFile(strFileName, function(errT, bufT) { //, this.encRead
-    if(errT){  err=errT; }
-    buf=bufT;
-    fiber.run();
-  });
-  Fiber.yield();
-  if(!err) {    CacheUri.set('/'+strFileName, buf, type, boZip, boUglify);    }
-  return err;
-}
-
 CacheUriT=function(){
-  var self=this;
-  self.set=function(key,buf,type,boZip,boUglify){
-    var eTag=crypto.createHash('md5').update(buf).digest('hex'); 
-    //if(boUglify) {
-      //var objU; objU=UglifyJS.minify(bufO.toString(), {fromString: true});
-      //bufO=new Buffer(objU.code,'utf8');
-    //}
-    var fiber=Fiber.current;
-    if(boZip){
-      var bufI=buf;
-      var gzip = zlib.createGzip(), boDoExit=0;
-      zlib.gzip(bufI, function(err, bufT) {
-        if(err){ boDoExit=1;  console.log(err);    }
-        buf=bufT; //.toString();
-        fiber.run();
-      });
-      Fiber.yield();  if(boDoExit==1) {process.exit(); return;}
-    }
-    self[key]={buf:buf,type:type,eTag:eTag,boZip:boZip,boUglify:boUglify};
-  }
-  
-}
-
-isRedirAppropriate=function(req){
-  if(typeof RegRedir=='undefined') return false;
-
-  var domainName=req.headers.host;
-  for(var i=0;i<RegRedir.length;i++){
-    var regTmp=RegRedir[i][0], strNew=RegRedir[i][1];
-    var boT=regTmp.test(domainName);
-    if(boT) {
-      var domainNameNew=domainName.replace(regTmp, strNew);
-      return 'http://'+domainNameNew+req.url;
-    }
-  }
-  return false;
-}
-*/
-
-
-var regFileType=RegExp('\\.([a-z0-9]+)$','i'),    regZip=RegExp('^(css|js|txt|html)$'),   regUglify=RegExp('^js$');
-readFileToCache=function*(flow, strFileName) {
-  var type, Match=regFileType.exec(strFileName);    if(Match && Match.length>1) type=Match[1]; else type='txt';
-  var boZip=regZip.test(type),  boUglify=regUglify.test(type);
-  var err, buf;
-  fs.readFile(strFileName, function(errT, bufT) {  err=errT; buf=bufT;  flow.next();   });  yield;
-  if(!err) {    yield* CacheUri.set(flow, '/'+strFileName, buf, type, boZip, boUglify);    }
-  return err;
-}
-
-CacheUriT=function(){
-  var self=this;
-  this.set=function*(flow, key,buf,type,boZip,boUglify){
+  this.set=function*(flow, key, buf, type, boZip, boUglify){
     var eTag=crypto.createHash('md5').update(buf).digest('hex'); 
     //if(boUglify) {
       //var objU; objU=UglifyJS.minify(bufO.toString(), {fromString: true});
@@ -284,12 +207,33 @@ CacheUriT=function(){
       var bufI=buf;
       var gzip = zlib.createGzip();
       var err;
-      zlib.gzip(bufI, function(errT, bufT) { err=errT; buf=bufT; flow.next(); });  yield; 
-      if(err){  console.error(err);  process.exit(); return;}
+      zlib.gzip(bufI, function(errT, bufT) { err=errT; buf=bufT; flow.next(); });  yield; if(err) return [err];
     }
-    self[key]={buf:buf,type:type,eTag:eTag,boZip:boZip,boUglify:boUglify};
+    this[key]={buf:buf,type:type,eTag:eTag,boZip:boZip,boUglify:boUglify};
+    return [null];
   }
-  
+}
+
+var regFileType=RegExp('\\.([a-z0-9]+)$','i'),    regZip=RegExp('^(css|js|txt|html)$'),   regUglify=RegExp('^js$');
+readFileToCache=function*(flow, strFileName) {
+  var type, Match=regFileType.exec(strFileName);    if(Match && Match.length>1) type=Match[1]; else type='txt';
+  var boZip=regZip.test(type),  boUglify=regUglify.test(type);
+  var err, buf;
+  fs.readFile(strFileName, function(errT, bufT) {  err=errT; buf=bufT;  flow.next();   });  yield;  if(err) return [err];
+  var [err]=yield* CacheUri.set(flow, '/'+strFileName, buf, type, boZip, boUglify);
+  return [err];
+}
+
+makeWatchCB=function(strFolder, StrFile) {
+  return function(ev,filename){
+    if(StrFile.indexOf(filename)!=-1){
+      var strFileName=path.normalize(strFolder+'/'+filename)
+      console.log(filename+' changed: '+ev);
+      var flow=( function*(){ 
+        var [err]=yield* readFileToCache(flow, strFileName); if(err) console.error(err);
+      })(); flow.next();
+    }
+  }
 }
 
 isRedirAppropriate=function(req){

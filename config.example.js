@@ -1,7 +1,7 @@
 
 
 //
-// For variable naming convention see https://emagnusandersson.com/myNodeApps_notation
+// For variable naming convention see https://emagnusandersson.com/prefixes_to_variables
 //
 
 

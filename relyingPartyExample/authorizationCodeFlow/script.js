@@ -38,10 +38,10 @@ var wwwRedir=wwwApp+"/"+leafLoginBack;
 uRedir='http://'+wwwRedir;
 
 
-UrlOAuth={fb:"https://www.facebook.com/v2.5/dialog/oauth", google: "https://accounts.google.com/o/oauth2/v2/auth", idplace:'https://idplace.org', idL:'http://localhost:5000', id192:'http://192.168.0.5:5000'};
-UrlGraph={fb:"https://graph.facebook.com/v2.5/me", google: "https://www.googleapis.com/plus/v1/people/me", idplace:'https://idplace.org/me', idL:'http://localhost:5000/me', id192:'http://192.168.0.5:5000/me'};
+UrlOAuth={fb:"https://www.facebook.com/v3.0/dialog/oauth", google: "https://accounts.google.com/o/oauth2/v2/auth", idplace:'https://idplace.org', idL:'http://localhost:5000', id192:'http://192.168.0.5:5000'};
+UrlGraph={fb:"https://graph.facebook.com/v3.0/me", google: "https://www.googleapis.com/plus/v1/people/me", idplace:'https://idplace.org/me', idL:'http://localhost:5000/me', id192:'http://192.168.0.5:5000/me'};
 
-UrlCode2Token={fb:"https://graph.facebook.com/v2.5/oauth/access_token", google: "https://accounts.google.com/o/oauth2/token", idplace:'https://idplace.org/access_token', idL:'http://localhost:5000/access_token', id192:'http://192.168.0.5:5000/access_token'};
+UrlCode2Token={fb:"https://graph.facebook.com/v3.0/oauth/access_token", google: "https://accounts.google.com/o/oauth2/token", idplace:'https://idplace.org/access_token', idL:'http://localhost:5000/access_token', id192:'http://192.168.0.5:5000/access_token'};
 
 
 var handler=function(req, res){

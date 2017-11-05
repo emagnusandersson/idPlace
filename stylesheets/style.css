@@ -360,20 +360,18 @@ button.fixWidth{} /*width:2em*/
 }
 
 .Center {
-  height: 50%;
-  max-width:300px;  
-  overflow: auto;    /* Recommended in case content is larger than the container */  
-  margin: auto;    
-  position: fixed;    
-  top: 0;
-  left: 0;
-  bottom: 0;
-  right: 0;
-  /* Set the bounds in which to center it, relative to its parent/container */
+  max-width:300px;
+  min-width:200px;
+  overflow: auto;  
+  margin: auto;
+  position: fixed;
+  top: 50%;
+  left: 50%;
   background-color: #eeeeee;
   box-sizing: border-box;
   border:1px solid;
   z-index: 9002;
+  transform: translate(-50%,-50%);
 }
 
 *.unselectable {
