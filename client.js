@@ -1,107 +1,153 @@
+/*
+\$\('<([^>]+)>'
+createElement('\1'
+
+\$\("<([^>]+)>"
+createElement('\1'
+
+\.val\('([^\)]*)'\)
+.value='\1'
+
+\.val\(\)
+.value
+
+\.val\(([^\)]*)\)
+.prop('value',\1)
+.value=\1
+
+\$\(([a-zA-Z0-9]+)\)
+\$([a-zA-Z0-9]+)\[0\]
+\1
+
+$r
+elR
+
+$
+(this)
+parent()
+clone
+body
+.index
+.each
+add
+click
+keypress
+change
+append
+html
+text
+[]
+
+.eq
+\.eq\(([^\)]*)\)
+[\1]
+mouseover mouseout
+.add(
+.push(
+nth-of-type
+bind
+data
+\(([a-zA-Z0-9]+)\)\.
+eq
+append ->myAppend
+
+index
+not()
+before
+after
+setVis
+width()
+height()
+majax
+pop
+next()
+.hasClass
+.is(':empty')
+originalEvent
+
+myText\([^\)\,]+,[^\)]+\)
+filter
+.find
+
+.children
+.children.forEach
+
+oAJAX
+* extend
+*/
+
 
 (function(){
 
-
-
-
-
-function popUpExtend($el){
-  $el.openPop=function() {
+popUpExtend=function(el){
 "use strict"
-    //siz=getViewPortSize();  winW=siz.w;winH=siz.h;
-    //var siz=getViewPortSize(); var winW=siz.w;
-    var winW=$(window).width(),winH=$(window).height();
-    var $doc=$(document), scrollX=$doc.scrollLeft(), scrollY=$doc.scrollTop(); 
-    //var pageYOffset=window.pageYOffset;   if(typeof pageYOffset =='undefined') pageYOffset=document.body.scrollTop;
-    $el.setBlanketSize();
-  
-    $el.addClass('popUpDiv');
-    
-    $body.prepend($el.$blanket);  
-    $body.prepend($el);
+  el.openPop=function() {
+    el.append(spanMessageText);
+    container.empty().append(el);  elBody.append(blanket);  elBody.append(container);
+  }
+  el.closePop=function() {  el.remove();  container.remove();  blanket.remove();  elBody.append(spanMessageText);  }
 
-    //$(window).scroll($el.setBlanketSize);
-    $(window).on('scroll',$el.setBlanketSize);
-    //$(window).scroll(function(){alert('tt');});
-    
-    //var bubW=$el.width(), bubH=$el.height();
-    var bubW=$el.outerWidth(), bubH=$el.outerHeight(); //alert('$(window).width(): '+winW+' '+winH+', bubW: '+bubW+' '+bubH);
-    var x=scrollX+(winW-bubW)/2; if(x<0) x=0;    var y=scrollY+(winH-bubH)/4;  if(y<0) y=0;
-    //$el.append("scrollY:"+scrollY+", winH:"+winH+", bubH:"+bubH);
-    //if($.browser.msie)  $el.css({left:x+'px'});   else $el.css({top:y+'px',left:x+'px'});
-    $el.css({top:y+'px',left:x+'px'});
-  }
-
-  $el.closePop=function() { 
-    $el.detach();    
-    //$(window).unbind('scroll',$el.setBlanketSize);
-    $(window).off('scroll',$el.setBlanketSize);
-    $el.$blanket.detach(); 
-  }
-  
-  $el.setBlanketSize=function(){
-    
-    var docH=$(document).height(), winH=$(window).height(), blankH=docH>winH?docH:winH, blankHOld=$el.$blanket.css("height");
-    if(blankH!=blankHOld)  $el.$blanket.css({"height": blankH  });
-    var docW=$(document).width(), winW=$(window).width(), blankW=docW>winW?docW:winW, blankWOld=$el.$blanket.css("width");
-    if(blankW!=blankWOld)  $el.$blanket.css({"width": blankW  });
-    
-  }
-  
-  $el.$blanket=$('<div>').addClass('blanketPop');
-  //$el.$blanket.css({background:'#555'});
-  $el.$blanket.css({background:'#fff'});
-  return $el;
+  el.addClass('Center');
+  var blanket=createElement('div').addClass('blanket');
+  var container=createElement('div').addClass('Center-Container');
+  return el;
 }
 
-var vippButtonExtend=function($el){
+var vippButtonExtend=function(el){
 "use strict"
-  $el.setStat=function(bo1){
-    if(!bo1) {$el.css(o0);} else {$el.css(o1);} 
-    $el.attr({boOn:bo1});
+  el.setStat=function(bo1){
+    if(!bo1) {el.css(o0);} else {el.css(o1);} 
+    el.attr({boOn:bo1});
   }
   var o0={background:'url('+uVipp0+') no-repeat'}, o1={background:'url('+uVipp1+') no-repeat'};
     
-  $el.attr({boOn:0});
-  $el.css({'background':'url('+uVipp0+') no-repeat',height:'33px',width:'90px',zoom:'60%','vertical-align':'-0.5em',cursor:'pointer',display:'inline-block'}).addClass('unselectable');
-  $el.on('click',function(){var t=1-$el.attr('boOn');   $el.setStat(t);});
-  return $el;
+  el.attr({boOn:0});
+  el.css({'background':'url('+uVipp0+') no-repeat',height:'33px',width:'90px',zoom:'60%','vertical-align':'-0.5em',cursor:'pointer',display:'inline-block'}).addClass('unselectable');
+  el.on('click',function(){var t=1-el.attr('boOn');   el.setStat(t);});
+  return el;
 }
 
-var toggleButtonExtend=function($el){
-  $el.setStat=function(bo1){
-    if(bo1) {$el.css(colOn);} else {$el.css(colOff);} 
-    //$el.toggleClass('on',Boolean(bo1));
-    $el.attr({boOn:bo1});
+var toggleButtonExtend=function(el){
+  el.setStat=function(bo1){
+    if(bo1) {el.css(colOn);} else {el.css(colOff);} 
+    //el.toggleClass('on',Boolean(bo1));
+    el.attr({boOn:bo1});
   }
   var colOn={background:'#4f4'}, colOff={background:''};
     
-  $el.attr({boOn:0});
-  $el.css({height:'1em',width:'1em'});
-  $el.on('click',function(){var t=1-$el.attr('boOn');   $el.setStat(t);});
-  return $el;
+  el.attr({boOn:0});
+  el.css({height:'1em',width:'1em'});
+  el.on('click',function(){var t=1-el.attr('boOn');   el.setStat(t);});
+  return el;
 }
 
 
-messExtend=function($el){
-"use strict"
-  $el.resetMess=function(time){ 
-    if(typeof time =='number')     messTimer=setTimeout('resetMess()',time*1000);
-    else {$el.html(''); clearTimeout(messTimer);} 
+spanMessageTextCreate=function(){
+  var el=createElement('span');
+  var spanInner=createElement('span');
+  el.appendChild(spanInner, imgBusy)
+  el.resetMess=function(time){
+    clearTimeout(messTimer);
+    if(typeof time =='number') { messTimer=setTimeout('resetMess()',time*1000); return; }
+    spanInner.myText(' ');
+    imgBusy.hide();
   }
-  $el.setMess=function(str,time,boRot){  
-    $el.show();
-    $el.html(str);  clearTimeout(messTimer); 
-    if(typeof time=='number' && time>0)     messTimer=setTimeout('resetMess()',time*1000);
-    if(boRot) $el.append($imgBusy);
+  el.setMess=function(str,time,boRot){
+    spanInner.myText(str);
+    clearTimeout(messTimer);
+    if(typeof time =='number')     messTimer=setTimeout('resetMess()',time*1000);
+    imgBusy.toggle(Boolean(boRot));
+  };
+  el.setHtml=function(str,time,boRot){
+    spanInner.myHtml(str);
+    clearTimeout(messTimer);
+    if(typeof time =='number')     messTimer=setTimeout('resetMess()',time*1000);
+    imgBusy.toggle(Boolean(boRot));
   };
   var messTimer;
-  //$el.addClass('message').css({'z-index':8100,position:'fixed'}); 
-  $el.css({border:'black 1px solid',bottom:'0%',right:'0%',margin:'0',padding:'1px','background-color':'#F7F700','font-size':'0.8em','z-index':18100,position:'fixed'}); 
-  $el.click(function(){$el.hide();});
-  return $el;
+  el.addClass('message');//.css({'z-index':8100,position:'fixed'});
+  return el;
 }
-
 
 
 /*******************************************************************************************************************
@@ -112,13 +158,13 @@ messExtend=function($el){
  *******************************************************************************************************************
  *******************************************************************************************************************/
 
-histGoTo=function($view){}
+histGoTo=function(view){}
 doHistBack=function(){  history.back();}
 doHistPush=function(obj){ 
     // Set "scroll" of stateNew  (If the scrollable div is already visible) 
-  var $view=obj.$view;
-  var scrollT=$window.scrollTop();
-  if(typeof $view.setScroll=='function') $view.setScroll(scrollT); else history.StateMy[history.state.ind].scroll=scrollT;  //$view.intScroll=scrollT; 
+  var view=obj.view;
+  var scrollT=window.scrollTop();
+  if(typeof view.setScroll=='function') view.setScroll(scrollT); else history.StateMy[history.state.ind].scroll=scrollT;  //view.intScroll=scrollT; 
 
   if((boChrome || boOpera) && !boTouch)  history.boFirstScroll=true;
 
@@ -138,24 +184,24 @@ changeHist=function(obj){
   history.StateMy[history.state.ind]=obj;
 }
 getHistStatName=function(){
-  return history.StateMy[history.state.ind].$view.toString();
+  return history.StateMy[history.state.ind].view.toString();
 }
 
 
-history.distToGoal=function($viewGoal){
+history.distToGoal=function(viewGoal){
   var ind=history.state.ind;
   var indGoal;
   for(var i=ind; i>=0; i--){
     var obj=history.StateMy[i];
-    if(typeof obj=='object') var $view=obj.$view; else continue;
-    if($view===$viewGoal) {indGoal=i; break;}
+    if(typeof obj=='object') var view=obj.view; else continue;
+    if(view===viewGoal) {indGoal=i; break;}
   }
   
   var dist; if(typeof indGoal!='undefined') dist=indGoal-ind;
   return dist;
 }
-history.fastBack=function($viewGoal, boRefreshHash){
-  var dist=history.distToGoal($viewGoal);
+history.fastBack=function(viewGoal, boRefreshHash){
+  var dist=history.distToGoal(viewGoal);
   if(dist) {
     if(typeof boRefreshHash!='undefined') history.boResetHashCurrent=boRefreshHash;
     history.go(dist);
@@ -169,30 +215,31 @@ history.fastBack=function($viewGoal, boRefreshHash){
 /*******************************************************************************************************************
  * top-line-div
  *******************************************************************************************************************/
-var loginInfoExtend=function($el){
+var loginInfoExtend=function(el){
 "use strict"
-  $el.setStat=function(){
+  el.setStat=function(){
     var boIn=Boolean(Object.keys(userInfoFrDB).length);
     if(boIn){
-      $spanName.html(userInfoFrDB.name);
-      $el.show();
+      spanName.myText(userInfoFrDB.name);
+      el.show();
     }else {
-      $el.hide(); 
+      el.hide(); 
     }
   }
-  $el.cb=null;
-  var $spanName=$('<span>'); 
-  //var $logoutButt=$('<a>').prop({href:''}).text(langHtml.loginInfo.logoutButt).css({'float':'right'});
-  var $logoutButt=$('<button>').text(langHtml.loginInfo.logoutButt).css({'float':'right','font-size':'90%'});
-  $logoutButt.click(function(){ 
+  el.cb=null;
+  var spanName=createElement('span'); 
+  //var logoutButt=createElement('a').prop({href:''}).myText(langHtml.loginInfo.logoutButt).css({'float':'right'});
+  var logoutButt=createElement('button').myText(langHtml.loginInfo.logoutButt).css({'float':'right','font-size':'90%'});
+  logoutButt.on('click',function(e){
+    e.preventDefault();
     //userInfoFrDB={}; 
-    $userAppList.boStale=1;  $devAppList.boStale=1;
-    var vec=[['logout',1, $el.cb]];
+    userAppList.boStale=1;  devAppList.boStale=1;
+    var vec=[['logout',1, el.cb]];
     majax(oAJAX,vec);
     return false;
   });
-  $el.append($spanName,$logoutButt);
-  return $el;
+  el.append(spanName,logoutButt);
+  return el;
 }
 
 
@@ -206,88 +253,88 @@ var loginInfoExtend=function($el){
  *******************************************************************************************************************
  *******************************************************************************************************************/
 
-var mainDivExtend=function($el){
+var mainDivExtend=function(el){
 "use strict"
-  $el.toString=function(){return 'mainDiv';}
+  el.toString=function(){return 'mainDiv';}
 
-  $el.setUp=function(){
+  el.setUp=function(){
     var boIn=Boolean(Object.keys(userInfoFrDB).length);
-    $loggedOutDiv.toggle(!boIn);
-    $loggedInDiv.toggle(boIn);
+    loggedOutDiv.toggle(!boIn);
+    loggedInDiv.toggle(boIn);
   }
 
   var cssCol={display:'inline-block','box-sizing': 'border-box','text-align':'center',padding:'1em',flex:1}; //width:'50%',
 
 
     //
-    // $loggedOutDiv
+    // loggedOutDiv
     //
 
-  var $buttonSignIn=$('<button>').addClass('highStyle').append('Sign in').click(function(){
-    doHistPush({$view:$loginSelectorDiv});
-    $loginSelectorDiv.setVis();
+  var buttonSignIn=createElement('button').addClass('highStyle').myText('Sign in').on('click',function(){
+    doHistPush({view:loginSelectorDiv});
+    loginSelectorDiv.setVis();
   });
-  var $buttonCreateAccount=$('<button>').addClass('highStyle').append('Create an account').click(function(){
-    doHistPush({$view:$createUserSelectorDiv});
-    $createUserSelectorDiv.setVis();
+  var buttonCreateAccount=createElement('button').addClass('highStyle').myText('Create an account').on('click',function(){
+    doHistPush({view:createUserSelectorDiv});
+    createUserSelectorDiv.setVis();
   });
-  var $signInDiv=$('<div>').css(cssCol).append($buttonSignIn);
-  var $createAccountDiv=$('<div>').css(cssCol).css({'border-left':'2px solid grey','vertical-align':'top'}).append($buttonCreateAccount);
+  var signInDiv=createElement('div').css(cssCol).myAppend(buttonSignIn);
+  var createAccountDiv=createElement('div').css(cssCol).css({'border-left':'2px solid grey','vertical-align':'top'}).myAppend(buttonCreateAccount);
 
-  var $divWhatIsOpen=$('<div>').append();
-  var $imgIdPlaceCompare=$('<img>').css({width:'80%', display:'block', margin:'1em auto'}).prop({src:uIdPlaceCompare});  
-  var $aMoreInfo=$('<a>').css({display:'block', margin:'3em auto', 'text-align':'center'}).prop({href:"http://www.emagnusandersson.com/idPlace"}).append("More info");
-  var $headComparing=$('<h3>').append("Comparing some common ID providers:").css({'text-align':'center'});
+  var divWhatIsOpen=createElement('div');
+  var imgIdPlaceCompare=createElement('img').css({width:'80%', display:'block', margin:'1em auto'}).prop({src:uIdPlaceCompare});  
+  var aMoreInfo=createElement('a').css({display:'block', margin:'3em auto', 'text-align':'center'}).prop({href:"http://www.emagnusandersson.com/idPlace"}).myText("More info");
+  var headComparing=createElement('h3').myText("Comparing some common ID providers:").css({'text-align':'center'});
 
-  var $divRowA=$('<div>').append($signInDiv,$createAccountDiv).css({display: 'flex', 'justify-content':'space-around'});
-  var $loggedOutDiv=$('<div>').css({'margin-top':'1em'}).append($divRowA, $headComparing, $imgIdPlaceCompare, $aMoreInfo);
+  var divRowA=createElement('div').myAppend(signInDiv,createAccountDiv).css({display: 'flex', 'justify-content':'space-around'});
+  var loggedOutDiv=createElement('div').css({'margin-top':'1em'}).myAppend(divRowA, headComparing, imgIdPlaceCompare, aMoreInfo);
 
     //
-    // $loggedInDiv
+    // loggedInDiv
     //
 
   var boShowDevStuff=getItem('boShowDevStuff');  if(boShowDevStuff===null)  boShowDevStuff=false;
-  $el.devStuffToggleEventF=function(){
+  el.devStuffToggleEventF=function(){
     var now=Date.now(); if(now>timeSpecialR+1000*10) {timeSpecialR=now; nSpecialReq=0;}    nSpecialReq++;
-    if(nSpecialReq==3) { nSpecialReq=0;boShowDevStuff=!boShowDevStuff; $divDev.toggle(boShowDevStuff);  setItem('boShowDevStuff',boShowDevStuff);  }
+    if(nSpecialReq==3) { nSpecialReq=0;boShowDevStuff=!boShowDevStuff; divDev.toggle(boShowDevStuff);  setItem('boShowDevStuff',boShowDevStuff);  }
   }
   var timeSpecialR=0, nSpecialReq=0;
 
 
-  var $buttonUserSetting=$('<button>').addClass('highStyle').append('Settings').click(function(){ //.css({display: 'block'})
-    doHistPush({$view:$userSettingDiv});
-    $userSettingDiv.setVis();
-    $el.devStuffToggleEventF();
+  var buttonUserSetting=createElement('button').addClass('highStyle').myText('Settings').on('click',function(){ //.css({display: 'block'})
+    doHistPush({view:userSettingDiv});
+    userSettingDiv.setVis();
+    el.devStuffToggleEventF();
   });
-  var $buttonUserAppList=$('<button>').addClass('highStyle').append('Apps I use').click(function(){ //.css({display: 'block'})
-    doHistPush({$view:$userAppList});
-    $userAppList.setVis();
+  var buttonUserAppList=createElement('button').addClass('highStyle').myText('Apps I use').on('click',function(){ //.css({display: 'block'})
+    doHistPush({view:userAppList});
+    userAppList.setVis();
   });
-  var $buttonDevAppList=$('<button>').addClass('highStyle').append('Apps I own').click(function(){ // .css({display: 'block'})
-    doHistPush({$view:$devAppList});
-    $devAppList.setVis();
+  var buttonDevAppList=createElement('button').addClass('highStyle').myText('Apps I own').on('click',function(){ // .css({display: 'block'})
+    doHistPush({view:devAppList});
+    devAppList.setVis();
   });
-  var $divA=$('<div>').append($buttonUserSetting), $divB=$('<div>').append($buttonUserAppList),  $divDev=$('<div>').append($buttonDevAppList); 
+  var divA=createElement('div').myAppend(buttonUserSetting), divB=createElement('div').myAppend(buttonUserAppList),  divDev=createElement('div').myAppend(buttonDevAppList); 
 
-  var $DivAll=$([]).push($divA, $divB, $divDev).css(cssCol);
-  $([]).push($divB, $divDev).css({'border-left':'2px solid grey'});
+  var DivAll=[divA, divB, divDev]; DivAll.forEach(ele=>ele.css(cssCol));
+  [divB, divDev].forEach(ele=>ele.css({'border-left':'2px solid grey'}));
 
-  var $divRowB=$('<div>').append($DivAll).css({display: 'flex', 'justify-content':'space-around'});
+  var divRowB=createElement('div').myAppend(...DivAll).css({display: 'flex', 'justify-content':'space-around'});
 
-  var $loggedInDiv=$('<div>').css({'margin-top':'1em'}).append($divRowB);
-  $divDev.toggle(boShowDevStuff);
-  //if(boShowDevStuff) $divDev.show(); else   $divDev.hide();
+  var loggedInDiv=createElement('div').css({'margin-top':'1em'}).myAppend(divRowB);
+  divDev.toggle(boShowDevStuff);
+  //if(boShowDevStuff) divDev.show(); else   divDev.hide();
 
 
-  var $infoLink=$('<a>').prop({href:"http://www.emagnusandersson.com/idPlace"}).append("More info");
-  var $menuA=$('<div>').append($infoLink).css({padding:'0 0.3em 0 0', overflow:'hidden', 'max-width':menuMaxWidth+'px', 'text-align':'center', margin:'.3em auto .4em'}); 
+  var infoLink=createElement('a').prop({href:"http://www.emagnusandersson.com/idPlace"}).myText("More info");
+  var menuA=createElement('div').myAppend(infoLink).css({padding:'0 0.3em 0 0', overflow:'hidden', 'max-width':menuMaxWidth+'px', 'text-align':'center', margin:'.3em auto .4em'}); 
 
-  var $divCont=$el.$divCont=$('<div>').css({padding:'0 0.3em 0 0', overflow:'hidden', 'max-width':menuMaxWidth+'px', 'text-align':'left', margin:'1em auto'});
-  $el.$divCont.append($loggedOutDiv, $loggedInDiv);
-  $el.$fixedDiv=$('<div>').append($menuA).css(cssFixed);
+  var divCont=el.divCont=createElement('div').css({padding:'0 0.3em 0 0', overflow:'hidden', 'max-width':menuMaxWidth+'px', 'text-align':'left', margin:'1em auto'});
+  el.divCont.myAppend(loggedOutDiv, loggedInDiv);
+  el.fixedDiv=createElement('div').myAppend(menuA).css(cssFixed);
 
-  $el.append($el.$divCont, $el.$fixedDiv);
-  return $el;
+  el.append(el.divCont, el.fixedDiv);
+  return el;
 }
 
 /*******************************************************************************************************************
@@ -320,484 +367,469 @@ getOAuthCode=function*(flow, boReauthenticate=false){
 }
 
 
-  // Used in $loginSelectorDiv and $createUserSelectorDiv
-idPLoginDivExtend=function($el){
+  // Used in loginSelectorDiv and createUserSelectorDiv
+idPLoginDivExtend=function(el){
   var strButtonSize='2em';
-  var $imgFb=$('<img>').prop({src:uFb}).click(function(){
+  var imgFb=createElement('img').prop({src:uFb}).on('click',function(){
     var flow=(function*(){
       var [err, code]=yield* getOAuthCode(flow); if(err) {setMess(err); return;}
       var timeZone=new Date().toString().match(/([A-Z]+[\+-][0-9]+.*)/)[1];
       var oT={IP:strIPPrim, fun:'userFun', caller:'index', code:code, timeZone:timeZone};
       var vec=[['loginGetGraph', oT], ['setupById',{idApp:idApp}, function(){ flow.next(); }]];   majax(oAJAX,vec);   yield;
       
-      if($el.cb) $el.cb();
+      if(el.cb) el.cb();
     })(); flow.next();
   });
-  var $imgGoogle=$('<img>').prop({src:uGoogle}).click(function(){
+  var imgGoogle=createElement('img').prop({src:uGoogle}).on('click',function(){
     popupWin('google');
   });
-  $el.cb=null;
-  var $Im=$([]).push($imgFb).css({align:'center', display:'block', 'margin-top': '0.7em'}); //  , $imgGoogle    position:'relative',top:'0.4em',heigth:strButtonSize,width:strButtonSize
-  $el.append($Im); //,$fbHelp , $mess
-  return $el;
+  el.cb=null;
+  var Im=[imgFb]; Im.forEach(ele=>ele.css({align:'center', display:'block', 'margin-top': '0.7em'})); //  , imgGoogle    position:'relative',top:'0.4em',heigth:strButtonSize,width:strButtonSize
+  el.append(...Im); //,fbHelp , mess
+  return el;
 }
 
-formLoginExtend=function($el){  
+formLoginExtend=function(el){  
   var login=function(){  
-    var tmp=SHA1($formLogin.$inpPass.val()+strSalt);
-    var vec=[['loginWEmail',{email:$formLogin.$inpEmail.val(), password:tmp}], ['setupById',{idApp:idApp}, $el.cb]];   majax(oAJAX,vec); 
-    $formLogin.$inpPass.val('');
+    var tmp=SHA1(formLogin.inpPass.value+strSalt);
+    var vec=[['loginWEmail',{email:formLogin.inpEmail.value, password:tmp}], ['setupById',{idApp:idApp}, el.cb]];   majax(oAJAX,vec); 
+    formLogin.inpPass.value='';
     return false;
   }
-  $el.cb=null;
-  $el.$labEmail=$el.children("label[name='email']"); $el.$inpEmail=$el.children("input[name='email']").css({'max-width':'100%'});
-  $el.$labPass=$el.children("label[name='password']"); $el.$inpPass=$el.children("input[name='password']").css({'max-width':'100%'});
-  $el.$buttLogin=$el.children("button[name='submit']").css({"margin-top": "1em"}).on('click',login);
+  el.cb=null;
+  el.labEmail=el.querySelector("label[name='email']"); el.inpEmail=el.querySelector("input[name='email']").css({'max-width':'100%'});
+  el.labPass=el.querySelector("label[name='password']"); el.inpPass=el.querySelector("input[name='password']").css({'max-width':'100%'});
+  el.buttLogin=el.querySelector("button[name='submit']").css({"margin-top": "1em"}).on('click',login);
 
-  $el.find('input[type=text],[type=email],[type=number],[type=password]').css({display:'block'}).keypress( function(e){ if(e.which==13) { login(); }} );
-  return $el;
+  [...el.querySelectorAll('input[type=text],[type=email],[type=number],[type=password]')].forEach(ele=>ele.css({display:'block'}).on('keypress', function(e){ if(e.which==13) { login(); }} ) );
+  return el;
 }
 
 
-var loginSelectorDivExtend=function($el){
+var loginSelectorDivExtend=function(el){
 "use strict"
-  $el.toString=function(){return 'loginSelectorDiv';}
-  $el.myToggle=function(boOn){
-    if(boOn) $el.show();else $el.hide(); if(boOn) $formLogin.$inpPass.focus();
+  el.toString=function(){return 'loginSelectorDiv';}
+  el.myToggle=function(boOn){
+    if(boOn) el.show();else el.hide(); if(boOn) formLogin.inpPass.focus();
   }
-  var forgotClickF=function(){ 
-    $forgottPWPop.openFunc();
-    return false;
+  var forgotClickF=function(e){ 
+    e.preventDefault();
+    forgottPWPop.openFunc();
   }
-  $el.setUp=function(){ $messDiv.insertAfter($formLogin); $divRight.append($idPLoginDiv);  }
-  var $h1=$('<h1>').append('Sign in');
+  //el.setUp=function(){ messDiv.insertAfter(formLogin); divRight.append(idPLoginDiv);  }
+  el.setUp=function(){ formLogin.insertAdjacentElement('afterEnd', messDiv); divRight.append(idPLoginDiv);  }
+  var h1=createElement('h1').myText('Sign in');
   var cssCol={display:'inline-block','box-sizing': 'border-box',padding:'1em',flex:1}; //width:'50%',
 
-  var $messDiv=$('<div>').css({color:'red'});
-  var $buttForgot=$('<a>').prop({href:''}).text('Forgot your password?').click(forgotClickF);
-  var $divForgot=$('<div>').css({'margin-top':'1em'}).append($buttForgot);
+  var messDiv=createElement('div').css({color:'red'});
+  var buttForgot=createElement('a').prop({href:''}).myText('Forgot your password?').on('click',forgotClickF);
+  var divForgot=createElement('div').css({'margin-top':'1em'}).myAppend(buttForgot);
  
-  var $divLeft=$('<div>').css(cssCol).append($messDiv,    $formLogin,     $divForgot); 
-  var $divRight=$('<div>').css(cssCol).css({'text-align':'center', 'border-left':'2px solid grey'});
-  var $divRow=$('<div>').append($divLeft, $divRight).css({display: 'flex', 'justify-content':'space-around'});
-  var $divCont=$('<div>').append($h1, $divRow);
-  $el.append($divCont);
+  var divLeft=createElement('div').css(cssCol).myAppend(messDiv,    formLogin,     divForgot); 
+  var divRight=createElement('div').css(cssCol).css({'text-align':'center', 'border-left':'2px solid grey'});
+  var divRow=createElement('div').myAppend(divLeft, divRight).css({display: 'flex', 'justify-content':'space-around'});
+  var divCont=createElement('div').myAppend(h1, divRow);
+  el.append(divCont);
 
-  return $el;
+  return el;
 }
 
 
-devAppSecretDivExtend=function($el){
+devAppSecretDivExtend=function(el){
 "use strict"
-  $el.toString=function(){return 'devAppSecretDiv';}
+  el.toString=function(){return 'devAppSecretDiv';}
   var ret=function(data){
-    $spanSecret.append(data.secret); $inpPass.val('')
+    spanSecret.myText(data.secret); inpPass.value=''
   }
-  $el.openFunc=function(){
-    var $r=$(this).parent().parent(); idApp=$r.data('r').idApp;
-    $spanSecret.text('');
-    doHistPush({$view:$devAppSecretDiv});
-    $el.setVis();
-    $inpPass.focus()
+  el.openFunc=function(){
+    var elR=this.parentNode.parentNode; idApp=elR.r.idApp;
+    spanSecret.myText('');
+    doHistPush({view:devAppSecretDiv});
+    el.setVis();
+    inpPass.focus()
   }
   var send=function(){
-    var tmp=SHA1($inpPass.val()+strSalt);
+    var tmp=SHA1(inpPass.value+strSalt);
     var vec=[['devAppSecret',{idApp:idApp, password:tmp},ret]];   majax(oAJAX,vec);
     
   }
-  $el.setVis=function(){
-    $el.show(); return 1;
+  el.setVis=function(){
+    el.show(); return 1;
   }
   var idApp;
  
     // Authenticate with password
-  var $inpPass=$('<input type=password>').keypress( function(e){ if(e.which==13) { send();   }} );
-  var $buttSend=$("<button>").append('Send').css({"margin-top": "1em"}).on('click',send);
+  var inpPass=createElement('input').prop('type','password').on('keypress', function(e){ if(e.which==13) { send();   }} );
+  var buttSend=createElement('button').myText('Send').css({"margin-top": "1em"}).on('click',send);
 
 
     // Authenticate with IdP
   var strButtonSize='2em';
-  var $imgFb=$('<img>').prop({src:uFb}).click(function(){
+  var imgFb=createElement('img').prop({src:uFb}).on('click',function(){
     var flow=(function*(){
       var [err, code]=yield* getOAuthCode(flow, true); if(err) {setMess(err); return;}
-      var oT={IP:strIPPrim, fun:'getSecretFun', caller:'index', code:code, idApp:idApp};
+      //var oT={IP:strIPPrim, fun:'getSecretFun', caller:'index', code:code, idApp:idApp};
+      var timeZone=new Date().toString().match(/([A-Z]+[\+-][0-9]+.*)/)[1];
+      var oT={IP:strIPPrim, fun:'getSecretFun', caller:'index', code:code, idApp:idApp, timeZone:timeZone};
       var result;
       var vec=[['loginGetGraph', oT, function(resultT){ result=resultT; flow.next(); }]];   majax(oAJAX,vec);   yield;
-      $spanSecret.append(result.resultOfFun.secret);
+      spanSecret.append(result.resultOfFun.secret);
     })(); flow.next();
   });
-  var $Im=$([]).push($imgFb).css({align:'center', display:'block', 'margin-top': '0.7em'}); 
+  var Im=[imgFb]; Im.forEach(ele=>ele.css({align:'center', display:'block', 'margin-top': '0.7em'})); 
 
 
  
-  var $head=$('<h3>').append('Reauthenticate to see secret');
-  var $hSecret=$('<span>').css({margin:'0 .5em 0 0','font-weight': 'bold'}).append('Secret: ');
+  var head=createElement('h3').myText('Reauthenticate to see secret');
+  var hSecret=createElement('span').css({margin:'0 .5em 0 0','font-weight': 'bold'}).myText('Secret: ');
   
   
   var cssCol={display:'inline-block','box-sizing': 'border-box',padding:'1em',flex:1}; //width:'50%',
-  var $divLeft=$('<div>').css(cssCol).append('Password: ', $inpPass, $buttSend);
-  var $divRight=$('<div>').css(cssCol).css({'text-align':'center', 'border-left':'2px solid grey'}).append($Im);
-  var $divRow=$('<div>').append($divLeft, $divRight).css({display: 'flex', 'justify-content':'space-around'});
+  var divLeft=createElement('div').css(cssCol).myText('Password: ').myAppend(inpPass, buttSend);
+  var divRight=createElement('div').css(cssCol).css({'text-align':'center', 'border-left':'2px solid grey'}).myAppend(...Im);
+  var divRow=createElement('div').myAppend(divLeft, divRight).css({display: 'flex', 'justify-content':'space-around'});
   
-  var $spanSecret=$('<span>');//.css({'font-weight': 'bold'});
-  var $p=$('<div>').append($hSecret, $spanSecret).css({margin:'0.5em 0',border:'solid 1px',background:'yellow'});
-  var $cancel=$('<button>').addClass('highStyle').html('Back').click(doHistBack).css({display:'block', margin:'1em 0em'});
+  var spanSecret=createElement('span');//.css({'font-weight': 'bold'});
+  var p=createElement('div').myAppend(hSecret, spanSecret).css({margin:'0.5em 0',border:'solid 1px',background:'yellow'});
+  var cancel=createElement('button').addClass('highStyle').myText('Back').on('click',doHistBack).css({display:'block', margin:'1em 0em'});
 
-  var $blanket=$('<div>').addClass("blanket");
-  var $centerDiv=$('<div>').addClass("Center").append($head, $divRow, $p,$cancel).css({'min-width':'17em','max-width':'25em', padding:'0.1em'}); // height:'19em', 
-  //if(boIE) $centerDiv.css({'width':'20em'}); 
-  $el.addClass("Center-Container").append($centerDiv,$blanket); 
-  return $el;
+  var blanket=createElement('div').addClass("blanket");
+  var centerDiv=createElement('div').addClass("Center").myAppend(head, divRow, p,cancel).css({'min-width':'17em','max-width':'25em', padding:'0.1em'}); // height:'19em', 
+  //if(boIE) centerDiv.css({'width':'20em'}); 
+  el.addClass("Center-Container").myAppend(centerDiv,blanket); 
+  return el;
 }
 
 
-var createUserSelectorDivExtend=function($el){
+var createUserSelectorDivExtend=function(el){
 "use strict"
-  $el.toString=function(){return 'createUserSelectorDiv';}
-  $el.setUp=function(){ $divRight.append($idPLoginDiv);   }
+  el.toString=function(){return 'createUserSelectorDiv';}
+  el.setUp=function(){ divRight.append(idPLoginDiv);   }
   var cssCol={display:'inline-block','box-sizing': 'border-box',padding:'1em',flex:1}; //width:'50%',
-  var $buttonCreateAccount=$('<button>').addClass('highStyle').append('Create an account').click(function(){
-    doHistPush({$view:$createUserDiv});
-    $createUserDiv.setVis();
+  var buttonCreateAccount=createElement('button').addClass('highStyle').myText('Create an account').on('click',function(){
+    doHistPush({view:createUserDiv});
+    createUserDiv.setVis();
   });
-  var $divCont=$el.$divCont=$('<div>').css({padding:'0 0.3em 0 0', overflow:'hidden', 'max-width':menuMaxWidth+'px', 'text-align':'left', margin:'1em auto'});
+  var divCont=el.divCont=createElement('div').css({padding:'0 0.3em 0 0', overflow:'hidden', 'max-width':menuMaxWidth+'px', 'text-align':'left', margin:'1em auto'});
   
-  var $h1=$('<h1>').append('Create account');
-  var $headUN=$('<h2>').append('Using password');
-  var $headFB=$('<h2>').append('Using Facebook');
+  var h1=createElement('h1').myText('Create account');
+  var headUN=createElement('h2').myText('Using password');
+  var headFB=createElement('h2').myText('Using Facebook');
 
-  var $divLeft=$('<div>').append($headUN, $buttonCreateAccount);
-  var $divRight=$('<div>').append($headFB);
-  $divLeft.css(cssCol); $divRight.css(cssCol).css({'border-left':'2px solid grey'}); //'text-align':'center', 
-  var $divRow=$('<div>').append($divLeft, $divRight).css({display: 'flex', 'justify-content':'space-around'});
-  var $divCont=$('<div>').append($h1, $divRow);
-  $el.append($divCont);
+  var divLeft=createElement('div').myAppend(headUN, buttonCreateAccount);
+  var divRight=createElement('div').myAppend(headFB);
+  divLeft.css(cssCol); divRight.css(cssCol).css({'border-left':'2px solid grey'}); //'text-align':'center', 
+  var divRow=createElement('div').myAppend(divLeft, divRight).css({display: 'flex', 'justify-content':'space-around'});
+  var divCont=createElement('div').myAppend(h1, divRow);
+  el.append(divCont);
 
-  return $el;
+  return el;
 }
 
-var divDisclaimerExtend=function($el){
+var divDisclaimerExtend=function(el){
 "use strict"
-  $el.setUp=function(boFrMem){
+  el.setUp=function(boFrMem){
     var boShowDisclaimer;
-    if(typeof boFrMem=='undefined') { boShowDisclaimer=$butTog.text()=='Show';}
+    if(typeof boFrMem=='undefined') { boShowDisclaimer=butTog.myText()=='Show';}
     else { boShowDisclaimer=getItem('boShowDisclaimer'); if(boShowDisclaimer===null) boShowDisclaimer=true; }
 
     setItem('boShowDisclaimer',boShowDisclaimer);
     var strTxt=boShowDisclaimer?langHtml.disclaimer:'';
-    $divText.html(strTxt);
-    $butTog.html(boShowDisclaimer?'Hide':'Show');
+    divText.myHtml(strTxt);
+    butTog.myText(boShowDisclaimer?'Hide':'Show');
   }
-  var $spanLable=$('<span>').append(langHtml.disclaimerHead).css({'font-weight':'bold','margin':'0.5em 0 0.5em'});
-  var $butTog=$('<button>').css({'float':'right','font-size':'60%'}).click(function(){$el.setUp();});
-  var $divTop=$('<div>').append($spanLable, $butTog), $divText=$('<div>');
-  $el.append($divTop, $divText);
-  $el.setUp(1);
-  return $el;
+  var spanLable=createElement('span').myText(langHtml.disclaimerHead).css({'font-weight':'bold','margin':'0.5em 0 0.5em'});
+  var butTog=createElement('button').css({'float':'right','font-size':'60%'}).on('click',function(){el.setUp();});
+  var divTop=createElement('div').myAppend(spanLable, butTog), divText=createElement('div');
+  el.append(divTop, divText);
+  el.setUp(1);
+  return el;
 }
 
-var createUserDivExtend=function($el){
+var createUserDivExtend=function(el){
 "use strict"
-  $el.toString=function(){return 'createUserDiv';}
+  el.toString=function(){return 'createUserDiv';}
   var save=function(){ 
     resetMess();  
-    if($inpPass.val().trim()!==$inpPassB.val().trim()) { var tmp='Password-fields are not equal'; setMess(tmp); return; }
-    var lTmp=boDbg?2:6; if($inpPass.val().trim().length<lTmp) { var tmp='The password must be at least '+lTmp+' characters long'; setMess(tmp); return; }
+    if(inpPass.value.trim()!==inpPassB.value.trim()) { var tmp='Password-fields are not equal'; setMess(tmp); return; }
+    var lTmp=boDbg?2:6; if(inpPass.value.trim().length<lTmp) { var tmp='The password must be at least '+lTmp+' characters long'; setMess(tmp); return; }
 
     var o={},boErr=0;
-  /*  $Inp.each(function(i){
-      var $inp=$(this),  strName=$inp.attr('name');
-      var tmp=Prop[strName].saveInp($inp); if(tmp===false) boErr=1; else o[strName]=tmp; 
+  /*  Inp.forEach(function(inp){
+      var strName=inp.attr('name');
+      var tmp=Prop[strName].saveInp(inp); if(tmp===false) boErr=1; else o[strName]=tmp; 
     }); 
     if(boErr) return;
 */
-    for(var i=0;i<$Inp.length;i++){
-      var $inp=$Inp.eq(i),  strName=$inp.attr('name');
-      //var tmp=Prop[strName].saveInp($inp); if(tmp===false) return; else o[strName]=tmp; 
-      var tmp=Prop[strName].saveInp($inp); if(tmp[0]) {setMess(tmp[0]); return; } else o[strName]=tmp[1];
+    for(var i=0;i<Inp.length;i++){
+      var inp=Inp.myIndex(i),  strName=inp.attr('name');
+      //var tmp=Prop[strName].saveInp(inp); if(tmp===false) return; else o[strName]=tmp; 
+      var tmp=Prop[strName].saveInp(inp); if(tmp[0]) {setMess(tmp[0]); return; } else o[strName]=tmp[1];
     };
     var strTmp=grecaptcha.getResponse(); if(!strTmp) {setMess("Captcha response is empty"); return; }
-    $.extend(o, {password:SHA1($inpPass.val().trim()+strSalt),  'g-recaptcha-response': grecaptcha.getResponse()});
+    extend(o, {password:SHA1(inpPass.value.trim()+strSalt),  'g-recaptcha-response': grecaptcha.getResponse()});
 
-    var vec=[['createUser',o], ['setupById',{idApp:idApp}, $el.cb]];   majax(oAJAX,vec); 
-    $inpPass.val(''); $inpPassB.val('');
+    var vec=[['createUser',o], ['setupById',{idApp:idApp}, el.cb]];   majax(oAJAX,vec); 
+    inpPass.value=''; inpPassB.value='';
     setMess('',null,true); 
   }
 
-  $el.createInputs=function(){
-    for(var i=0;i<$el.StrProp.length;i++){
-      var strName=$el.StrProp[i];
-      var $imgH=''; if(strName in helpBub ) {    var $imgH=$imgHelp.clone();   popupHoverJQ($imgH,helpBub[strName]);         }
+  el.createInputs=function(){
+    for(var i=0;i<el.StrProp.length;i++){
+      var strName=el.StrProp[i];
+      var imgH=''; if(strName in helpBub ) {    var imgH=imgHelp.cloneNode();   popupHover(imgH,helpBub[strName]);         }
 
-      var $lab=$('<label>').append(calcLabel(langHtml.label, strName));
-      var $inp=Prop[strName].crInp().attr('name',strName);
-      $Inp.push($inp);
+      var lab=createElement('label').myText(calcLabel(langHtml.label, strName));
+      var inp=Prop[strName].crInp().attr('name',strName);
+      Inp.push(inp);
       var strObli=Prop[strName].boObli?' *':'';
-      $divCont.append($lab, $imgH, $inp); //, strObli
+      divCont.append(lab, imgH, inp); //, strObli
+      if(inp.type=='number') inp.min=0;
     }
-    //$divCont.find('input[type=text],[type=email],[type=number]').keypress( function(e){ if(e.which==13) {save();return false;}} );
-    var $tmp=$Inp.filter('input[type=number]');  $tmp.prop({min:0});
-    //var $tmp=$divCont.find('input[type=number]').prop({min:0});
-    $Inp.css({display:'block', 'margin-bottom':'0.5em'});
-    $divCont.append($divReCaptcha);
+    //divCont.find('input[type=text],[type=email],[type=number]').on('keypress', function(e){ if(e.which==13) {save();return false;}} );
+    //var tmp=Inp.filter('input[type=number]');  tmp.prop({min:0});
+    Inp.forEach(ele=>ele.css({display:'block', 'margin-bottom':'0.5em'}));
+    divCont.append(divReCaptcha);
   }
-  $el.setUp=function(){
-    if($divReCaptcha.is(':empty')){
-      grecaptcha.render($divReCaptcha[0], {sitekey:strReCaptchaSiteKey});
+  el.setUp=function(){
+    if(divReCaptcha.hasChildNodes()){
+      grecaptcha.render(divReCaptcha, {sitekey:strReCaptchaSiteKey});
     }
     return true;
   }
-  //$el.setUp=function(){
-    //$Inp.each(function(i){
-      //var $inp=$(this), strName=$inp.attr('name'); Prop[strName].setInp($inp);
+  //el.setUp=function(){
+    //Inp.forEach(function(inp){
+      //var strName=inp.attr('name'); Prop[strName].setInp(inp);
     //});
     //return true; 
   //}
-  $el.cb=null;
+  el.cb=null;
 
-  var $Inp=$([]);
-  $el.StrProp=['name', 'email', 'telephone',   'country', 'federatedState', 'county', 'city', 'zip', 'address', 'idNational', 'birthdate', 'motherTongue', 'gender'];
+  var Inp=[];
+  el.StrProp=['name', 'email', 'telephone',   'country', 'federatedState', 'county', 'city', 'zip', 'address', 'idNational', 'birthdate', 'motherTongue', 'gender'];
 
-  var $divCont=$el.$divCont=$('<div>').css({padding:'0 0.3em 0 0', overflow:'hidden', 'max-width':menuMaxWidth+'px', 'text-align':'left', margin:'1em auto'});
+  var divCont=el.divCont=createElement('div').css({padding:'0 0.3em 0 0', overflow:'hidden', 'max-width':menuMaxWidth+'px', 'text-align':'left', margin:'1em auto'});
   
-  var $divReCaptcha=$('<div>');
+  var divReCaptcha=createElement('div');
   
-  var $h1=$('<h1>').append('Create account');  
-  $el.$divDisclaimerW=$('<div>').css({'margin':'0em', 'padding':'0em'});
-  var $messDiv=$('<div>').css({color:'red'});
-  var $obliDiv=$('<div>').append('* = obligatory');
-  var $labPass=$('<label>').append('Password'),  $labPassB=$('<label>').append('Password again');  
-  var $inpPass=$('<input type=password placeholder="at least 6 characters">'),  $inpPassB=$('<input type=password>');
-  $inpPass.add($inpPassB).css({display:'block', 'margin-bottom':'0.5em'});
+  var h1=createElement('h1').myText('Create account');  
+  el.divDisclaimerW=createElement('div').css({'margin':'0em', 'padding':'0em'});
+  var messDiv=createElement('div').css({color:'red'});
+  var obliDiv=createElement('div').myText('* = obligatory');
+  var labPass=createElement('label').myText('Password'),  labPassB=createElement('label').myText('Password again');  
+  var inpPass=createElement('input').prop({type:'password', placeholder:"at least 6 characters"}),  inpPassB=createElement('input').prop({type:'password'});
+  [inpPass, inpPassB].forEach(ele=>ele.css({display:'block', 'margin-bottom':'0.5em'}));
 
-  $divCont.append($h1, $el.$divDisclaimerW, $messDiv,   $labPass, $inpPass, $labPassB, $inpPassB);  //, $obliDiv
-  $el.createInputs();
+  divCont.append(h1, el.divDisclaimerW, messDiv,   labPass, inpPass, labPassB, inpPassB);  //, obliDiv
+  el.createInputs();
 
-  var $spanLabel=$('<span>').append(langHtml.CreateAccount).css({'float':'right',margin:'0.2em 0 0 0'}); 
-  var $buttonSave=$("<button>").addClass('highStyle').text(langHtml.Create).click(save);
-  var $menuA=$('<div>').append($buttonSave,$spanLabel).css({padding:'0 0.3em 0 0', overflow:'hidden', 'max-width':menuMaxWidth+'px', 'text-align':'left', margin:'.3em auto .4em'}); 
+  var spanLabel=createElement('span').myText(langHtml.CreateAccount).css({'float':'right',margin:'0.2em 0 0 0'}); 
+  var buttonSave=createElement('button').addClass('highStyle').myText(langHtml.Create).on('click',save);
+  var menuA=createElement('div').myAppend(buttonSave,spanLabel).css({padding:'0 0.3em 0 0', overflow:'hidden', 'max-width':menuMaxWidth+'px', 'text-align':'left', margin:'.3em auto .4em'}); 
 
-  $el.$fixedDiv=$('<div>').append($menuA).css(cssFixed);
-  $el.append($el.$divCont, $el.$fixedDiv);
-  return $el;
+  el.fixedDiv=createElement('div').myAppend(menuA).css(cssFixed);
+  el.append(el.divCont, el.fixedDiv);
+  return el;
 }
 
 
-var deleteAccountPopExtend=function($el){
+var deleteAccountPopExtend=function(el){
 "use strict"
-  $el.toString=function(){return 'deleteAccountPop';}
-  //var $el=popUpExtend($el);
-  var $yes=$('<button>').addClass('highStyle').html(langHtml.Yes).click(function(){
+  el.toString=function(){return 'deleteAccountPop';}
+  //var el=popUpExtend(el);
+  var yes=createElement('button').addClass('highStyle').myText(langHtml.Yes).on('click',function(){
     //var vec=[['VDelete',1,function(data){doHistBack();doHistBack();}]];   majax(oAJAX,vec);
     userInfoFrDB={};
     var vec=[['UDelete',1, function(data){
-      history.fastBack($mainDiv,true);
+      history.fastBack(mainDiv,true);
     }]];   majax(oAJAX,vec);
   });
-  var $cancel=$('<button>').addClass('highStyle').html(langHtml.Cancel).click(doHistBack);
-  //$el.append(langHtml.deleteBox.regret,'<br>',$yes,$cancel);
-  //$el.css({padding:'1.1em',border:'1px solid'});
-  $el.setVis=function(){
-    $el.show();   
+  var cancel=createElement('button').addClass('highStyle').myText(langHtml.Cancel).on('click',doHistBack);
+  //el.myAppendB(langHtml.deleteBox.regret,'<br>',yes,cancel);
+  //el.css({padding:'1.1em',border:'1px solid'});
+  el.setVis=function(){
+    el.show();   
     return true;
   }
 
-  var $h1=$('<div>').append(langHtml.deleteBox.regret);
-  var $blanket=$('<div>').addClass("blanket");
-  var $centerDiv=$('<div>').append($h1,'<br>',$cancel,$yes);
-  $centerDiv.addClass("Center").css({padding:'1.1em'}); // 'width':'20em', height:'9em', 
-  //if(boIE) $centerDiv.css({'width':'20em'}); 
-  $el.addClass("Center-Container").append($centerDiv,$blanket); //
+  var h1=createElement('div').myText(langHtml.deleteBox.regret).css({'margin-bottom':'1em'});
+  var blanket=createElement('div').addClass("blanket");
+  var centerDiv=createElement('div').myAppend(h1,cancel,yes);
+  centerDiv.addClass("Center").css({padding:'1.1em'}); // 'width':'20em', height:'9em', 
+  //if(boIE) centerDiv.css({'width':'20em'}); 
+  el.addClass("Center-Container").myAppend(centerDiv,blanket); //
 
-  return $el;
+  return el;
 }
 
-var changePWPopExtend=function($el){
+var changePWPopExtend=function(el){
 "use strict"
-  $el.toString=function(){return 'changePWPop';}
+  el.toString=function(){return 'changePWPop';}
   var save=function(){ 
     resetMess();
-    $messDiv.html('');
-    if($inpPass.val().trim()!==$inpPassB.val().trim()) { setMess('The new password fields are not equal'); return; }
-    var lTmp=boDbg?2:6; if($inpPass.val().trim().length<lTmp) { setMess('The password must be at least '+lTmp+' characters long'); return; }
+    messDiv.myText('');
+    if(inpPass.value.trim()!==inpPassB.value.trim()) { setMess('The new password fields are not equal'); return; }
+    var lTmp=boDbg?2:6; if(inpPass.value.trim().length<lTmp) { setMess('The password must be at least '+lTmp+' characters long'); return; }
 
-    var o={passwordOld:SHA1($inpPassOld.val().trim()+strSalt), passwordNew:SHA1($inpPass.val().trim()+strSalt)};
+    var o={passwordOld:SHA1(inpPassOld.value.trim()+strSalt), passwordNew:SHA1(inpPass.value.trim()+strSalt)};
 
     var vec=[['changePW',o,changePWRet]];   majax(oAJAX,vec); 
     setMess('',null,true); 
   }
 
-  $el.openFunc=function(){
-    doHistPush({$view:$changePWPop});
-    $el.setVis();
-    $inpPassOld.val(''); $inpPass.val(''); $inpPassB.val('');
+  el.openFunc=function(){
+    doHistPush({view:changePWPop});
+    el.setVis();
+    inpPassOld.value=''; inpPass.value=''; inpPassB.value='';
   }
-  $el.setVis=function(){
-    $el.show();   
+  el.setVis=function(){
+    el.show();   
     return true;
   }
   var changePWRet=function(data){
-    if(data.boOK) { $inpPassOld.val(''); $inpPass.val(''); $inpPassB.val('');  doHistBack(); }
+    if(data.boOK) { inpPassOld.value=''; inpPass.value=''; inpPassB.value='';  doHistBack(); }
   }
 
-  var $h1=$('<h3>').append('Change your password');
-  var $blanket=$('<div>').addClass("blanket");
-  var $messDiv=$('<div>').css({color:'red'});
-  var $labPassOld=$('<label>').append('Old password'), $labPass=$('<label>').append('New password'),  $labPassB=$('<label>').append('New password again');  
-  var $inpPassOld=$('<input type=password>'), $inpPass=$('<input type=password placeholder="at least 6 characters">'),  $inpPassB=$('<input type=password>');
+  var h1=createElement('h3').myText('Change your password');
+  var blanket=createElement('div').addClass("blanket");
+  var messDiv=createElement('div').css({color:'red'});
+  var labPassOld=createElement('label').myText('Old password'), labPass=createElement('label').myText('New password'),  labPassB=createElement('label').myText('New password again');  
+  var inpPassOld=createElement('input').prop({type:'password'}), inpPass=createElement('input').prop({type:'password', placeholder:"at least 6 characters"}),  inpPassB=createElement('input').prop({type:'password'});
 
-  $([]).push($inpPassOld, $inpPass, $inpPassB).css({display:'block', 'margin-bottom':'0.5em'}).keypress( function(e){ if(e.which==13) {okF();return false;}} );
+  [inpPassOld, inpPass, inpPassB].forEach(ele=>ele.css({display:'block', 'margin-bottom':'0.5em'}).on('keypress', function(e){ if(e.which==13) {okF();return false;}} )   );
 
-  var $ok=$('<button>').html(langHtml.OK).addClass('highStyle').click(save);
-  var $cancel=$('<button>').html(langHtml.Cancel).addClass('highStyle').click(doHistBack);
-  var $divBottom=$('<div>').append($cancel,$ok);  //$buttonCancel,
+  var ok=createElement('button').myText(langHtml.OK).addClass('highStyle').on('click',save);
+  var cancel=createElement('button').myText(langHtml.Cancel).addClass('highStyle').on('click',doHistBack);
+  var divBottom=createElement('div').myAppend(cancel,ok);  //buttonCancel,
 
-  var $centerDiv=$('<div>').append($h1, $messDiv,   $labPassOld, $inpPassOld, $labPass, $inpPass, $labPassB, $inpPassB, $divBottom);
-  $centerDiv.addClass("Center").css({padding:'1.1em'}); // 'width':'20em', height:'21em', 
-  //if(boIE) $centerDiv.css({'width':'20em'}); 
-  $el.addClass("Center-Container").append($centerDiv,$blanket); //
+  var centerDiv=createElement('div').myAppend(h1, messDiv,   labPassOld, inpPassOld, labPass, inpPass, labPassB, inpPassB, divBottom);
+  centerDiv.addClass("Center").css({padding:'1.1em'}); // 'width':'20em', height:'21em', 
+  //if(boIE) centerDiv.css({'width':'20em'}); 
+  el.addClass("Center-Container").myAppend(centerDiv,blanket); //
 
-  return $el;
+  return el;
 }
-var verifyEmailPopExtend=function($el){
+var verifyEmailPopExtend=function(el){
 "use strict"
-  $el.toString=function(){return 'verifyEmailPop';}
+  el.toString=function(){return 'verifyEmailPop';}
   var okF=function(){
     var vec=[['verifyEmail',1, okRet]];   majax(oAJAX,vec); 
     //var vec=[['verifyEmail',{email:userInfoFrDB.email}, okRet]];   majax(oAJAX,vec);
     
   };
-  $el.openFunc=function(){
-    doHistPush({$view:$verifyEmailPop});
-    $spanEmail.html(userInfoFrDB.email);
-    $el.setVis();
+  el.openFunc=function(){
+    doHistPush({view:verifyEmailPop});
+    spanEmail.myText(userInfoFrDB.email);
+    el.setVis();
   }
-  $el.setVis=function(){
-    $el.show();   
+  el.setVis=function(){
+    el.show();   
     return true;
   }
   var okRet=function(data){
     if(data.boOK) {  doHistBack(); }
   }
 
-  var $h1=$('<h3>').append('Verify emailaddress');
-  var $spanEmail=$('<span>').css({'font-weight': 'bold'});
-  var $pTxt=$('<p>').append('Send a verification email to ',$spanEmail);
-  var $pBottom=$('<p>').append('Note! The verification code sent will only be valid for 10 minutes.');
-  var $blanket=$('<div>').addClass("blanket");
+  var h1=createElement('h3').myText('Verify emailaddress');
+  var spanEmail=createElement('span').css({'font-weight': 'bold'});
+  var pTxt=createElement('p').myText('Send a verification email to ').myAppend(spanEmail);
+  var pBottom=createElement('p').myText('Note! The verification code sent will only be valid for 10 minutes.');
+  var blanket=createElement('div').addClass("blanket");
 
-  var $ok=$('<button>').html(langHtml.OK).addClass('highStyle').click(okF);
-  //var $cancel=$('<button>').html(langHtml.Cancel).click(doHistBack);
-  var $divBottom=$('<div>').append($ok);  //$cancel,
+  var ok=createElement('button').myText(langHtml.OK).addClass('highStyle').on('click',okF);
+  //var cancel=createElement('button').myText(langHtml.Cancel).on('click',doHistBack);
+  var divBottom=createElement('div').myAppend(ok);  //cancel,
 
-  var $centerDiv=$('<div>').append($h1, $pTxt, $pBottom, $divBottom);
-  $centerDiv.addClass("Center").css({padding:'1.1em'});  // 'width':'20em', height:'15em', 
-  //if(boIE) $centerDiv.css({'width':'20em'}); 
-  $el.addClass("Center-Container").append($centerDiv,$blanket); //
+  var centerDiv=createElement('div').myAppend(h1, pTxt, pBottom, divBottom);
+  centerDiv.addClass("Center").css({padding:'1.1em'});  // 'width':'20em', height:'15em', 
+  //if(boIE) centerDiv.css({'width':'20em'}); 
+  el.addClass("Center-Container").myAppend(centerDiv,blanket); //
 
-  return $el;
+  return el;
 }
 
-var forgottPWPopExtend=function($el){
+var forgottPWPopExtend=function(el){
 "use strict"
-  $el.toString=function(){return 'forgottPWPop';}
+  el.toString=function(){return 'forgottPWPop';}
   var okF=function(){
-    var vec=[['verifyPWReset',{email:$inpEmail.val().trim()}, okRet]];   majax(oAJAX,vec);
+    var vec=[['verifyPWReset',{email:inpEmail.value.trim()}, okRet]];   majax(oAJAX,vec);
     
   };
-  $el.openFunc=function(){
-    doHistPush({$view:$forgottPWPop});
-    $el.setVis();
-    $inpEmail.val('');
+  el.openFunc=function(){
+    doHistPush({view:forgottPWPop});
+    el.setVis();
+    inpEmail.value='';
   }
-  $el.setVis=function(){
-    $el.show();   
+  el.setVis=function(){
+    el.show();   
     return true;
   }
   var okRet=function(data){
-    if(data.boOK) { $inpEmail.val('');  doHistBack(); }
+    if(data.boOK) { inpEmail.value='';  doHistBack(); }
   }
 
-  var $h1=$('<h3>').append('Forgott your password?');
-  var $blanket=$('<div>').addClass("blanket");
-  var $labEmail=$('<label>').append('Email');  
-  var $inpEmail=$('<input type=email>').keypress( function(e){ if(e.which==13) {okF();return false;}} );
-  $inpEmail.css({display:'block', 'margin-bottom':'0.5em'});
+  var h1=createElement('h3').myText('Forgott your password?');
+  var blanket=createElement('div').addClass("blanket");
+  var labEmail=createElement('label').myText('Email');  
+  var inpEmail=createElement('input').prop({type:'email'}).on('keypress', function(e){ if(e.which==13) {okF();return false;}} );
+  inpEmail.css({display:'block', 'margin-bottom':'0.5em'});
 
-  var $ok=$('<button>').html(langHtml.OK).addClass('highStyle').click(okF);
-  var $cancel=$('<button>').html(langHtml.Cancel).addClass('highStyle').click(doHistBack);
-  var $divBottom=$('<div>').append($cancel,$ok);  //$buttonCancel,
+  var ok=createElement('button').myText(langHtml.OK).addClass('highStyle').on('click',okF);
+  var cancel=createElement('button').myText(langHtml.Cancel).addClass('highStyle').on('click',doHistBack);
+  var divBottom=createElement('div').myAppend(cancel,ok);  //buttonCancel,
 
-  var $centerDiv=$('<div>').append($h1, $labEmail, $inpEmail, $divBottom);
-  $centerDiv.addClass("Center").css({padding:'1.1em'}); // 'width':'20em', height:'13em', 
-  //if(boIE) $centerDiv.css({'width':'20em'}); 
-  $el.addClass("Center-Container").append($centerDiv,$blanket); //
+  var centerDiv=createElement('div').myAppend(h1, labEmail, inpEmail, divBottom);
+  centerDiv.addClass("Center").css({padding:'1.1em'}); // 'width':'20em', height:'13em', 
+  //if(boIE) centerDiv.css({'width':'20em'}); 
+  el.addClass("Center-Container").myAppend(centerDiv,blanket); //
 
-  return $el;
+  return el;
 }
-var consentDivExtend=function($el){
+var consentDivExtend=function(el){
 "use strict"
-  $el.toString=function(){return 'consentDiv';}
+  el.toString=function(){return 'consentDiv';}
 
-  $el.setUp=function(){
-    $spanApp.html(objApp.name);
+  el.setUp=function(){
+    spanApp.myText(objApp.name);
     var StrPerm=scopeAsked?scopeAsked.split(','):[];
-    var $Li=$([]);
+    var Li=[];
     for(var i=0;i<StrPerm.length;i++){
-      var $li=$('<li>').append(StrPerm[i]);
-      $Li.push($li);
+      var li=createElement('li').myText(StrPerm[i]);
+      Li.push(li);
     }
-    $listPerm.empty().append($Li);
-    var boGotOldScope=Boolean(objUApp);  $pOldPerm.toggle(boGotOldScope); if(boGotOldScope) $spanPermOld.html(objUApp.scope);
+    listPerm.empty().myAppend(...Li);
+    var boGotOldScope=Boolean(objUApp);  pOldPerm.toggle(boGotOldScope); if(boGotOldScope) spanPermOld.myText(objUApp.scope);
   }
 
-  var $spanApp=$('<b>');
-  var $listPerm=$('<ul>');
-  var $spanPermOld=$('<b>');
-  var $pA=$('<p>').append('The app: ', $spanApp, ", would like to be able to read these data: ", $listPerm);
-  var $pOldPerm=$('<p>').append('(Old permission: ', $spanPermOld, ')');
-  var $pB=$('<p>').append('(You can withdraw this right later.)').css({'font-size':'85%'});
-  var $buttCancel=$('<button>').addClass('highStyle').append('Cancel').click(function(){
-    $el.cb(false);
+  var spanApp=createElement('b');
+  var listPerm=createElement('ul');
+  var spanPermOld=createElement('b');
+  var pA=createElement('p').myAppendB('The app: ', spanApp, ", would like to be able to read these data: ", listPerm);
+  var pOldPerm=createElement('p').myAppendB('(Old permission: ', spanPermOld, ')');
+  var pB=createElement('p').myText('(You can withdraw this right later.)').css({'font-size':'85%'});
+  var buttCancel=createElement('button').addClass('highStyle').myText('Cancel').on('click',function(){
+    el.cb(false);
   });
-  var $buttAllow=$('<button>').addClass('highStyle').append('Allow').click(function(){
-    //var vec=[['userAppSet',{scope:scopeAsked, idApp:idApp, maxUnactivityToken:maxUnactivityToken}], ['setupById',{idApp:idApp},$el.cb]];   majax(oAJAX,vec);
+  var buttAllow=createElement('button').addClass('highStyle').myText('Allow').on('click',function(){
+    //var vec=[['userAppSet',{scope:scopeAsked, idApp:idApp, maxUnactivityToken:maxUnactivityToken}], ['setupById',{idApp:idApp},el.cb]];   majax(oAJAX,vec);
     var maxUnactivityToken=objQS.response_type=='code'?60*24*3600:2*3600;
-    var vec=[['setConsent',{scope:scopeAsked, idApp:idApp, maxUnactivityToken:maxUnactivityToken}], ['setupById',{idApp:idApp},function(data){$el.cb(true);}]];   majax(oAJAX,vec); 
+    var vec=[['setConsent',{scope:scopeAsked, idApp:idApp, maxUnactivityToken:maxUnactivityToken}], ['setupById',{idApp:idApp},function(data){el.cb(true);}]];   majax(oAJAX,vec); 
   });
-  $el.append($pA, $pOldPerm, $pB, $buttCancel, $buttAllow);
+  el.append(pA, pOldPerm, pB, buttCancel, buttAllow);
 
-  return $el;
+  return el;
 }
 
 
 
 
-var uploadImageDivExtend=function($el){
-  $el.toString=function(){return 'uploadImageDiv';}
-  var progressHandlingFunction=function(e){      if(e.lengthComputable){   $progress.attr({value:e.loaded,max:e.total});      }      }
-  var oAJAXL={
-    url: leafBE,
-    type: 'POST',
-    xhr: function() {  // Custom XMLHttpRequest
-      var myXhr = $.ajaxSettings.xhr();
-      if(myXhr.upload){   myXhr.upload.addEventListener('progress',progressHandlingFunction, false);   }
-      return myXhr;
-    },
-    beforeSend: function(){$progress.visible();},
-    success: function(){    $progress.attr({value:0});  $progress.invisible();     },
-    error: function(){ $progress.invisible(); errorFunc.call(this,arguments);},//errorHandler=function(){setMess('error uploading',5);},
-    //Options to tell jQuery not to process data or worry about content-type.
-    cache: false,
-    contentType: false,
-    processData: false,
-    headers:{'x-type':'single'}
-  }
-  oAJAXL.boFormData=1;
+var uploadImageDivExtend=function(el){
+  el.toString=function(){return 'uploadImageDiv';}
+  var progressHandlingFunction=function(e){      if(e.lengthComputable){   progress.attr({value:e.loaded,max:e.total});      }      }
 
-  var setMess=function(str) {$divMess.html(str);}
-  var clearMess=function() {$divMess.html('');}
-  var toggleVerified=function(boT){  boT=Boolean(boT);   $uploadButton.prop("disabled",!boT); }
+  var setMess=function(str) {divMess.myText(str);}
+  var clearMess=function() {divMess.myText('');}
+  var toggleVerified=function(boT){  boT=Boolean(boT);   uploadButton.prop("disabled",!boT); }
   var verifyFun=function(){  
     clearMess();
     var arrFile=this.files;
@@ -817,172 +849,209 @@ var uploadImageDivExtend=function($el){
     formData.append("kind", strKind);
     formData.append("fileToUpload[]", objFile);
      
-    majax(oAJAXL,[['uploadImage',formData,sendFunRet]]);
+
+  
+    var vecIn=[['uploadImage'], ['CSRFCode',CSRFCode]];
+    var arrRet=[sendFunRet];
+    formData.append('vec', JSON.stringify(vecIn));
+    var xhr = new XMLHttpRequest();
+    xhr.open('POST', uBE, true);
+    var dataOut=formData;
+    xhr.setRequestHeader('x-type','single');
+    
+    progress.visible(); //progress.visible();
+    xhr.onprogress=progressHandlingFunction;
+    xhr.onload=function() {
+      var dataFetched=this.response;
+      var data; try{ data=JSON.parse(this.response); }catch(e){ setMess(e);  return; }
+      
+      var dataArr=data.dataArr;  // Each argument of dataArr is an array, either [argument] or [altFuncArg,altFunc]
+      delete data.dataArr;
+      beRet(data);
+      for(var i=0;i<dataArr.length;i++){
+        var r=dataArr[i];
+        //if(r.length) { if('strMessage' in r[0]) setMess(r[0].strMessage);   }
+        if(r.length==1) {var f=arrRet[i]; if(f) f(r[0]);} else { window[r[1]].call(window,r[0]);   }
+      }
+      progress.attr({value:0});  progress.invisible();  //sendFunRet();
+    }
+    xhr.onerror=function(e){ progress.invisible(); errorFunc.call(this,arguments); }
+    
+    xhr.send(dataOut); 
+    busyLarge.show();
+    
+    
+     
+    //majax(oAJAXL,[['uploadImage',formData,sendFunRet]]);
     setMess('Uploading ...');
-    $uploadButton.prop("disabled",true);
+    uploadButton.prop("disabled",true);
   }
   var sendFunRet=function(data){
-      if('strMessage' in data) setMess(data.strMessage); $progress.invisible(); $uploadButton.prop("disabled",false);
-      callback(data);
+    if('strMessage' in data) setMess(data.strMessage); progress.invisible(); uploadButton.prop("disabled",false);
+    callback(data);
   }
-  $el.openFunc=function(strKindT, callbackT){
-    strKind=strKindT; callback=callbackT; setMess('');  $inpFile.val('');
-    doHistPush({$view:$uploadImageDiv});
-    $el.setVis();    
+  el.openFunc=function(strKindT, callbackT){
+    strKind=strKindT; callback=callbackT; setMess('');  inpFile.value='';
+    doHistPush({view:uploadImageDiv});
+    el.setVis();    
   };
-  $el.setVis=function(){
-    $el.show();   
+  el.setVis=function(){
+    el.show();   
     return true;
   }
   var strKind='u', callback;
-  //$el=popUpExtend($el);  
-  //$el.css({'max-width':'20em', padding: '0.3em 0.5em 1.2em 0.6em'});
+  //el=popUpExtend(el);  
+  //el.css({'max-width':'20em', padding: '0.3em 0.5em 1.2em 0.6em'});
 
-  var $head=$('<h3>').append('Upload Image: ').css({'font-weight':'bold'});
-  var $formFile=$('<form >'); //enctype="multipart/form-data"
-  var $inpFile=$('<input type=file name=file id=file accept="image/*">').css({background:'lightgrey'});
-  //var $inpUploadButton=$('<input type="button" value="Upload">');
-  var $uploadButton=$('<button>').text('Upload').addClass('highStyle').prop("disabled",true).css({'margin-right':'0.5em'}); //, 'float':'right'
-  var $progress=$('<progress max=100, value=0>').css({'display':'block','margin-top':'1em'}).invisible();
-  var $divMess=$('<div>').css({'margin-top':'1.2em', 'min-height':'1em'});
+  var head=createElement('h3').myText('Upload Image: ').css({'font-weight':'bold'});
+  var formFile=createElement('form'); //enctype="multipart/form-data"
+  var inpFile=createElement('input').prop({type:'file', name:'file', id:'file', accept:"image/*"}).css({background:'lightgrey'});
+  //var inpUploadButton=createElement('input').prop({type:"button", value:"Upload"});
+  var uploadButton=createElement('button').myText('Upload').addClass('highStyle').prop("disabled",true).css({'margin-right':'0.5em'}); //, 'float':'right'
+  var progress=createElement('progress').prop({max:100, value:0}).css({'display':'block','margin-top':'1em'}).invisible();
+  var divMess=createElement('div').css({'margin-top':'1.2em', 'min-height':'1em'});
   
   var objFile;
-  $inpFile.change(verifyFun).click(function(){$uploadButton.prop("disabled",true);});
-  $formFile.append($inpFile);   $formFile.css({display:'inline'});
+  inpFile.on('change',verifyFun).on('click',function(){uploadButton.prop("disabled",true);});
+  formFile.append(inpFile);   formFile.css({display:'inline'});
    
 
-  var $closeButton=$('<button>').append('Close').addClass('highStyle').click(doHistBack);
-  var $menuBottom=$('<div>').append($closeButton, $uploadButton).css({'margin-top':'1.2em'});
+  var closeButton=createElement('button').myText('Close').addClass('highStyle').on('click',doHistBack);
+  var menuBottom=createElement('div').myAppend(closeButton, uploadButton).css({'margin-top':'1.2em'});
 
-  //$el.append($head, $formFile, $progress, $divMess,$menuBottom); 
+  //el.append(head, formFile, progress, divMess,menuBottom); 
 
-  var $blanket=$('<div>').addClass("blanket");
-  var $centerDiv=$('<div>').append($head, $formFile, $progress, $divMess,$menuBottom);
-  $centerDiv.addClass("Center").css({'max-width':'21em', padding: '0.3em 0.5em 1.2em 0.6em'}); // , height:'15em'
-  //if(boIE) $centerDiv.css({'width':'20em'}); 
-  $el.addClass("Center-Container").append($centerDiv,$blanket); //
+  var blanket=createElement('div').addClass("blanket");
+  var centerDiv=createElement('div').myAppend(head, formFile, progress, divMess,menuBottom);
+  centerDiv.addClass("Center").css({'max-width':'21em', padding: '0.3em 0.5em 1.2em 0.6em'}); // , height:'15em'
+  //if(boIE) centerDiv.css({'width':'20em'}); 
+  el.addClass("Center-Container").myAppend(centerDiv,blanket); //
 
-  $uploadButton.click(sendFun);
-  return $el;
+  uploadButton.on('click',sendFun);
+  return el;
 }
 
 
-var userSettingDivExtend=function($el){
+var userSettingDivExtend=function(el){
 "use strict"
-  $el.toString=function(){return 'userSetting';}
+  el.toString=function(){return 'userSetting';}
   var save=function(){ 
     resetMess();  
     var o={},boErr=0;
-    $Inp.each(function(i){
-      var $inp=$(this),  strName=$inp.attr('name');
-      //var tmp=Prop[strName].saveInp($inp); if(tmp===false) boErr=1; else o[strName]=tmp; 
-      var tmp=Prop[strName].saveInp($inp); if(tmp[0]) {setMess(tmp[0]); return; } else o[strName]=tmp[1];
+    Inp.forEach(function(inp){
+      var strName=inp.attr('name');
+      //var tmp=Prop[strName].saveInp(inp); if(tmp===false) boErr=1; else o[strName]=tmp; 
+      var tmp=Prop[strName].saveInp(inp); if(tmp[0]) {setMess(tmp[0]); return; } else o[strName]=tmp[1];
     }); 
     if(boErr) return;
-    var vec=[['UUpdate',o], ['setupById',{},$el.setUp]];   majax(oAJAX,vec);
+    var vec=[['UUpdate',o], ['setupById',{},el.setUp]];   majax(oAJAX,vec);
     setMess('',null,true); 
   }
 
-  $el.createInputs=function(){
-    for(var i=0;i<$el.StrProp.length;i++){      
-      var strName=$el.StrProp[i];
-      var $imgH=''; if(strName in helpBub ) {    var $imgH=$imgHelp.clone();   popupHoverJQ($imgH,helpBub[strName]);         }
+  el.createInputs=function(){
+    for(var i=0;i<el.StrProp.length;i++){      
+      var strName=el.StrProp[i];
+      var imgH=''; if(strName in helpBub ) {    var imgH=imgHelp.cloneNode();   popupHover(imgH,helpBub[strName]);         }
 
-      var $lab=$('<label>').append(calcLabel(langHtml.label, strName));
-      var $spanLastChange=Prop[strName].crStatisticSpan().attr('name',strName);
-      var $inp=Prop[strName].crInp().attr('name',strName);
-      $SpanLastChange.push($spanLastChange);  $Inp.push($inp);
-      $divCont.append($lab,$imgH,$spanLastChange,$inp);
+      var lab=createElement('label').myText(calcLabel(langHtml.label, strName));
+      var spanLastChange=Prop[strName].crStatisticSpan().attr('name',strName);
+      var inp=Prop[strName].crInp().attr('name',strName);
+      SpanLastChange.push(spanLastChange);  Inp.push(inp);
+      divCont.myAppend(lab,imgH,spanLastChange,inp);
+      if(inp.type=='number') inp.min=0;
     }
-    //$divCont.find('input[type=text],[type=email],[type=number]').keypress( function(e){ if(e.which==13) {save();return false;}} );
-    var $tmp=$divCont.find('input[type=number]').prop({min:0});
-    $Inp.css({display:'block', 'margin-bottom':'0.5em'});
+    //divCont.find('input[type=text],[type=email],[type=number]').on('keypress', function(e){ if(e.which==13) {save();return false;}} );
+    //var tmp=divCont.find('input[type=number]').prop({min:0});
+    Inp.forEach(ele=>ele.css({display:'block', 'margin-bottom':'0.5em'}));
 
   }
-  $el.setUp=function(){
-    $SpanLastChange.each(function(i){
-      var $spanLastChange=$(this), strName=$spanLastChange.attr('name'); Prop[strName].setStatisticSpan($spanLastChange);
+  el.setUp=function(){
+    SpanLastChange.forEach(function(spanLastChange){
+      var strName=spanLastChange.attr('name'); Prop[strName].setStatisticSpan(spanLastChange);
     });  
-    $Inp.each(function(i){
-      var $inp=$(this), strName=$inp.attr('name'); Prop[strName].setInp($inp);
+    Inp.forEach(function(inp){
+      var strName=inp.attr('name'); Prop[strName].setInp(inp);
     });
     var arrTmp=getSuitableTimeUnit(unixNow()-userInfoFrDB.tCreated); arrTmp[0]=Math.round(arrTmp[0]);
-    $divCreated.children('b').html(arrTmp.join(' '));
+    divCreated.querySelector('b').myText(arrTmp.join(' '));
     return true; 
   }
-  var $Inp=$([]), $SpanLastChange=$([]);
+  var Inp=[], SpanLastChange=[];
 
-  $el.StrProp=['name', 'password', 'image', 'email', 'boEmailVerified', 'telephone',   'country', 'federatedState', 'county', 'city', 'zip', 'address',     'idFB', 'idNational', 'birthdate', 'motherTongue', 'gender']; //'idFB', 'idGoogle', 
+  el.StrProp=['name', 'password', 'image', 'email', 'boEmailVerified', 'telephone',   'country', 'federatedState', 'county', 'city', 'zip', 'address',     'idFB', 'idNational', 'birthdate', 'motherTongue', 'gender']; //'idFB', 'idGoogle', 
 
-  var $buttonDelete=$('<button>').append('Delete account').addClass('highStyle').click(function(){ 
-    doHistPush({$view:$deleteAccountPop});
-    $deleteAccountPop.setVis();
+  var buttonDelete=createElement('button').myText('Delete account').addClass('highStyle').on('click',function(){ 
+    doHistPush({view:deleteAccountPop});
+    deleteAccountPop.setVis();
   }).css({margin:'0.2em 0 0 0'});  //'float':'right',
-  var $divCreated=$('<div>').append('Account created <b></b> ago ', $buttonDelete).css({'font-size':'90%', 'border-bottom':'2px solid grey', 'margin-bottom':'1em', 'padding-bottom':'0.5em'});
-  $el.$divDisclaimerW=$('<div>').css({'margin':'0em', 'padding':'0em'});
+  var divCreated=createElement('div').myHtml('Account created <b></b> ago ', buttonDelete).css({'font-size':'90%', 'border-bottom':'2px solid grey', 'margin-bottom':'1em', 'padding-bottom':'0.5em'});
+  el.divDisclaimerW=createElement('div').css({'margin':'0em', 'padding':'0em'});
 
-  var $divCont=$el.$divCont=$('<div>').append($divCreated,$el.$divDisclaimerW).css({padding:'0 0.3em 0 0', overflow:'hidden', 'max-width':menuMaxWidth+'px', 'text-align':'left', margin:'1em auto'}); 
-  $el.createInputs();
+  var divCont=el.divCont=createElement('div').myAppend(divCreated,el.divDisclaimerW).css({padding:'0 0.3em 0 0', overflow:'hidden', 'max-width':menuMaxWidth+'px', 'text-align':'left', margin:'1em auto'}); 
+  el.createInputs();
 
-  var $spanLabel=$('<span>').append(langHtml.Settings).css({'float':'right',margin:'0.2em 0 0 0'});
-  var $buttonSave=$("<button>").text(langHtml.Save).addClass('highStyle').click(save);
-  var $menuA=$('<div>').append($buttonSave, $spanLabel).css({padding:'0 0.3em 0 0', overflow:'hidden', 'max-width':menuMaxWidth+'px', 'text-align':'left', margin:'.3em auto .4em'}); 
+  var spanLabel=createElement('span').myText(langHtml.Settings).css({'float':'right',margin:'0.2em 0 0 0'});
+  var buttonSave=createElement('button').myText(langHtml.Save).addClass('highStyle').on('click',save);
+  var menuA=createElement('div').myAppend(buttonSave, spanLabel).css({padding:'0 0.3em 0 0', overflow:'hidden', 'max-width':menuMaxWidth+'px', 'text-align':'left', margin:'.3em auto .4em'}); 
 
-  $el.$fixedDiv=$('<div>').append($menuA).css(cssFixed);
-  $el.append($el.$divCont, $el.$fixedDiv);
-  return $el;
+  el.fixedDiv=createElement('div').myAppend(menuA).css(cssFixed);
+  el.append(el.divCont, el.fixedDiv);
+  return el;
 }
 
 
-
-var headExtend=function($el, $tableDiv, StrName, BoAscDefault, Label, strTR, strTD){  // $tableDiv must have a property $table, $tbody and nRowVisible (int)
 "use strict"
-  $el.setArrow=function(strName,dir){
+var headExtend=function(el, tableDiv, StrName, BoAscDefault, Label, strTR='tr', strTD='td'){  // tableDiv must have a property table, tbody and nRowVisible (int)
+  el.setArrow=function(strName,dir){
     boAsc=dir==1;
-    $sortImages.prop({src:uUnsorted});     var tmp=boAsc?uIncreasing:uDecreasing;  $el.children(strTH+'[name='+strName+']').children('img[data-type=sort]').prop({src:tmp});
+    arrImgSort.forEach(function(ele){ele.prop({src:uUnsorted}) });
+    var tmp=boAsc?uIncreasing:uDecreasing;
+    el.querySelector(strTH+'[name='+strName+']').querySelector('img[data-type=sort]').prop({src:tmp});
   }
-  $el.clearArrow=function(){
-    thSorted=null, boAsc=false;  $sortImages.prop({src:uUnsorted});
+  el.clearArrow=function(){
+    thSorted=null, boAsc=false;
+    arrImgSort.forEach(function(ele){ele.prop({src:uUnsorted}) });
   }
-  var thClick=function() { 
-    var $ele=$(this), strName=$ele.attr('name'); boAscDefault=$ele.data('boAscDefault');
+  var thClick=function() {
+    var ele=this, strName=ele.attr('name'), boAscDefault=ele.boAscDefault;
     boAsc=(thSorted===this)?!boAsc:boAscDefault;  thSorted=this;
-    $sortImages.prop({src:uUnsorted});     var tmp=boAsc?uIncreasing:uDecreasing;  $ele.children('img[data-type=sort]').prop({src:tmp});
-    $tableDiv.$tbody.detach();
-    var $tr=$tableDiv.$tbody.children(strTR+':lt('+$tableDiv.nRowVisible+')');
-    var $tdNameSort =$tr.children(strTD+'[name='+strName+']'); 
-    $tdNameSort.sortElements(function(aT, bT){               
-      var $a=$(aT), $b=$(bT), a = $a.data('valSort'),  b = $b.data('valSort'),   dire=boAsc?1:-1;
+    arrImgSort.forEach(function(ele){ele.prop({src:uUnsorted}) });
+    var tmp=boAsc?uIncreasing:uDecreasing;  ele.querySelector('img[data-type=sort]').prop({src:tmp});
+    var tBody=tableDiv.tBody;
+    var arrT=[...tBody.querySelectorAll('tr')];
+    var arrToSort=arrT.slice(0, tableDiv.nRowVisible);
+    var iChild=ele.myIndex();
+    var comparator=function(aT, bT){
+      var a = aT.children[iChild].valSort,  b = bT.children[iChild].valSort,   dire=boAsc?1:-1; 
       var boAStr=0,boBStr=0;
       var aN=Number(a); if(!isNaN(aN) && a!=='') {a=aN;} else {a=a.toLowerCase(); boAStr=1;}
       var bN=Number(b); if(!isNaN(bN) && b!=='') {b=bN;} else {b=b.toLowerCase(); boBStr=1;}
-      if(boAStr!=boBStr) return ((boAStr<boBStr)?-1:1)*dire; 
-      if(a==b) {return 0;} else return ((a<b)?-1:1)*dire; 
-    }, function(){ return this.parentNode;  });
-    $tableDiv.$table.append($tableDiv.$tbody);
-
+      if(boAStr!=boBStr) return ((boAStr<boBStr)?-1:1)*dire;
+      if(a==b) {return 0;} else return ((a<b)?-1:1)*dire;
+    }
+    var arrToSortN=msort.call(arrToSort,comparator);
+    tBody.prepend.apply(tBody,arrToSortN);
   }
-  strTR=strTR||'tr'; strTD=strTD||'td'; var strTH=strTD=='td'?'th':strTD;
-  var boAsc=false, thSorted=null;
 
-  for(var i=0;i<StrName.length;i++){
+  var strTH=strTD=='td'?'th':strTD;
+  var boAsc=false, thSorted=null;
+  var len=StrName.length;
+  var Th=Array(len), arrImgSort=Array(len);
+  for(var i=0;i<len;i++){
     var strName=StrName[i];  
-    var $imgSort=$('<img data-type=sort>');
+    var imgSort=createElement('img').attr('data-type', 'sort').prop({src:uUnsorted});
     var boAscDefault=(strName in BoAscDefault)?BoAscDefault[strName]:true;
     var label=(strName in Label)?Label[strName]:ucfirst(strName);
-    var $h=$("<"+strTH+">").append($imgSort).addClass('unselectable').prop({UNSELECTABLE:"on"}).attr('name',strName).data('boAscDefault',boAscDefault).prop('title',label).click(thClick);
-    $el.append($h);
+    var h=createElement(strTH).myAppend(imgSort).addClass('unselectable').prop({UNSELECTABLE:"on"}).attr('name',strName).prop('boAscDefault',boAscDefault).prop('title',label).on('click',thClick);
+    Th[i]=h;
+    arrImgSort[i]=imgSort;
   }
 
-  var $th=$el.children(strTH);
-  var $sortImages=$th.children('img[data-type=sort]').prop({src:uUnsorted});
-  //$sortImages.css({zoom:1.5,'margin':'auto','margin-top':'0.3em','margin-bottom':'0.3em'}); // display:'block',
-  $el.addClass('listHead');
-  //$el.css({'font-family':'initial'});
-  //$el.css({ position:'fixed'});
-  
-  return $el;
+  el.append(...Th);
+  el.addClass('listHead');
+  return el;
 }
+
 
 /*******************************************************************************************************************
  *******************************************************************************************************************
@@ -992,414 +1061,450 @@ var headExtend=function($el, $tableDiv, StrName, BoAscDefault, Label, strTR, str
  *******************************************************************************************************************
  *******************************************************************************************************************/
 
-userAppSetDivExtend=function($el){
+userAppSetDivExtend=function(el){
 "use strict"
-  $el.toString=function(){return 'userAppSetDiv';}
-  return $el;
+  el.toString=function(){return 'userAppSetDiv';}
+  return el;
 }
-userAppDeleteDivExtend=function($el){
+userAppDeleteDivExtend=function(el){
 "use strict"
-  $el.toString=function(){return 'userAppDeleteDiv';}
-  var $ok=$('<button>').html('OK').addClass('highStyle').css({'margin-top':'1em'}).click(function(){    
-    var idApp=$r.attr('idApp'), vec=[['userAppDelete',{idApp:idApp},okRet]];   majax(oAJAX,vec);    
+  el.toString=function(){return 'userAppDeleteDiv';}
+  var ok=createElement('button').myText('OK').addClass('highStyle').css({'margin-top':'1em'}).on('click',function(){    
+    var idApp=elR.attr('idApp'), vec=[['userAppDelete',{idApp:idApp},okRet]];   majax(oAJAX,vec);    
   });
   var okRet=function(data){
     if(!data.boOK) return;
-    $userAppList.myRemove($r);
+    userAppList.myRemove(elR);
     doHistBack();
   }
-  $el.openFunc=function(){
-    $r=$(this).parent().parent(); $spanApp.text($r.data('r').appName);
-    doHistPush({$view:$userAppDeleteDiv});
-    $el.setVis();
+  el.openFunc=function(){
+    elR=this.parentNode.parentNode; spanApp.myText(elR.r.appName);
+    doHistPush({view:userAppDeleteDiv});
+    el.setVis();
   }
-  $el.setVis=function(){
-    $el.show(); return 1;
+  el.setVis=function(){
+    el.show(); return 1;
   }
  
-  var $r;
-  var $head=$('<h3>').append('Remove');
-  var $spanApp=$('<span>');//.css({'font-weight': 'bold'});
-  var $p=$('<div>').append($spanApp);
+  var elR;
+  var head=createElement('h3').myText('Remove');
+  var spanApp=createElement('span');//.css({'font-weight': 'bold'});
+  var p=createElement('div').myAppend(spanApp);
 
-  var $blanket=$('<div>').addClass("blanket");
-  var $centerDiv=$('<div>').addClass("Center").append($head,$p,$ok).css({'min-width':'17em','max-width':'25em', padding:'0.1em'}); //,$cancel  height:'10em', 
-  // if(boIE) $centerDiv.css({'width':'20em'}); 
-  $el.addClass("Center-Container").append($centerDiv,$blanket); 
-  return $el;
+  var blanket=createElement('div').addClass("blanket");
+  var centerDiv=createElement('div').addClass("Center").myAppend(head,p,ok).css({'min-width':'17em','max-width':'25em', padding:'0.1em'}); //,cancel  height:'10em', 
+  // if(boIE) centerDiv.css({'width':'20em'}); 
+  el.addClass("Center-Container").myAppend(centerDiv,blanket); 
+  return el;
 }
-userAppListExtend=function($el){
+userAppListExtend=function(el){
 "use strict"
-  $el.toString=function(){return 'userAppList';}
-  //$el.setUp=function(){};
+  el.toString=function(){return 'userAppList';}
+  //el.setUp=function(){};
   var TDProt={
     tAccess:{
-      mySetVal:function(tT){ var arrT=getSuitableTimeUnit(unixNow()-tT);  $(this).text(Math.round(arrT[0])+arrT[1]);  }
+      mySetVal:function(tT){ var arrT=getSuitableTimeUnit(unixNow()-tT);  this.myText(Math.round(arrT[0])+arrT[1]);  }
     },
     imageHash:{
       mySetVal:function(imageHash){
-        var r=$(this).parent().data('r'), $i=$(this).children(), uImg; if(r.imageHash!=null) uImg=uAppImage+r.imageHash;  else uImg=uSite+"/lib/image/anonEmptyHash.png";
-        $i.prop({src:uImg});
+        var r=this.parentNode.r, im=this.firstChild, uImg; if(r.imageHash!=null) uImg=uAppImage+r.imageHash;  else uImg=uSite+"/lib/image/anonEmptyHash.png";
+        im.prop({src:uImg});
       }
     }
   }
   var TDConstructors={
-    tAccess:function(){ var $el=$('<td>');  $.extend($el[0],TDProt.tAccess);  return $el;  },
-    imageHash:function(){ var $image=$('<img>').css({'vertical-align':'middle'}), $el=$('<td>').css('text-align','center').append($image);  $.extend($el[0],TDProt.imageHash);  return $el;  }
+    tAccess:function(){ var el=createElement('td');  extend(el,TDProt.tAccess);  return el;  },
+    imageHash:function(){ var image=createElement('img').css({'vertical-align':'middle'}), el=createElement('td').css('text-align','center').myAppend(image);  extend(el,TDProt.imageHash);  return el;  }
   }
-  $el.myAdd=function(r){
-    var $Td=$([]);
+  el.myAdd=function(r){
+    var Td=[];
     for(var i=0;i<StrCol.length;i++) { 
-      var name=StrCol[i], val=r[name], $td; if(name in TDConstructors) {$td=new TDConstructors[name](); }   else $td=$('<td>');   $Td.push($td.attr('name',name));
-      //if('mySetVal' in $td[0]) { $td[0].mySetVal(val);}   else $td.append(val);
-      //if('mySetSortVal' in $td[0]) { $td[0].mySetSortVal(val);}   else $td.data('valSort',val);
+      var name=StrCol[i], val=r[name], td; if(name in TDConstructors) {td=new TDConstructors[name](); }   else td=createElement('td');   Td.push(td.attr('name',name));
+      //if('mySetVal' in td) { td.mySetVal(val);}   else td.append(val);
+      //if('mySetSortVal' in td) { td.mySetSortVal(val);}   else td.valSort=val;
     }
-    var $buttEdit=$('<button>').attr('name','buttonEdit').append('Edit').addClass('highStyle').click(function(){
-      $userAppSetDiv.openFunc.call(this,1,1);
+    var buttEdit=createElement('button').attr('name','buttonEdit').myText('Edit').addClass('highStyle').on('click',function(){
+      userAppSetDiv.openFunc.call(this,1,1);
     });
-    var $buttDelete=$('<button>').attr('name','buttonDelete').addClass('highStyle').css({'margin-right':'0.2em'}).append($imgDelete.clone()).click($userAppDeleteDiv.openFunc);
-    var $tEdit=$('<td>').append($buttEdit), $tDelete=$('<td>').append($buttDelete); 
-    var $r=$('<tr>').append($Td, $tDelete); $r.attr({idApp:r.idApp,appName:r.appName}).data('r',r);  //, $tEdit
+    var buttDelete=createElement('button').attr('name','buttonDelete').addClass('highStyle').css({'margin-right':'0.2em'}).myAppend(imgDelete.cloneNode()).on('click',userAppDeleteDiv.openFunc);
+    var tEdit=createElement('td').myAppend(buttEdit), tDelete=createElement('td').myAppend(buttDelete); 
+    var elR=createElement('tr').myAppend(...Td, tDelete); elR.attr({idApp:r.idApp,appName:r.appName}).prop('r',r);  //, tEdit
     for(var i=0;i<StrCol.length;i++) { 
-      var $td=$Td.eq(i), name=StrCol[i], val=r[name]
-      if('mySetVal' in $td[0]) { $td[0].mySetVal(val);}   else $td.append(val);
-      if('mySetSortVal' in $td[0]) { $td[0].mySetSortVal(val);}   else $td.data('valSort',val);
+      var td=Td[i], name=StrCol[i], val=r[name]
+      if('mySetVal' in td) { td.mySetVal(val);}   else td.append(val);
+      if('mySetSortVal' in td) { td.mySetSortVal(val);}   else td.valSort=val;
     }
-    $tbody.append($r); 
-    $el.nRowVisible=$tbody.children('tr').length;
-    return $el;
+    tbody.append(elR); 
+    el.nRowVisible=tbody.children.length;
+    return el;
   }
-  $el.myRemove=function($r){
-    $r.remove();  return $el; 
-    $el.nRowVisible=$tbody.children('tr').length;
+  el.myRemove=function(elR){
+    elR.remove();  return el; 
+    el.nRowVisible=tbody.children.length;
   }
-  $el.myEdit=function(r){
-    var $r=$tbody.children('[idApp='+r.idApp+']');
-    $r.attr({idApp:r.idApp});
-    for(var i=0;i<StrCol.length;i++) { var name=StrCol[i], val=r[name], $td=$r.children('td:eq('+i+')'); if($td[0].mySetVal) $td[0].mySetVal(val); else $td.text(val); }
-    return $el;
+  el.myEdit=function(r){
+    var elR=tbody.querySelector('[idApp="'+r.idApp+'"]');
+    elR.attr({idApp:r.idApp});
+    //for(var i=0;i<StrCol.length;i++) { var name=StrCol[i], val=r[name], td=elR.children('td:eq('+i+')'); if(td.mySetVal) td.mySetVal(val); else td.empty().myAppend(val); }
+    for(var i=0;i<StrCol.length;i++) { var name=StrCol[i], val=r[name], td=elR.children[i]; if(td.mySetVal) td.mySetVal(val); else td.empty().myAppend(val); }
+    return el;
   }
-  $el.setUp=function(){
-    if($el.boStale) {
+  el.setUp=function(){
+    if(el.boStale) {
       var vec=[['userAppListGet',1,setUpRet]];   majax(oAJAX,vec);
-      $el.boStale=0;
+      el.boStale=0;
     }
   }
   var setUpRet=function(data){
     var tab=data.tab||[];
     var StrColTmp=data.StrCol; 
-    $tbody.empty(); 
+    tbody.empty(); 
     for(var i=0;i<tab.length;i++) {  
       var obj={}; for(var j=0;j<StrColTmp.length;j++){ obj[StrColTmp[j]]=tab[i][j];}
       tab[i]=obj;
-      $el.myAdd(tab[i]);      
+      el.myAdd(tab[i]);      
     }
-    $el.nRowVisible=tab.length;
+    el.nRowVisible=tab.length;
   }
-  $el.boStale=1;
+  el.boStale=1;
 
-  var $tbody=$el.$tbody=$("<tbody>");
-  $el.$table=$("<table>").append($tbody); //.css({width:'100%',position:'relative'});
-  $el.$divCont=$("<div>").append($el.$table).css({'margin':'1em auto','text-align':'left',display:'inline-block'});
+  var tbody=el.tbody=createElement('tbody');
+  el.table=createElement('table').myAppend(tbody); //.css({width:'100%',position:'relative'});
+  el.divCont=createElement('div').myAppend(el.table).css({'margin':'1em auto','text-align':'left',display:'inline-block'});
 
   var StrCol=['idApp', 'appName','scope', 'imageHash', 'tAccess'], BoAscDefault={tAccess:0};
   var Label={tAccess:'Accessed',imageHash:'Image'};
-  var $thead=headExtend($('<thead>'),$el,StrCol,BoAscDefault,Label);
-  $thead.css({background:'white', width:'inherit'});  //,height:'calc(12px + 1.2em)'
-  $el.$table.prepend($thead);
-  $el.nRowVisible=0;
+  var thead=headExtend(createElement('thead'),el,StrCol,BoAscDefault,Label);
+  thead.css({background:'white', width:'inherit'});  //,height:'calc(12px + 1.2em)'
+  el.table.prepend(thead);
+  el.nRowVisible=0;
 
-  var $imgDelete=$imgProt.clone().prop({src:uDelete});
+  var imgDelete=imgProt.cloneNode().prop({src:uDelete});
       // menuA
-  var $spanLabel=$('<span>').append('userAppList').css({'float':'right',margin:'0.2em 0 0 0'});  
-  var $menuA=$('<div>').append($spanLabel).css({padding:'0 0.3em 0 0',overflow:'hidden','max-width':menuMaxWidth+'px','text-align':'left',margin:'.3em auto .4em'}); 
+  var spanLabel=createElement('span').myText('userAppList').css({'float':'right',margin:'0.2em 0 0 0'});  
+  var menuA=createElement('div').myAppend(spanLabel).css({padding:'0 0.3em 0 0',overflow:'hidden','max-width':menuMaxWidth+'px','text-align':'left',margin:'.3em auto .4em'}); 
 
-  $el.addClass('userAppList');
-  $el.$fixedDiv=$('<div>').append($menuA).css(cssFixed);
-  $el.css({'text-align':'center'});
-  $el.append($el.$divCont, $el.$fixedDiv);
-  return $el;
+  el.addClass('userAppList');
+  el.fixedDiv=createElement('div').myAppend(menuA).css(cssFixed);
+  el.css({'text-align':'center'});
+  el.append(el.divCont, el.fixedDiv);
+  return el;
 }
 
 
-devAppSetDivExtend=function($el){
+devAppSetDivExtend=function(el){
 "use strict"
-  $el.toString=function(){return 'devAppSetDiv';}
+  el.toString=function(){return 'devAppSetDiv';}
   var save=function(){
-    r.appName=$inpAppName.val().trim(); if(r.appName.length==0){ setMess('empty app name',2);  return;}
-    var uri=$inpURL.val().trim();  if(uri.length==0){ setMess('empty redir_uri',2);  return;}
+    r.appName=inpAppName.value.trim(); if(r.appName.length==0){ setMess('empty app name',2);  return;}
+    var uri=inpURL.value.trim();  if(uri.length==0){ setMess('empty redir_uri',2);  return;}
     if(RegExp('^https?:\/\/$').test(uri)) { setMess('empty domain',2);  return;}
     if(!RegExp('^https?:\/\/').test(uri)){  uri="http://"+uri;   }
     r.redir_uri=uri;
-    var objTmp=$.extend({boUpd:boUpd},r);
+    var objTmp=extend({boUpd:boUpd},r);
     var vec=[['devAppSet', objTmp, saveRet]];   majax(oAJAX,vec);
   }
   var saveRet=function(data){
     if(!data.boOK) return;
     if('idApp' in data)  { r.idApp=data.idApp; }
     if('imageHash' in data)  { r.imageHash=data.imageHash; }
-    if(boUpd) {  $devAppList.myEdit(r); } 
-    else {r.created=unixNow(); $devAppList.myAdd(r); }
+    if(boUpd) {  devAppList.myEdit(r); } 
+    else {r.created=unixNow(); devAppList.myAdd(r); }
     doHistBack();
   }
-  $el.setUp=function(){
-    $inpAppName.val(r.appName); $inpURL.val(r.redir_uri);
-    $inpAppName.focus();  return true;
+  el.setUp=function(){
+    inpAppName.value=r.appName; inpURL.value=r.redir_uri;
+    inpAppName.focus();  return true;
   }
-  $el.openFunc=function(boUpdT,boGotData){
+  el.openFunc=function(boUpdT,boGotData){
     boUpd=boUpdT;
     if(boGotData){
-      var $r=$(this).parent().parent();
-      r=$r.data('r');
+      var elR=this.parentNode.parentNode;
+      r=elR.r;
     } else {r=rDefault;}
-    doHistPush({$view:$devAppSetDiv});
-    $el.setVis();
-    $el.setUp();
+    doHistPush({view:devAppSetDiv});
+    el.setVis();
+    el.setUp();
   }
-  $el.setVis=function(){
-    $el.show(); return 1;
+  el.setVis=function(){
+    el.show(); return 1;
   }
  
   var rDefault={appName:'', redir_uri:''};
   var boUpd, r; 
   
 
-  var $labAppName=$('<b>').append('appName');
-  var $inpAppName=$('<input type=text>');
-  var $labURL=$('<b>').append('Redirect uri');
-  var $inpURL=$('<input type=text>');
+  var labAppName=createElement('b').myText('appName');
+  var inpAppName=createElement('input').prop({type:'text'});
+  var labURL=createElement('b').myText('Redirect uri');
+  var inpURL=createElement('input').prop({type:'text'});
 
 
-  var $Lab=$([]).push($labAppName, $labURL).css({'margin-right':'0.5em'});
-  var $Inp=$([]).push($inpAppName, $inpURL).css({display:'block',width:'100%'}).keypress( function(e){ if(e.which==13) {save();return false;}} );
-  var $inpNLab=$([]).push($labAppName, $inpAppName, $labURL, $inpURL);
+  var Lab=[labAppName, labURL]; Lab.forEach(ele=>ele.css({'margin-right':'0.5em'}));
+  var Inp=[inpAppName, inpURL]; Inp.forEach(ele=>ele.css({display:'block',width:'100%'}).on('keypress', function(e){ if(e.which==13) {save();return false;}} )  );
+  var InpNLab=[labAppName, inpAppName, labURL, inpURL];
 
 
-  var $buttonSave=$('<button>').append('Save').addClass('highStyle').click(save).css({'margin-top':'1em'});
-  var $divBottom=$('<div>').append($buttonSave);  //$buttonCancel,
+  var buttonSave=createElement('button').myText('Save').addClass('highStyle').on('click',save).css({'margin-top':'1em'});
+  var divBottom=createElement('div').myAppend(buttonSave);  //buttonCancel,
 
-  var $blanket=$('<div>').addClass("blanket");
-  var $centerDiv=$('<div>').addClass("Center").append($inpNLab,$divBottom).css({'min-width':'17em','max-width':'30em', padding: '1.2em 0.5em 1.2em 1.2em'}); // height:'18em', 
-  //if(boIE) $centerDiv.css({'width':'20em'}); 
-  $el.addClass("Center-Container").append($centerDiv,$blanket); 
+  var blanket=createElement('div').addClass("blanket");
+  var centerDiv=createElement('div').addClass("Center").myAppend(...InpNLab,divBottom).css({'min-width':'17em','max-width':'30em', padding: '1.2em 0.5em 1.2em 1.2em'}); // height:'18em', 
+  //if(boIE) centerDiv.css({'width':'20em'}); 
+  el.addClass("Center-Container").myAppend(centerDiv,blanket); 
    
-  return $el;
+  return el;
 }
 
 
-devAppDeleteDivExtend=function($el){
+devAppDeleteDivExtend=function(el){
 "use strict"
-  $el.toString=function(){return 'devAppDeleteDiv';}
-  var $ok=$('<button>').html('OK').addClass('highStyle').css({'margin-top':'1em'}).click(function(){    
-    var idApp=$r.attr('idApp'), vec=[['devAppDelete',{idApp:idApp},okRet]];   majax(oAJAX,vec);    
+  el.toString=function(){return 'devAppDeleteDiv';}
+  var ok=createElement('button').myText('OK').addClass('highStyle').css({'margin-top':'1em'}).on('click',function(){    
+    var idApp=elR.attr('idApp'), vec=[['devAppDelete',{idApp:idApp},okRet]];   majax(oAJAX,vec);    
   });
   var okRet=function(data){
     if(!data.boOK) return;
-    $devAppList.myRemove($r);
+    devAppList.myRemove(elR);
     doHistBack();
   }
-  $el.openFunc=function(){
-    $r=$(this).parent().parent(); $spanApp.text($r.data('r').appName);
-    doHistPush({$view:$devAppDeleteDiv});
-    $el.setVis();
+  el.openFunc=function(){
+    elR=this.parentNode.parentNode; spanApp.myText(elR.r.appName);
+    doHistPush({view:devAppDeleteDiv});
+    el.setVis();
   }
-  $el.setVis=function(){
-    $el.show(); return 1;
+  el.setVis=function(){
+    el.show(); return 1;
   }
  
-  var $r;
-  var $head=$('<h3>').append('Delete');
-  var $spanApp=$('<span>');//.css({'font-weight': 'bold'});
-  var $p=$('<div>').append($spanApp);
+  var elR;
+  var head=createElement('h3').myText('Delete');
+  var spanApp=createElement('span');//.css({'font-weight': 'bold'});
+  var p=createElement('div').myAppend(spanApp);
 
-  var $blanket=$('<div>').addClass("blanket");
-  var $centerDiv=$('<div>').addClass("Center").append($head,$p,$ok).css({'min-width':'17em','max-width':'25em', padding:'0.1em'}); //,$cancel  height:'10em', 
-  //if(boIE) $centerDiv.css({'width':'20em'}); 
-  $el.addClass("Center-Container").append($centerDiv,$blanket); 
-  return $el;
+  var blanket=createElement('div').addClass("blanket");
+  var centerDiv=createElement('div').addClass("Center").myAppend(head,p,ok).css({'min-width':'17em','max-width':'25em', padding:'0.1em'}); //,cancel  height:'10em', 
+  //if(boIE) centerDiv.css({'width':'20em'}); 
+  el.addClass("Center-Container").myAppend(centerDiv,blanket); 
+  return el;
 }
 
 /*
-devAppSecretDivExtend=function($el){
+devAppSecretDivExtend=function(el){
 "use strict"
-  $el.toString=function(){return 'devAppSecretDiv';}
+  el.toString=function(){return 'devAppSecretDiv';}
   var ret=function(data){
-    $spanSecret.append(data.secret);
+    spanSecret.myText(data.secret);
   }
-  $el.openFunc=function(){
-    var $r=$(this).parent().parent(), idApp=$r.data('r').idApp;
+  el.openFunc=function(){
+    var elR=this.parentNode.parentNode, idApp=elR.r.idApp;
     var vec=[['devAppSecret',{idApp:idApp},ret]];   majax(oAJAX,vec);
-    $spanSecret.text('');
-    doHistPush({$view:$devAppSecretDiv});
-    $el.setVis();
+    spanSecret.myText('');
+    doHistPush({view:devAppSecretDiv});
+    el.setVis();
   }
-  $el.setVis=function(){
-    $el.show(); return 1;
+  el.setVis=function(){
+    el.show(); return 1;
   }
  
-  var $head=$('<h3>').append('Secret');
-  var $spanSecret=$('<span>');//.css({'font-weight': 'bold'});
-  var $p=$('<div>').append($spanSecret);
+  var head=createElement('h3').myText('Secret');
+  var spanSecret=createElement('span');//.css({'font-weight': 'bold'});
+  var p=createElement('div').myAppend(spanSecret);
 
-  var $blanket=$('<div>').addClass("blanket");
-  var $centerDiv=$('<div>').addClass("Center").append($head,$p).css({'min-width':'17em','max-width':'25em', padding:'0.1em'}); //,$cancel  height:'10em', 
-  //if(boIE) $centerDiv.css({'width':'20em'}); 
-  $el.addClass("Center-Container").append($centerDiv,$blanket); 
-  return $el;
+  var blanket=createElement('div').addClass("blanket");
+  var centerDiv=createElement('div').addClass("Center").myAppend(head,p).css({'min-width':'17em','max-width':'25em', padding:'0.1em'}); //,cancel  height:'10em', 
+  //if(boIE) centerDiv.css({'width':'20em'}); 
+  el.addClass("Center-Container").myAppend(centerDiv,blanket); 
+  return el;
 }*/
 
 //idApp, name, redir_uri, imageHash, created
-devAppListExtend=function($el){
+devAppListExtend=function(el){
 "use strict"
-  $el.toString=function(){return 'devAppList';}
+  el.toString=function(){return 'devAppList';}
   var TDProt={
     created:{
-      mySetVal:function(tCreated){ var arrT=getSuitableTimeUnit(unixNow()-tCreated);  $(this).text(Math.round(arrT[0])+arrT[1]);  }
+      mySetVal:function(tCreated){ var arrT=getSuitableTimeUnit(unixNow()-tCreated);  this.myText(Math.round(arrT[0])+arrT[1]);  }
     },
     imageHash:{
       mySetVal:function(imageHash){
-        var r=$(this).parent().data('r'), $i=$(this).children(), uImg; if(r.imageHash!=null) uImg=uAppImage+r.imageHash;  else uImg=uSite+"/lib/image/anonEmptyHash.png";
-        $i.prop({src:uImg});
+        var r=this.parentNode.r, im=this.firstChild, uImg; if(r.imageHash!=null) uImg=uAppImage+r.imageHash;  else uImg=uSite+"/lib/image/anonEmptyHash.png";
+        im.prop({src:uImg});
       }
     }
   }
   var TDConstructors={
-    created:function(){ var $el=$('<td>');  $.extend($el[0],TDProt.created);  return $el;  },
+    created:function(){ var el=createElement('td');  extend(el,TDProt.created);  return el;  },
     imageHash:function(){
-      var $image=$('<img>').css({'vertical-align':'middle'}).click(setImage), $el=$('<td>').css('text-align','center').append($image);  $.extend($el[0],TDProt.imageHash);  return $el;  }
+      var image=createElement('img').css({'vertical-align':'middle'}).on('click',setImage), el=createElement('td').css('text-align','center').myAppend(image);  extend(el,TDProt.imageHash);  return el;  }
   }
   var setImage=function(){
-    var $i=$(this), $r=$(this).parent().parent(), r=$r.data('r');
+    var i=this, elR=this.parentNode.parentNode, r=elR.r;
     var uploadCallback=function(data){
       var imageHash=null; if('imageHash' in data) imageHash=data.imageHash;
       var uImg; if(imageHash!=null) uImg=uAppImage+imageHash;  else uImg=uSite+"/lib/image/anonEmptyHash.png";
-      if('imageHash' in data)  $i.prop({src:uImg}); 
+      if('imageHash' in data)  i.prop({src:uImg}); 
       doHistBack();
     }
-    $uploadImageDiv.openFunc('a'+r.idApp, uploadCallback);
+    uploadImageDiv.openFunc('a'+r.idApp, uploadCallback);
 
   }
-  $el.myAdd=function(r){
-    var $Td=$([]);
+  el.myAdd=function(r){
+    var Td=[];
     for(var i=0;i<StrCol.length;i++) { 
-      var name=StrCol[i], val=r[name], $td; if(name in TDConstructors) {$td=new TDConstructors[name](); }   else $td=$('<td>');   $Td.push($td.attr('name',name));
-      //if('mySetVal' in $td[0]) { $td[0].mySetVal(val);}   else $td.append(val);
-      //if('mySetSortVal' in $td[0]) { $td[0].mySetSortVal(val);}   else $td.data('valSort',val);
+      var name=StrCol[i], val=r[name], td; if(name in TDConstructors) {td=new TDConstructors[name](); }   else td=createElement('td');   Td.push(td.attr('name',name));
+      //if('mySetVal' in td) { td.mySetVal(val);}   else td.append(val);
+      //if('mySetSortVal' in td) { td.mySetSortVal(val);}   else td.valSort=val;
     }
-    var $buttEdit=$('<button>').attr('name','buttonEdit').append('Edit').addClass('highStyle').click(function(){
-      $devAppSetDiv.openFunc.call(this,1,1);
+    var buttEdit=createElement('button').attr('name','buttonEdit').myText('Edit').addClass('highStyle').on('click',function(){
+      devAppSetDiv.openFunc.call(this,1,1);
     });
-    var $buttSecret=$('<button>').attr('name','buttonSecret').append('Secret').addClass('highStyle').click(function(){
-      $devAppSecretDiv.openFunc.call(this);
+    var buttSecret=createElement('button').attr('name','buttonSecret').myText('Secret').addClass('highStyle').on('click',function(){
+      devAppSecretDiv.openFunc.call(this);
     });
-    var $buttDelete=$('<button>').attr('name','buttonDelete').addClass('highStyle').css({'margin-right':'0.2em'}).append($imgDelete.clone()).click($devAppDeleteDiv.openFunc);
-    var $tEdit=$('<td>').append($buttEdit), $tSecret=$('<td>').append($buttSecret), $tDelete=$('<td>').append($buttDelete); 
-    var $r=$('<tr>').append($Td, $tSecret, $tEdit, $tDelete); $r.attr({idApp:r.idApp,appName:r.appName}).data('r',r);
+    var buttDelete=createElement('button').attr('name','buttonDelete').addClass('highStyle').css({'margin-right':'0.2em'}).myAppend(imgDelete.cloneNode()).on('click',devAppDeleteDiv.openFunc);
+    var tEdit=createElement('td').myAppend(buttEdit), tSecret=createElement('td').myAppend(buttSecret), tDelete=createElement('td').myAppend(buttDelete); 
+    var elR=createElement('tr').myAppend(...Td, tSecret, tEdit, tDelete); elR.attr({idApp:r.idApp,appName:r.appName}).prop('r',r);
     for(var i=0;i<StrCol.length;i++) { 
-      var $td=$Td.eq(i), name=StrCol[i], val=r[name]
-      if('mySetVal' in $td[0]) { $td[0].mySetVal(val);}   else $td.append(val);
-      if('mySetSortVal' in $td[0]) { $td[0].mySetSortVal(val);}   else $td.data('valSort',val);
+      var td=Td[i], name=StrCol[i], val=r[name]
+      if('mySetVal' in td) { td.mySetVal(val);}   else td.append(val);
+      if('mySetSortVal' in td) { td.mySetSortVal(val);}   else td.valSort=val;
     }
-    $tbody.append($r); 
-    $el.nRowVisible=$tbody.children('tr').length;
-    return $el;
+    tbody.append(elR); 
+    el.nRowVisible=tbody.children.length;
+    return el;
   }
-  $el.myRemove=function($r){
-    $r.remove();  return $el; 
-    $el.nRowVisible=$tbody.children('tr').length;
+  el.myRemove=function(elR){
+    elR.remove();  return el; 
+    el.nRowVisible=tbody.children.length;
   }
-  $el.myEdit=function(r){
-    var $r=$tbody.children('[idApp='+r.idApp+']');
-    $r.attr({idApp:r.idApp});
-    for(var i=0;i<StrCol.length;i++) { var name=StrCol[i], val=r[name], $td=$r.children('td:eq('+i+')'); if($td[0].mySetVal) $td[0].mySetVal(val); else $td.text(val); }
-    return $el;
+  el.myEdit=function(r){
+    var elR=tbody.querySelector('[idApp="'+r.idApp+'"]');
+    elR.attr({idApp:r.idApp});
+    //for(var i=0;i<StrCol.length;i++) { var name=StrCol[i], val=r[name], td=elR.children('td:eq('+i+')'); if(td.mySetVal) td.mySetVal(val); else td.empty().myAppend(val); }
+    for(var i=0;i<StrCol.length;i++) { var name=StrCol[i], val=r[name], td=elR.children[i]; if(td.mySetVal) td.mySetVal(val); else td.empty().myAppend(val); }
+    return el;
   }
-  $el.setUp=function(){
-    if($el.boStale) {
+  el.setUp=function(){
+    if(el.boStale) {
       var vec=[['devAppListGet',1,setUpRet]];   majax(oAJAX,vec);
-      $el.boStale=0;
+      el.boStale=0;
     }
   }
   var setUpRet=function(data){
     var tab=data.tab||[];
     var StrColTmp=data.StrCol; 
-    $tbody.empty(); 
+    tbody.empty(); 
     for(var i=0;i<tab.length;i++) {  
       var obj={}; for(var j=0;j<StrColTmp.length;j++){ obj[StrColTmp[j]]=tab[i][j];}
       tab[i]=obj;
-      $el.myAdd(tab[i]);      
+      el.myAdd(tab[i]);      
     }
-    $el.nRowVisible=tab.length;
+    el.nRowVisible=tab.length;
   }
-  $el.boStale=1;
+  el.boStale=1;
 
-  var $tbody=$el.$tbody=$("<tbody>");
-  $el.$table=$("<table>").append($tbody); //.css({width:'100%',position:'relative'});
-  $el.$divCont=$("<div>").append($el.$table).css({'margin':'1em auto','text-align':'left',display:'inline-block'});
+  var tbody=el.tbody=createElement('tbody');
+  el.table=createElement('table').myAppend(tbody); //.css({width:'100%',position:'relative'});
+  el.divCont=createElement('div').myAppend(el.table).css({'margin':'1em auto','text-align':'left',display:'inline-block'});
 
   var StrCol=['idApp','appName','redir_uri', 'imageHash', 'created'], BoAscDefault={created:0};
   var Label={imageHash:'Image', created:'Age'};
-  var $thead=headExtend($('<thead>'),$el,StrCol,BoAscDefault,Label);
-  $thead.css({background:'white', width:'inherit'});  //,height:'calc(12px + 1.2em)'
-  $el.$table.prepend($thead);
-  $el.nRowVisible=0;
+  var thead=headExtend(createElement('thead'),el,StrCol,BoAscDefault,Label);
+  thead.css({background:'white', width:'inherit'});  //,height:'calc(12px + 1.2em)'
+  el.table.prepend(thead);
+  el.nRowVisible=0;
 
-  var $imgDelete=$imgProt.clone().prop({src:uDelete});
+  var imgDelete=imgProt.cloneNode().prop({src:uDelete});
       // menuA
-  var $buttonAdd=$("<button>").append('Add').addClass('highStyle fixWidth').css({'margin-left':'0.8em','margin-right':'1em'}).click(function(){
-    $devAppSetDiv.openFunc.call({},0,0);
+  var buttonAdd=createElement('button').myText('Add').addClass('highStyle', 'fixWidth').css({'margin-left':'0.8em','margin-right':'1em'}).on('click',function(){
+    devAppSetDiv.openFunc.call({},0,0);
   });
-  var $spanLabel=$('<span>').append('devAppList').css({'float':'right',margin:'0.2em 0 0 0'});  
-  var $menuA=$('<div>').append($buttonAdd,$spanLabel).css({padding:'0 0.3em 0 0',overflow:'hidden','max-width':menuMaxWidth+'px','text-align':'left',margin:'.3em auto .4em'}); 
+  var spanLabel=createElement('span').myText('devAppList').css({'float':'right',margin:'0.2em 0 0 0'});  
+  var menuA=createElement('div').myAppend(buttonAdd,spanLabel).css({padding:'0 0.3em 0 0',overflow:'hidden','max-width':menuMaxWidth+'px','text-align':'left',margin:'.3em auto .4em'}); 
 
-  $el.addClass('devAppList');
-  $el.$fixedDiv=$('<div>').append($menuA).css(cssFixed);
-  $el.css({'text-align':'center'});
-  $el.append($el.$divCont, $el.$fixedDiv);
-  return $el;
+  el.addClass('devAppList');
+  el.fixedDiv=createElement('div').myAppend(menuA).css(cssFixed);
+  el.css({'text-align':'center'});
+  el.append(el.divCont, el.fixedDiv);
+  return el;
 }
 
 
 
 
-majax=function(oAJAX,vecIn){  // Each argument of vecIn is an array: [serverSideFunc, serverSideFuncArg, returnFunc]
-"use strict"
-  var makeRetF=function(vecT){ return function(data,textStatus,jqXHR){
-      var dataArr=data.dataArr;  // Each argument of dataArr is an array, either [argument] or [altFuncArg,altFunc]
-      delete data.dataArr;
-      beRet(data,textStatus,jqXHR);
-      for(var i=0;i<dataArr.length;i++){
-        var r=dataArr[i];
-        if(r.length==1) {var f=vecT[i][2]; if(f) f(r[0]);} else { window[r[1]].call(window,r[0]);   }
-      }
-    };
-  }
+//majax=function(oAJAX,vecIn){  // Each argument of vecIn is an array: [serverSideFunc, serverSideFuncArg, returnFunc]
+//"use strict"
+  //var makeRetF=function(vecT){ return function(data,textStatus,jqXHR){
+      //var dataArr=data.dataArr;  // Each argument of dataArr is an array, either [argument] or [altFuncArg,altFunc]
+      //delete data.dataArr;
+      //beRet(data,textStatus,jqXHR);
+      //for(var i=0;i<dataArr.length;i++){
+        //var r=dataArr[i];
+        //if(r.length==1) {var f=vecT[i][2]; if(f) f(r[0]);} else { window[r[1]].call(window,r[0]);   }
+      //}
+    //};
+  //}
 
-  var oOut=$.extend(true, [], oAJAX);
-  if('boFormData' in oAJAX && oAJAX.boFormData){
+  //var oOut=$.extend(true, [], oAJAX);
+  //if('boFormData' in oAJAX && oAJAX.boFormData){
+    //var formData=vecIn[0][1]; vecIn[0][1]=0; // First element in vecIn contains the formData object. Rearrange it as "root object" and add the remainder to a property 'vec'
+    //var vecMod=$.extend(true, [], vecIn);
+    //for(var i=0; i<vecMod.length; i++){delete vecMod[i][2];}
+    //vecMod.push(['CSRFCode',CSRFCode]);  
+    //oOut.data=formData; oOut.data.append('vec', JSON.stringify(vecMod));
+  //}else{
+    //var vecMod=$.extend(true, [], vecIn);
+    //for(var i=0; i<vecMod.length; i++){delete vecMod[i][2];}
+    //vecMod.push(['CSRFCode',CSRFCode]);  
+    //oOut.data=JSON.stringify(vecMod);
+  //}
+  //busyLarge.show();
+  //oOut.success=makeRetF(vecIn);  return .ajax(oOut);
+//}
+
+
+
+'use strict';
+majax=function(trash, vecIn){  // Each argument of vecIn is an array: [serverSideFunc, serverSideFuncArg, returnFunc]
+  var xhr = new XMLHttpRequest();
+  xhr.open('POST', uBE, true);
+  var arrRet=[]; vecIn.forEach(function(el,i){var f=null; if(el.length==3) f=el.pop(); arrRet[i]=f;}); // Put return functions in a separate array
+  vecIn.push(['CSRFCode',CSRFCode]);
+  if(vecIn.length==2 && vecIn[0][1] instanceof FormData){
     var formData=vecIn[0][1]; vecIn[0][1]=0; // First element in vecIn contains the formData object. Rearrange it as "root object" and add the remainder to a property 'vec'
-    var vecMod=$.extend(true, [], vecIn);
-    for(var i=0; i<vecMod.length; i++){delete vecMod[i][2];}
-    vecMod.push(['CSRFCode',CSRFCode]);  
-    oOut.data=formData; oOut.data.append('vec', JSON.stringify(vecMod));
-  }else{
-    var vecMod=$.extend(true, [], vecIn);
-    for(var i=0; i<vecMod.length; i++){delete vecMod[i][2];}
-    vecMod.push(['CSRFCode',CSRFCode]);  
-    oOut.data=JSON.stringify(vecMod);
+    formData.append('vec', JSON.stringify(vecIn));
+    var dataOut=formData;
+    xhr.setRequestHeader('x-type','single');
+  } else { var dataOut=JSON.stringify(vecIn); }
+  
+  xhr.onload=function () {
+    var dataFetched=this.response;
+    var data; try{ data=JSON.parse(this.response); }catch(e){ setMess(e);  return; }
+    
+    var dataArr=data.dataArr;  // Each argument of dataArr is an array, either [argument] or [altFuncArg,altFunc]
+    delete data.dataArr;
+    beRet(data);
+    for(var i=0;i<dataArr.length;i++){
+      var r=dataArr[i];
+      if(r.length==1) {var f=arrRet[i]; if(f) f(r[0]);} else { window[r[1]].call(window,r[0]);   }
+    }
   }
-  $busyLarge.show();
-  //if(oAJAX.crossDomain) tmp=o;
-  oOut.success=makeRetF(vecIn);  return $.ajax(oOut);
+  xhr.onerror=function(e){ var tmp='statusText : '+xhr.statusText;  setMess(tmp); console.log(tmp);   throw 'bla';}
+  
+  xhr.send(dataOut); 
+  busyLarge.show();
 }
 
-beRet=function(data,textStatus,jqXHR){
+
+
+beRet=function(data){ //,textStatus,jqXHR
 "use strict"
-  if(typeof jqXHR!='undefined') var tmp=jqXHR.responseText;
+  //if(typeof jqXHR!='undefined') var tmp=jqXHR.responseText;
   for(var key in data){
     window[key].call(this,data[key]); 
   }
-  $busyLarge.hide();
+  busyLarge.hide();
 }
 
 GRet=function(data){
@@ -1412,7 +1517,7 @@ GRet=function(data){
   tmp=data.userInfoFrDB; if(typeof tmp!="undefined") {  userInfoFrDB=tmp; }
   tmp=data.objApp; if(typeof tmp!="undefined") {  objApp=tmp; }  
   tmp=data.objUApp; if(typeof tmp!="undefined") {  objUApp=tmp; }  
-  $loginInfo.setStat();
+  loginInfo.setStat();
  
 }
 
@@ -1421,155 +1526,156 @@ GRet=function(data){
  *******************************************************************************************************************/
 
 
- // $el.StrProp=['name', 'password', 'image', 'email', 'telephone',   'country', 'federatedState', 'county', 'city', 'zip', 'address',     'idFB', 'idGoogle', 'idNational', 'birthdate', 'motherTongue', 'gender'];
+ // el.StrProp=['name', 'password', 'image', 'email', 'telephone',   'country', 'federatedState', 'county', 'city', 'zip', 'address',     'idFB', 'idGoogle', 'idNational', 'birthdate', 'motherTongue', 'gender'];
 PropExtend=function(){
-  var saveInpDefault=function($inp){ return [null, $inp.val().trim()];}
+  var saveInpDefault=function(inp){ return [null, inp.value.trim()];}
   var crInpDefault=function(){
-    var strType=('strType' in this)?'type='+this.strType:'', $inp=$('<input '+strType+'>');
-    if('inpW' in this)  $inp.css({width:this.inpW+'em'});
-    return $inp;
+    //var strType=('strType' in this)?this.strType:'';
+    var inp=createElement('input').prop({type:this.strType||''});
+    if('inpW' in this)  inp.css({width:this.inpW+'em'});
+    return inp;
   }
-  var setInpDefault=function($inp){  var strName=$inp.attr('name');   $inp.val(userInfoFrDB[strName]);  }
+  var setInpDefault=function(inp){  var strName=inp.attr('name');   inp.value=userInfoFrDB[strName];  }
 
   var crStatisticSpanDefault=function(){
-    var $spanNChange=$('<span>').css({'font-weight':'bold'}).attr('name','nChange'), $spanLastChange=$('<span>').css({'font-weight':'bold'}).attr('name','lastChange');
-    var $span=$('<span>').append('Last changed ', $spanLastChange, ' ago (', $spanNChange, ' times)').css({'font-size':'85%', 'margin-left':'0.4em'});
-    return $span;
+    var spanNChange=createElement('span').css({'font-weight':'bold'}).attr('name','nChange'), spanLastChange=createElement('span').css({'font-weight':'bold'}).attr('name','lastChange');
+    var span=createElement('span').myAppendB('Last changed ', spanLastChange, ' ago (', spanNChange, ' times)').css({'font-size':'85%', 'margin-left':'0.4em'});
+    return span;
   }
-  var setStatisticSpanDefault=function($span){
-    var strNName='n'+ucfirst($span.attr('name'));       $span.children('span[name=nChange]').html(userInfoFrDB[strNName]);
-    var strTName='t'+ucfirst($span.attr('name')), arrTmp=getSuitableTimeUnit(unixNow()-userInfoFrDB[strTName]); arrTmp[0]=Math.round(arrTmp[0]);
-    $span.children('span[name=lastChange]').html(arrTmp.join(' '));
+  var setStatisticSpanDefault=function(span){
+    var strNName='n'+ucfirst(span.attr('name'));       span.querySelector('span[name=nChange]').myText(userInfoFrDB[strNName]);
+    var strTName='t'+ucfirst(span.attr('name')), arrTmp=getSuitableTimeUnit(unixNow()-userInfoFrDB[strTName]); arrTmp[0]=Math.round(arrTmp[0]);
+    span.querySelector('span[name=lastChange]').myText(arrTmp.join(' '));
   }
 
 
   var StrProp=Object.keys(Prop);
   for(var i=0;i<StrProp.length;i++){
     var strName=StrProp[i];  
-    $.extend(Prop[strName], {
+    extend(Prop[strName], {
       saveInp:saveInpDefault, crInp:crInpDefault, setInp:setInpDefault,
       crStatisticSpan:crStatisticSpanDefault,
       setStatisticSpan:setStatisticSpanDefault
     });
   }
 
-  var tmpCrF=function(){return $('<button>').addClass('highStyle').append('Fetch');};
+  var tmpCrF=function(){return createElement('button').addClass('highStyle').myText('Fetch');};
   var tmpSetF=function(){};
 
 
     // text
-  $.extend(Prop.name, {strType:'text',inpW:9});
+  extend(Prop.name, {strType:'text',inpW:9});
 
 
     // password
-  $.extend(Prop.password, {
+  extend(Prop.password, {
     strType:'password',
     inpW:9,
-    crInp:function(){return $('<button>').addClass('highStyle').append('Change').click(function(){
-      $changePWPop.openFunc();
+    crInp:function(){return createElement('button').addClass('highStyle').myText('Change').on('click',function(){
+      changePWPop.openFunc();
     });},
-    crStatisticSpan:function(){return $('<span>'); },
+    crStatisticSpan:function(){return createElement('span'); },
     setStatisticSpan:function(){ }
   });
 
 
     // misc
-  //$.extend(Prop.idFB, { crInp:tmpCrF, setInp:tmpSetF });
-  $.extend(Prop.idGoogle, { crInp:tmpCrF, setInp:tmpSetF });
-  $.extend(Prop.telephone, {strType:'tel'});
-  $.extend(Prop.email, {strType:'email'});
+  //extend(Prop.idFB, { crInp:tmpCrF, setInp:tmpSetF });
+  extend(Prop.idGoogle, { crInp:tmpCrF, setInp:tmpSetF });
+  extend(Prop.telephone, {strType:'tel'});
+  extend(Prop.email, {strType:'email'});
 
 
     // idFB
   var tmpCrInp=function(){
-    var $c=$('<span>');
-    $c[0].$nr=$('<span>');
-    $c[0].$butDelete=$('<button>').addClass('highStyle').append('Clear').click(function(){
-      var vec=[['deleteExtId', {kind:'fb'}], ['setupById',{}, $userSettingDiv.setUp]];   majax(oAJAX,vec); 
+    var c=createElement('span');
+    c.nr=createElement('span');
+    c.butDelete=createElement('button').addClass('highStyle').myText('Clear').on('click',function(){
+      var vec=[['deleteExtId', {kind:'fb'}], ['setupById',{}, userSettingDiv.setUp]];   majax(oAJAX,vec); 
     });
-    $c[0].$buttFetch=$('<button>').addClass('highStyle').html('Fetch').click(function(){
+    c.buttFetch=createElement('button').addClass('highStyle').myText('Fetch').on('click',function(){
       var flow=(function*(){
         var [err, code]=yield* getOAuthCode(flow); if(err) {setMess(err); return;}
         var timeZone=new Date().toString().match(/([A-Z]+[\+-][0-9]+.*)/)[1];
         var oT={IP:strIPPrim, fun:'fetchFun', caller:'index', code:code, timeZone:timeZone};
         var vec=[['loginGetGraph', oT], ['setupById',{idApp:idApp}, function(){ flow.next(); }]];   majax(oAJAX,vec);   yield;
         
-        $userSettingDiv.setUp();
+        userSettingDiv.setUp();
       })(); flow.next();
     });
-    $c[0].$thumb=$('<img>').css({'vertical-align':'middle'});
-    $c.append($c[0].$nr, $c[0].$thumb, $c[0].$butDelete, $c[0].$buttFetch);  //langHtml.YourImage+': ',
-    return $c;
+    c.thumb=createElement('img').css({'vertical-align':'middle'});
+    c.append(c.nr, c.thumb, c.butDelete, c.buttFetch);  //langHtml.YourImage+': ',
+    return c;
   };
-  var tmpSetInp=function($c){
-    $c[0].$nr.html(userInfoFrDB.idFB);
-    var boExist=Boolean(userInfoFrDB.idFB); $c[0].$butDelete.toggle(boExist);  $c[0].$buttFetch.toggle(!boExist);
-    var tmp=userInfoFrDB.image; $c[0].$thumb.prop({src:tmp}).toggle(Boolean(tmp.length)); 
+  var tmpSetInp=function(c){
+    c.nr.myText(userInfoFrDB.idFB);
+    var boExist=Boolean(userInfoFrDB.idFB); c.butDelete.toggle(boExist);  c.buttFetch.toggle(!boExist);
+    var tmp=userInfoFrDB.image; c.thumb.prop({src:tmp}).toggle(Boolean(tmp.length)); 
   };
-  $.extend(Prop.idFB, { strType:'span', crInp:tmpCrInp, setInp:tmpSetInp, saveInp:function(){return [null, null];}  });
+  extend(Prop.idFB, { strType:'span', crInp:tmpCrInp, setInp:tmpSetInp, saveInp:function(){return [null, null];}  });
 
 
 
     // email
-  $.extend(Prop.email, {
-    saveInp:function($inp){ var val=$inp.val().trim(); if(/\S+@\S+/.test(val)) return [null,val]; else return ['Invalid email'];}
+  extend(Prop.email, {
+    saveInp:function(inp){ var val=inp.value.trim(); if(/\S+@\S+/.test(val)) return [null,val]; else return ['Invalid email'];}
   });
   
     //boEmailVerified 
   var tmpCrInp=function(){
-    var $c=$('<span>');
-    $c[0].$spanYes=$('<span>').css({'color':'green', 'margin-right':'1em'}).append('Yes');
-    $c[0].$spanNo=$('<span>').css({'color':'red', 'margin-right':'1em'}).append('No');
-    $c[0].$butVerify=$('<button>').addClass('highStyle').append(langHtml.emailVerificationOfEmail).click(function(){
+    var c=createElement('span');
+    c.spanYes=createElement('span').css({'color':'green', 'margin-right':'1em'}).myText('Yes');
+    c.spanNo=createElement('span').css({'color':'red', 'margin-right':'1em'}).myText('No');
+    c.butVerify=createElement('button').addClass('highStyle').myText(langHtml.emailVerificationOfEmail).on('click',function(){
       //var vec=[['verifyEmail',1]];   majax(oAJAX,vec); 
-      $verifyEmailPop.openFunc();
+      verifyEmailPop.openFunc();
     });
-    $c.append($c[0].$spanYes, $c[0].$spanNo, $c[0].$butVerify);  //langHtml.YourImage+': ',
-    return $c;
+    c.append(c.spanYes, c.spanNo, c.butVerify);  //langHtml.YourImage+': ',
+    return c;
   }; 
-  var tmpSetInp=function($c){
+  var tmpSetInp=function(c){
     var boT=Boolean(userInfoFrDB.boEmailVerified);
-    $c[0].$spanYes.toggle(boT); $c[0].$spanNo.toggle(!boT);    $c[0].$butVerify.toggle(!boT);
+    c.spanYes.toggle(boT); c.spanNo.toggle(!boT);    c.butVerify.toggle(!boT);
   };
-  $.extend(Prop.boEmailVerified, {
+  extend(Prop.boEmailVerified, {
     strType:'span', crInp:tmpCrInp, setInp:tmpSetInp, saveInp:function(){return [null, null];},
-    crStatisticSpan:function(){return $('<span>'); },
+    crStatisticSpan:function(){return createElement('span'); },
     setStatisticSpan:function(){ }
   });
 
     // birthdate
-  $.extend(Prop.birthdate, {
+  extend(Prop.birthdate, {
     strType:'date', 
-    saveInp:function($inp){ var val=$inp.val().trim(); if(val) return [null,val]; else return ['Invalid Birthdate'];},
-    //setInp:function($inp){  debugger; var strName=$inp.attr('name'), val=new Date(userInfoFrDB[strName]*1000).toISOString().split('T')[0];   $inp.val(val); }
-    setInp:function($inp){   var strName=$inp.attr('name'), val=userInfoFrDB[strName];   $inp.val(val); }
+    saveInp:function(inp){ var val=inp.value.trim(); if(val) return [null,val]; else return ['Invalid Birthdate'];},
+    //setInp:function(inp){  debugger; var strName=inp.attr('name'), val=new Date(userInfoFrDB[strName]*1000).toISOString().split('T')[0];   inp.value=val; }
+    setInp:function(inp){   var strName=inp.attr('name'), val=userInfoFrDB[strName];   inp.value=val; }
   });
 
     // gender
   var crInpFunc=function(){
-    var $c=$('<select>').addClass('highStyle'), arrTmp=['male','female'];
-    for(var i=0;i<arrTmp.length;i++){  var $opt=$("<option>").text(arrTmp[i]).val(arrTmp[i]);   $c.append($opt);    } 
-    $c.val('male');
-    return $c;
+    var c=createElement('select').addClass('highStyle'), arrTmp=['male','female'];
+    for(var i=0;i<arrTmp.length;i++){  var opt=createElement('option').myText(arrTmp[i]).prop('value',arrTmp[i]);   c.append(opt);    } 
+    c.value='male';
+    return c;
   };
-  $.extend(Prop.gender, {strType:'select', crInp:crInpFunc});
+  extend(Prop.gender, {strType:'select', crInp:crInpFunc});
 
     // image
   var tmpCrInp=function(){
-    var $c=$('<span>');
-    $c[0].$thumb=$('<img>').css({'vertical-align':'middle'});
-    $c[0].$butDeleteImg=$('<button>').addClass('highStyle').append('Clear').click(function(){
-      var vec=[['deleteImage', {kind:'u'}], ['setupById',{}, $userSettingDiv.setUp]];   majax(oAJAX,vec); 
+    var c=createElement('span');
+    c.thumb=createElement('img').css({'vertical-align':'middle'});
+    c.butDeleteImg=createElement('button').addClass('highStyle').myText('Clear').on('click',function(){
+      var vec=[['deleteImage', {kind:'u'}], ['setupById',{}, userSettingDiv.setUp]];   majax(oAJAX,vec); 
     });
     var uploadCallback=function(){
       var tmpF=function(){
-        var tmp=calcImageUrlUser(); $c[0].$thumb.prop({src:tmp}); doHistBack();
+        var tmp=calcImageUrlUser(); c.thumb.prop({src:tmp}); doHistBack();
       };
       var vec=[ ['setupById',{},tmpF]];   majax(oAJAX,vec);
     }
-    var $buttUploadImage=$('<button>').addClass('highStyle').html(langHtml.uploadNewImg).click(function(){$uploadImageDiv.openFunc('u',uploadCallback);});
-    $c.append($c[0].$thumb, $c[0].$butDeleteImg, $buttUploadImage);  //langHtml.YourImage+': ',
-    return $c;
+    var buttUploadImage=createElement('button').addClass('highStyle').myText(langHtml.uploadNewImg).on('click',function(){uploadImageDiv.openFunc('u',uploadCallback);});
+    c.append(c.thumb, c.butDeleteImg, buttUploadImage);  //langHtml.YourImage+': ',
+    return c;
   };
   calcImageUrl=function(rT){
     var uImg;
@@ -1579,11 +1685,11 @@ PropExtend=function(){
     return uImg;
   };
   calcImageUrlUser=function(){    return calcImageUrl(userInfoFrDB);     }
-  var tmpSetInp=function($c){
+  var tmpSetInp=function(c){
     var tmp=calcImageUrlUser();
-    $c[0].$thumb.prop({src:tmp});
+    c.thumb.prop({src:tmp});
   };
-  $.extend(Prop.image, { strType:'span', crInp:tmpCrInp, setInp:tmpSetInp, saveInp:function(){return [null, null];}  });
+  extend(Prop.image, { strType:'span', crInp:tmpCrInp, setInp:tmpSetInp, saveInp:function(){return [null, null];}  });
 
   var StrObli=['name', 'email', 'password', 'birthdate'];
   for(var i=0;i<StrObli.length;i++){  var strName=StrObli[i];  Prop[strName].boObli=true;  }
@@ -1667,11 +1773,7 @@ setUp1=function(){
 
 
   elHtml=document.documentElement;  elBody=document.body
-  $body=$('body');  $html=$('html');
-  $bodyNHtml=$body.add($html);  
-  $body.css({margin:'0px'});
-  $document=$(document);
-  $window=$(window);
+  elBody.css({margin:'0px'});
   
   boTouch = Boolean('ontouchstart' in document.documentElement);
   //boTouch=1;
@@ -1700,13 +1802,7 @@ setUp1=function(){
   
   if(boTouch){
     if(boIOS) {  
-      $bodyNHtml.css({"height":"100%", "overflow-y":"scroll", "-webkit-overflow-scrolling":"touch"});
-    } else {
-      //var h=screen.height, w=screen.width;
-      var h=window.innerHeight, w=window.innerWidth;
-      //alert(window.devicePixelRatio+' '+ screen.height+' '+screen.width);
-      if(boTouch && h*w>230400) $body.css({'font-size':'120%'}); // between 320*480=153600 and 480*640=307200
-      if(boTouch && h*w<115200) { $body.css({'font-size':'85%'}); boSmallAndroid=1;} // between 240*320=76800 and 320*480=153600
+      [elBody,elHtml].forEach(ele=>ele.css({"height":"100%", "overflow-y":"scroll", "-webkit-overflow-scrolling":"touch"}));
     }
   } 
 
@@ -1772,11 +1868,11 @@ setUp1=function(){
   uIdPlaceCompare=uLibImageFolder+'idPlaceCompare.png';
 
 
-  $imgHelp=$('<img>').prop({src:uHelpFile}).css({'vertical-align':'-0.4em'});
-  $hovHelp=$('<span>').text('?').css({'font-size':'88%',color:'#a7a7a7','vertical-align':'-0.4em'});
+  imgHelp=createElement('img').prop({src:uHelpFile}).css({'vertical-align':'-0.4em'});
+  hovHelp=createElement('span').myText('?').css({'font-size':'88%',color:'#a7a7a7','vertical-align':'-0.4em'});
 
   sizeIcon=1.5; strSizeIcon=sizeIcon+'em';
-  $imgProt=$('<img>').css({height:strSizeIcon,width:strSizeIcon,'vertical-align':'text-bottom'}); 
+  imgProt=createElement('img').css({height:strSizeIcon,width:strSizeIcon,'vertical-align':'text-bottom'}); 
 
 
   strHistTitle=wwwSite;
@@ -1800,18 +1896,18 @@ setUp1=function(){
         history.boResetHashCurrent=false;
       }
 
-      //var strName=tmpObj.strName, $obj=window['$'+strName];
-      //$obj.setVis();       $body.scrollTop(tmpObj.scroll);
+      //var strName=tmpObj.strName, obj=window[''+strName];
+      //obj.setVis();       elBody.scrollTop(tmpObj.scroll);
 
       var stateMy=history.StateMy[history.state.ind];
       if(typeof stateMy!='object' ) {var tmpStr=window.location.href +" Error: typeof stateMy: "+(typeof stateMy); if(!boEpiphany) alert(tmpStr); else  console.log(tmpStr); return; }
-      var $view=stateMy.$view;
-      $view.setVis();
-      if(typeof $view.getScroll=='function') {
-        var scrollT=$view.getScroll();
-        setTimeout(function(){$window.scrollTop(scrollT);},1);
+      var view=stateMy.view;
+      view.setVis();
+      if(typeof view.getScroll=='function') {
+        var scrollT=view.getScroll();
+        setTimeout(function(){window.scrollTop(scrollT);},1);
       } else {
-        //var scrollT=stateMy.scroll;  setTimeout(function(){  $window.scrollTop(scrollT);},1);
+        //var scrollT=stateMy.scroll;  setTimeout(function(){  window.scrollTop(scrollT);},1);
       }
       
 
@@ -1820,15 +1916,15 @@ setUp1=function(){
         if('fun' in stateMy && stateMy.fun) {var fun=stateMy.fun(stateMy); }
       }
 
-      stateTrans=$.extend({},tmpObj);
+      stateTrans=extend({},tmpObj);
     }else{
-      stateTrans=history.state; $.extend(stateTrans,{hash:randomHash()}); history.replaceState(stateTrans,'',uCanonical);
+      stateTrans=history.state; extend(stateTrans,{hash:randomHash()}); history.replaceState(stateTrans,'',uCanonical);
       history.go(sign(dir));
     }
   }); 
 
   if(boFF){
-    $(window).on('beforeunload', function(){   });
+    window.on('beforeunload', function(){   });
   } 
 
 
@@ -1841,160 +1937,148 @@ setUp1=function(){
 
 
 
-  $imgBusy=$('<img>').prop({src:uBusy});
-  $messageText=messExtend($("<span>"));  window.setMess=$messageText.setMess;  window.resetMess=$messageText.resetMess;   $body.append($messageText); 
-   
-  $busyLarge=$('<img>').prop({src:uBusyLarge}).css({position:'fixed',top:'50%',left:'50%','margin-top':'-42px','margin-left':'-42px','z-index':'1000',border:'black solid 1px'}).hide();
-  $body.append($busyLarge);
+  imgBusy=createElement('img').prop({src:uBusy});
+  //messageText=messExtend(createElement('span'));  window.setMess=messageText.setMess;  window.resetMess=messageText.resetMess;   elBody.myText(messageText); 
+  spanMessageText=spanMessageTextCreate();  window.setMess=spanMessageText.setMess;  window.resetMess=spanMessageText.resetMess;  window.appendMess=spanMessageText.appendMess;  elBody.append(spanMessageText)
+
+  busyLarge=createElement('img').prop({src:uBusyLarge}).css({position:'fixed',top:'50%',left:'50%','margin-top':'-42px','margin-left':'-42px','z-index':'1000',border:'black solid 1px'}).hide();
+  elBody.append(busyLarge);
 
 
-  $H1=$('h1:eq(0)');//.detach()
-  $H1.css({background:'#fff',border:'solid 1px',color:'black','font-size':'1.6em','font-weight':'bold','text-align':'center',
+  H1=elBody.querySelector('h1');//.detach()
+  H1.css({background:'#fff',border:'solid 1px',color:'black','font-size':'1.6em','font-weight':'bold','text-align':'center',
       padding:'0.4em 0em 0.4em 0em',margin:'0.3em 0em 0em 0em'}); 
 
-  $loginInfo=loginInfoExtend($('<div>'));  $loginInfo.css({padding:'0em 0em 0em 0em','font-size':'75%', height:'1em'});
-  $body.prepend($loginInfo);
+  loginInfo=loginInfoExtend(createElement('div'));  loginInfo.css({padding:'0em 0em 0em 0em','font-size':'75%', height:'1em'});
+  elBody.prepend(loginInfo);
   
 
-  $mainDiv=mainDivExtend($('<div>')); 
-  $idPLoginDiv=idPLoginDivExtend($("<div>"));
-  $formLogin=formLoginExtend($('#formLogin'));
-  $loginSelectorDiv=loginSelectorDivExtend($('<div>'));
-  //$loginForSecretDiv=loginForSecretDivExtend($('<div>'));
+  mainDiv=mainDivExtend(createElement('div')); 
+  idPLoginDiv=idPLoginDivExtend(createElement('div'));
+  formLogin=formLoginExtend(elBody.querySelector('#formLogin'));
+  loginSelectorDiv=loginSelectorDivExtend(createElement('div'));
+  //loginForSecretDiv=loginForSecretDivExtend(createElement('div'));
 
 
-  $deleteAccountPop=deleteAccountPopExtend($('<div>'));
-  $changePWPop=changePWPopExtend($('<div>'));
-  $verifyEmailPop=verifyEmailPopExtend($('<div>'));
-  $forgottPWPop=forgottPWPopExtend($('<div>'));
-  $uploadImageDiv=uploadImageDivExtend($("<div>"));
+  deleteAccountPop=deleteAccountPopExtend(createElement('div'));
+  changePWPop=changePWPopExtend(createElement('div'));
+  verifyEmailPop=verifyEmailPopExtend(createElement('div'));
+  forgottPWPop=forgottPWPopExtend(createElement('div'));
+  uploadImageDiv=uploadImageDivExtend(createElement('div'));
 
-  $devAppList=devAppListExtend($('<div>'));
-  $devAppSetDiv=devAppSetDivExtend($("<div>"));
-  $devAppDeleteDiv=devAppDeleteDivExtend($('<div>'));
-  $devAppSecretDiv=devAppSecretDivExtend($('<div>'));
-  $userAppSetDiv=userAppSetDivExtend($("<div>"));
-  $userAppDeleteDiv=userAppDeleteDivExtend($('<div>'));
-  $userAppList=userAppListExtend($('<div>'));
-
-
-  $divDisclaimer=divDisclaimerExtend($('<div>')).css({'background':'pink', 'margin-bottom':'1em', 'padding':'0.2em', border:'1px red solid'});
+  devAppList=devAppListExtend(createElement('div'));
+  devAppSetDiv=devAppSetDivExtend(createElement('div'));
+  devAppDeleteDiv=devAppDeleteDivExtend(createElement('div'));
+  devAppSecretDiv=devAppSecretDivExtend(createElement('div'));
+  userAppSetDiv=userAppSetDivExtend(createElement('div'));
+  userAppDeleteDiv=userAppDeleteDivExtend(createElement('div'));
+  userAppList=userAppListExtend(createElement('div'));
 
 
-  $createUserDiv=createUserDivExtend($('<div>'));
-  $createUserSelectorDiv=createUserSelectorDivExtend($('<div>'));
-  $userSettingDiv=userSettingDivExtend($('<div>'));
-  $consentDiv=consentDivExtend($('<div>'));
+  divDisclaimer=divDisclaimerExtend(createElement('div')).css({'background':'#fff5f6', 'margin-bottom':'1em', 'padding':'0.2em', border:'1px red solid'});
+
+
+  createUserDiv=createUserDivExtend(createElement('div'));
+  createUserSelectorDiv=createUserSelectorDivExtend(createElement('div'));
+  userSettingDiv=userSettingDivExtend(createElement('div'));
+  consentDiv=consentDivExtend(createElement('div'));
   
  
-  StrMainDiv=['loginInfo', 'H1', 'mainDiv', 'loginSelectorDiv', 'createUserSelectorDiv', 'createUserDiv', 'userSettingDiv', 'consentDiv', 'deleteAccountPop', 'verifyEmailPop', 'forgottPWPop', 'changePWPop', 'uploadImageDiv',
- 'devAppList', 'devAppSetDiv', 'devAppDeleteDiv', 'devAppSecretDiv', 'userAppSetDiv', 'userAppDeleteDiv', 'userAppList'];  
+  StrMainDiv=['mainDiv', 'loginSelectorDiv', 'createUserSelectorDiv', 'createUserDiv', 'userSettingDiv', 'consentDiv', 'deleteAccountPop', 'verifyEmailPop', 'forgottPWPop', 'changePWPop', 'uploadImageDiv',
+ 'devAppList', 'devAppSetDiv', 'devAppDeleteDiv', 'devAppSecretDiv', 'userAppSetDiv', 'userAppDeleteDiv', 'userAppList'];  //'loginInfo', 'H1', 
 
 
-  MainDiv=[];  for(var i=0;i<StrMainDiv.length;i++){    var key=StrMainDiv[i], $el=window['$'+key];   MainDiv[i]=$el;  };
-  $MainDiv=$([]); $MainDiv.push.apply($MainDiv,MainDiv); 
+  var MainDiv=[];  for(var i=0;i<StrMainDiv.length;i++){    MainDiv[i]=window[StrMainDiv[i]];  };
 
 
-  $mainDivsNonFixWidth=$([]);
-  $mainDivsPop=$([]);
-  if(1){ //if(!boTouch) {
-    $mainDivsNonFixWidth.push($mainDiv, $devAppList, $userAppList, $userSettingDiv, $createUserDiv);
-    $mainDivsPop.push($deleteAccountPop, $verifyEmailPop, $forgottPWPop, $changePWPop, $uploadImageDiv, $devAppSetDiv, $devAppDeleteDiv, $devAppSecretDiv, $userAppSetDiv, $userAppDeleteDiv);
-  }
-  $mainDivsFixWidth=$MainDiv.not($mainDivsNonFixWidth).not($mainDivsPop);
+  history.StateMy[history.state.ind]={view:mainDiv};
 
-
-  history.StateMy[history.state.ind]={$view:$mainDiv};
-
-  $mainDivsTogglable=$MainDiv.not($loginInfo.add($H1));
   
-  $mainDiv.setVis=function(){
-    var $tmp=this;  $mainDivsTogglable.not($tmp).hide(); $tmp.show();
-    $mainDiv.setUp();
-    //$tmp.$divCont.css({'margin-bottom':285+'px'});
+  mainDiv.setVis=function(){
+    MainDiv.forEach(ele=>ele.hide()); this.show();
+    mainDiv.setUp();
     return true;
   }
-  $loginSelectorDiv.setVis=function(){
-    var $tmp=this;  $mainDivsTogglable.not($tmp).hide(); $tmp.show();
-    $tmp.setUp();
-    //$tmp.$divCont.css({'margin-bottom':285+'px'});
+  loginSelectorDiv.setVis=function(){
+    MainDiv.forEach(ele=>ele.hide()); this.show();
+    this.setUp();
     return true;
   }
-  $createUserSelectorDiv.setVis=function(){
-    var $tmp=this;  $mainDivsTogglable.not($tmp).hide(); $tmp.show();
-    $tmp.setUp();
-    //$tmp.$divCont.css({'margin-bottom':285+'px'});
+  createUserSelectorDiv.setVis=function(){
+    MainDiv.forEach(ele=>ele.hide()); this.show();
+    this.setUp();
     return true;
   }
-  $createUserDiv.setVis=function(){
-    var $tmp=this;  $mainDivsTogglable.not($tmp).hide(); $tmp.show();
-    //$tmp.$divCont.css({'margin-bottom':285+'px'}); 
-    $tmp.$divDisclaimerW.append($divDisclaimer);
-    $tmp.setUp();
+  createUserDiv.setVis=function(){
+    MainDiv.forEach(ele=>ele.hide()); this.show();
+    this.divDisclaimerW.append(divDisclaimer);
+    this.setUp();
     return true;
   }
-  $userSettingDiv.setVis=function(){
-    var $tmp=this;  $mainDivsTogglable.not($tmp).hide(); $tmp.show();
-    //$tmp.$divCont.css({'margin-bottom':285+'px'});
-    $tmp.setUp(); 
-    $tmp.$divDisclaimerW.append($divDisclaimer);
+  userSettingDiv.setVis=function(){
+    MainDiv.forEach(ele=>ele.hide()); this.show();
+    this.setUp(); 
+    this.divDisclaimerW.append(divDisclaimer);
     return true;
   }
-  $consentDiv.setVis=function(){
-    var $tmp=this;  $mainDivsTogglable.not($tmp).hide(); $tmp.show();
-    $tmp.setUp();
+  consentDiv.setVis=function(){
+    MainDiv.forEach(ele=>ele.hide()); this.show();
+    this.setUp();
     return true; 
   }
 
-  $devAppList.setVis=function(){
-    var $tmp=this;  $mainDivsTogglable.not($tmp).hide(); $tmp.show();
-    $tmp.setUp();
+  devAppList.setVis=function(){
+    MainDiv.forEach(ele=>ele.hide()); this.show();
+    this.setUp();
     return true;
   }
-  $userAppList.setVis=function(){
-    var $tmp=this;  $mainDivsTogglable.not($tmp).hide(); $tmp.show();
-    $tmp.setUp();
+  userAppList.setVis=function(){
+    MainDiv.forEach(ele=>ele.hide()); this.show();
+    this.setUp();
     return true;
   }
 
   
-  $MainDiv.hide();
-  $body.append($MainDiv);
+  MainDiv.forEach(ele=>ele.hide());
+  elBody.append(loginInfo, H1, ...MainDiv);
 
 
-  $body.css({'text-align':'center'});
-  //$MainDiv.css({'margin-left':'auto','margin-right':'auto','text-align':'left',background:'#fff'});
-  $MainDiv.css({'margin-left':'auto','margin-right':'auto'});
-  $MainDiv.not($H1).css({'text-align':'left',background:'#fff'});
-  $mainDivsFixWidth.css({'max-width':'800px'});
+  elBody.css({'text-align':'center'});
+  //MainDiv.css({'margin-left':'auto','margin-right':'auto'});
+  //MainDiv.not(H1).css({'text-align':'left',background:'#fff'});
+  [...MainDiv, loginInfo, H1].forEach(ele=>ele.css({'margin-left':'auto','margin-right':'auto'}));
+  [...MainDiv, loginInfo].forEach(ele=>ele.css({'text-align':'left',background:'#fff'}));
+  
 
-  $mainDivsNonFixWidth.css({display:'block','text-align':'center'});
-  $mainDivsPop.css({display:'block','text-align':'left'});
-  $mainDivsNonFixWidth.hide();  
-  $mainDivsPop.hide();  
+  var mainDivsNonFixWidth=[mainDiv, devAppList, userAppList, userSettingDiv, createUserDiv];
+  var mainDivsPop=[deleteAccountPop, verifyEmailPop, forgottPWPop, changePWPop, uploadImageDiv, devAppSetDiv, devAppDeleteDiv, devAppSecretDiv, userAppSetDiv, userAppDeleteDiv];
+  
+  mainDivsNonFixWidth.forEach(ele=>ele.css({display:'block','text-align':'center'}));
+  mainDivsPop.forEach(ele=>ele.css({display:'block','text-align':'left'}));
+  
+  var mainDivsFixWidth=AMinusB([...MainDiv, loginInfo, H1],[...mainDivsNonFixWidth, ...mainDivsPop]);  mainDivsFixWidth.forEach(ele=>ele.css({'max-width':'800px'}));
 
 
-
-  $body.visible();
-  $H1.show();
-  $mainDiv.setVis();
-  $loginInfo.setStat();
+  elBody.visible();
+  H1.show();
+  mainDiv.setVis();
+  loginInfo.setStat();
 
   
   setBottomMargin=function() { // This is not very beautiful. But how should one else make a fixed div at the bottom without hiding the bottom of the scrollable content behind??
-    if($devAppList.$divCont.is(':visible')){$devAppList.$divCont.css({'margin-bottom':$devAppList.$fixedDiv.height()+'px'});}
-    //else if($userAppList.$divCont.is(':visible')){$userAppList.$divCont.css({'margin-bottom':$userAppList.$fixedDiv.height()+'px'});}
-    else if($userSettingDiv.$divCont.is(':visible')){$userSettingDiv.$divCont.css({'margin-bottom':$userSettingDiv.$fixedDiv.height()+'px'});}
-    else if($createUserDiv.$divCont.is(':visible')){$createUserDiv.$divCont.css({'margin-bottom':$createUserDiv.$fixedDiv.height()+'px'});}
+    if(devAppList.style.display!='none'){devAppList.divCont.css({'margin-bottom':devAppList.fixedDiv.offsetHeight+'px'});}
+    //else if(userAppList.style.display!='none'){userAppList.divCont.css({'margin-bottom':userAppList.fixedDiv.offsetHeight+'px'});}
+    else if(userSettingDiv.style.display!='none'){userSettingDiv.divCont.css({'margin-bottom':userSettingDiv.fixedDiv.offsetHeight+'px'});}
+    else if(createUserDiv.style.display!='none'){createUserDiv.divCont.css({'margin-bottom':createUserDiv.fixedDiv.offsetHeight+'px'});}
   }
-  if(boFF) window.addEventListener("DOMMouseScroll", setBottomMargin, false); else   $(window).bind('mousewheel', setBottomMargin);
-  $(window).scroll(setBottomMargin);
-  $body.click(setBottomMargin);
+  if(boFF) window.on("DOMMouseScroll", setBottomMargin, false); else   window.on('mousewheel', setBottomMargin);
+  window.scroll(setBottomMargin);
+  elBody.on('click',setBottomMargin);
 
     // In normal case: go back to mainDiv after successfull login/logout/createUser
-  $idPLoginDiv.cb=$formLogin.cb=$createUserDiv.cb=$loginInfo.cb=function(){
-    if(history.StateMy[history.state.ind].$view===$mainDiv) {$mainDiv.setVis();}
-    else history.fastBack($mainDiv);
+  idPLoginDiv.cb=formLogin.cb=createUserDiv.cb=loginInfo.cb=function(){
+    if(history.StateMy[history.state.ind].view===mainDiv) {mainDiv.setVis();}
+    else history.fastBack(mainDiv);
   };
   if(boAuthReq){
     var flow=(function*(){ yield *authFlowF(flow); })(); flow.next();
@@ -2002,24 +2086,24 @@ setUp1=function(){
   }
 }
 
-//$mainDiv
-//  $loginSelectorDiv  ($idPLoginDiv, $formLogin)
-//  $createUserSelectorDiv  ($idPLoginDiv)
-//    $createUserDiv
+//mainDiv
+//  loginSelectorDiv  (idPLoginDiv, formLogin)
+//  createUserSelectorDiv  (idPLoginDiv)
+//    createUserDiv
 
 authFlowF=function*(flow){
   if(Object.keys(userInfoFrDB).length==0){
-    $idPLoginDiv.cb=function(){
+    idPLoginDiv.cb=function(){
       flow.next();
     };
-    $formLogin.cb=function(){
+    formLogin.cb=function(){
       flow.next();
     };
-    $createUserDiv.cb=function(){
+    createUserDiv.cb=function(){
       flow.next();
     };
     yield;
-    $idPLoginDiv.cb=null;$formLogin.cb=null; $createUserDiv.cb=null;
+    idPLoginDiv.cb=null;formLogin.cb=null; createUserDiv.cb=null;
   }
   var tmpScopeGranted=objUApp?objUApp.scope:'';
   var boScopeOK=isScopeOK(tmpScopeGranted, scopeAsked);
@@ -2030,8 +2114,8 @@ authFlowF=function*(flow){
   var boAllow=true;
   if(boShowForm){
     boAllow=false;
-    $consentDiv.setVis();
-    $consentDiv.cb=function(boAllowT){
+    consentDiv.setVis();
+    consentDiv.cb=function(boAllowT){
       boAllow=boAllowT;
       flow.next();
     };
@@ -2053,13 +2137,13 @@ authFlowF=function*(flow){
 authFlowT=function(){
   this.continueStart=function(){
     if(Object.keys(userInfoFrDB).length==0){
-      $idPLoginDiv.cb=continueGotUser;
-      $formLogin.cb=continueGotUser;
-      $createUserDiv.cb=continueGotUser;
+      idPLoginDiv.cb=continueGotUser;
+      formLogin.cb=continueGotUser;
+      createUserDiv.cb=continueGotUser;
     } else continueGotUser();
   }
   var continueGotUser=function(){
-    $idPLoginDiv.cb=null;$formLogin.cb=null; $createUserDiv.cb=null;
+    idPLoginDiv.cb=null;formLogin.cb=null; createUserDiv.cb=null;
     var tmpScopeGranted=objUApp?objUApp.scope:'';
     var boScopeOK=isScopeOK(tmpScopeGranted, scopeAsked);
     var boRerequest=objQS.auth_type=='rerequest';
@@ -2068,8 +2152,8 @@ authFlowT=function(){
     
     if(boShowForm){
       boAllow=false;
-      $consentDiv.setVis();
-      $consentDiv.cb=function(boAllowT){
+      consentDiv.setVis();
+      consentDiv.cb=function(boAllowT){
         boAllow=boAllowT;
         continueGotConsent();
       };
@@ -2091,11 +2175,8 @@ authFlowT=function(){
 }
 */
 
-//window.onload=function(){  setUp1(); };
-$(function(){
-  setUp1();
-});
 
+window.onload=function(){  setUp1(); };
 
 })();
 

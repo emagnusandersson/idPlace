@@ -3,10 +3,44 @@
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
 <meta name='viewport' content='initial-scale=1'/>
-<script src='https://code.jquery.com/jquery-latest.min.js'></script>
 
 <script>
+  
+/*******************************************************************************************************************
+ *
+ * This app (index.html and loginBack.html) can be used to test the "implicit flow" of OAuth 2.0
+ *
+ *******************************************************************************************************************/
 
+  
+  
+/*******************************************************************************************************************
+ * My library functions
+ *******************************************************************************************************************/
+
+  //
+  // DOM handling
+  //
+  
+EventTarget.prototype.on=function(){ this.addEventListener.apply(this, [...arguments]); return this; }
+EventTarget.prototype.off=function(){ this.removeEventListener.apply(this, [...arguments]); return this; }
+Node.prototype.myText=function(str){
+  if(typeof str=='undefined') { return this.textContent; }
+  if(typeof str!='string') { if(str===null) str=' '; str=str.toString(); }
+  if(this.childNodes.length==1 && this.firstChild.nodeName=="#text" ) { this.firstChild.nodeValue=str||' ';  return this;} // Being a bit GC-friendly
+  this.textContent=str||' '; return this;
+}
+Node.prototype.myHtml=function(str=' '){
+  if(typeof str!='string') { if(str===null) str=' '; str=str.toString(); }
+  this.innerHTML=str||' '; return this;
+}
+createElement=function(str){ return document.createElement(str); }
+
+
+  //
+  // Other functions
+  //
+  
 var randomHash=function(){ return Math.random().toString(36).slice(2)+Math.random().toString(36).slice(2);}
 var parseQS=function(str){
   var params = {},      regex = /([^&=]+)=([^&]*)/g, m;
@@ -17,26 +51,36 @@ var parseQS=function(str){
 }
 
 
+/*******************************************************************************************************************
+ * Actual app
+ *******************************************************************************************************************/
+
   // Fill in your data !!!!
 var AppId={  fb:"your-fb-app-id",  google:"your-google-app-id",  idplace:"your-idplace-app-id"  }; // <--- Fill in your data !!!!
 var uRedir='http://localhost/loginBack.html';  // <--- Fill in your data !!!!
 
 
+  // Endpoints
 var UrlOAuth={fb:"https://www.facebook.com/v3.0/dialog/oauth", google: "https://accounts.google.com/o/oauth2/v2/auth", idplace:'https://idplace.org'};
 var UrlGraph={fb:"https://graph.facebook.com/v3.0/me", google: "https://www.googleapis.com/plus/v1/people/me", idplace:'https://idplace.org/me'};
 
+  // Ignore this !!!
+  // (Only for the writer of this code, who might want to debug)
+var boDbg=0;  if(boDbg) {AppId.idplace="1"; uRedir='http://192.168.0.4:8000/loginBack.html';  UrlOAuth.idplace='http://192.168.0.4:5000'; UrlGraph.idplace='http://192.168.0.4:5000/me';  }
+
+
 var setUp=function(){
   "use strict"
-  var $body=$('body');
+  var elBody=document.body
 
 
   var popupWin=function(IP) {
     flowLogin=flowLoginF.call(this, IP);  flowLogin.next();
   }  
   var flowLoginF=function*(IP){
-    $divMess.html('');
-    $divParamMeReq.html('');
-    $divParamAccessTokenReq.html('');
+    divMess.myText('');
+    divParamMeReq.myText('');
+    divParamAccessTokenReq.myText('');
       // Get access_token
     var nonce=randomHash();
     var arrQ=["client_id="+AppId[IP], "redirect_uri="+encodeURIComponent(uRedir), "state="+nonce, "response_type=token"];
@@ -53,20 +97,20 @@ var setUp=function(){
     };
     yield;
     var param=parseQS(strHash.substring(1));
-    var tmp='<b>Result of access_token request</b>:<pre>'+JSON.stringify(param, null,2)+"</pre>";   $divParamAccessTokenReq.html(tmp);
+    var tmp='<b>Result of access_token request</b>:<pre>'+JSON.stringify(param, null,2)+"</pre>";   divParamAccessTokenReq.myHtml(tmp);
 
-    if(!('state' in param) || param.state !== nonce) {    $divMess.html('Invalid state.'); return;  } 
+    if(!('state' in param) || param.state !== nonce) {    divMess.myText('Invalid state.'); return;  } 
 
     var access_token;
-    if('error' in param) { $divMess.html(param.error); return }
+    if('error' in param) { divMess.myText(param.error); return }
     
-    if(!('access_token' in param)) {  $divMess.html('no "access_token" parameter in response from IP'); return;  }
+    if(!('access_token' in param)) {  divMess.myText('no "access_token" parameter in response from IP'); return;  }
     var access_token=param.access_token;
 
 
       // Get graph (make cross site ajax-request)
     var uGraph=UrlGraph[IP];
-    if(IP=='fb')  var objForm={access_token:access_token, fields:"id,name,verified,picture"};
+    if(IP=='fb')  var objForm={access_token:access_token, fields:"id,name,picture"};
     else if(IP=='google')  var objForm={access_token:access_token, fields:"id,name,verified,image"};
     else if(IP=='idplace' || IP=='idL' || IP=='id192')  var objForm={access_token:access_token};
      
@@ -76,7 +120,7 @@ var setUp=function(){
     var xhr = new XMLHttpRequest(), boExit=0;
     xhr.open('GET', uGraph);
     xhr.onload = function() {
-      if(xhr.status !== 200) {   boExit=1;  $divMess.html('"Me"-Request failed.  Returned status of ' + xhr.status);  }
+      if(xhr.status !== 200) {   boExit=1;  divMess.myText('"Me"-Request failed.  Returned status of ' + xhr.status);  }
       flowLogin.next();
     };
     xhr.send();
@@ -85,21 +129,21 @@ var setUp=function(){
     var data=xhr.responseText;
     try{ var objGraph=JSON.parse(data); }catch(e){ console.log(e);  debugger; return; }
 
-    var tmp='<b>Result of "Me"-request</b>:<pre>'+JSON.stringify(objGraph, null,2)+"</pre>";   $divParamMeReq.html(tmp);
+    var tmp='<b>Result of "Me"-request</b>:<pre>'+JSON.stringify(objGraph, null,2)+"</pre>";   divParamMeReq.myHtml(tmp);
 
   }
   var flowLogin;  
 
 
-  var $buttonFB=$('<button>').click(function(){popupWin('fb');}).append('Facebook');
-  var $buttonGoogle=$('<button>').click(function(){popupWin('google');}).append('Google');
-  var $buttonIdPlace=$('<button>').click(function(){popupWin('idplace');}).append('idPlace');
+  var buttonFB=createElement('button').on('click',function(){popupWin('fb');}).myText('Facebook');
+  var buttonGoogle=createElement('button').on('click',function(){popupWin('google');}).myText('Google');
+  var buttonIdPlace=createElement('button').on('click',function(){popupWin('idplace');}).myText('idPlace');
 
-  var $divParamAccessTokenReq=$('<div>');
-  var $divParamMeReq=$('<div>');
-  var $divMess=$('<div>');  //,  setMess=function(strMess){$divMess.html(strMess);}
+  var divParamAccessTokenReq=createElement('div');
+  var divParamMeReq=createElement('div');
+  var divMess=createElement('div');
 
-  $body.append($buttonFB,$buttonGoogle,$buttonIdPlace, $divParamAccessTokenReq, $divParamMeReq, $divMess); 
+  elBody.append(buttonFB,buttonGoogle,buttonIdPlace, divParamAccessTokenReq, divParamMeReq, divMess); 
 }
 
 window.onload=function(){  setUp();};
@@ -108,6 +152,8 @@ window.onload=function(){  setUp();};
 </script>
 </head>
 <body>
-<p>Note! this test-app only works with browsers supporting <a href=https://kangax.github.io/compat-table/es6/>Generators</a></p>
+<!--<p>Note! this test-app only works with browsers supporting <a href=https://kangax.github.io/compat-table/es6/>Generators</a></p>-->
+<!--<p>Remember: Check and fill in the "Fill in your data !!!!" section in the source-code (index.html)</p>-->
+<p>This demo-app will use the "Implicit flow" (of OAuth 2.0) to fetch the ID (some data) from some ID-providers.</p>
 <p>Privacy policy: The data sent back from the IdP will just be displayed to you (nothing stored)</p>
 </body></html>

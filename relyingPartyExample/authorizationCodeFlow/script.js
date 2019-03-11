@@ -22,6 +22,11 @@ leafBE='be.json';
 leafLoginBack="loginBack.html"; 
 
 
+/********************************************************************
+ * Instructions:
+ * On the IdP-site you will get the app-id + app-secret which you fill in below.
+ * Usually the uRedir (found below) should also be filled in on the IdP site.
+ ********************************************************************/
 
   // Fill in your data !!!!
 AppCred={
@@ -30,12 +35,16 @@ AppCred={
   idplace:{id: "your-idplace-app-id", secret:"your-idplace-app-secret"}
 }
 
-
-AppId={};   for(var k in AppCred){   AppId[k]=AppCred[k].id;    } // Create a variable without secrets that can be sent to the client
-
 var wwwApp='localhost:'+port;
 var wwwRedir=wwwApp+"/"+leafLoginBack;
-uRedir='http://'+wwwRedir;
+uRedir='http://'+wwwRedir;  // <-- This url should be quite often be entered on the IdP site
+
+
+/********************************************************************/
+
+
+
+AppId={};   for(var k in AppCred){   AppId[k]=AppCred[k].id;    } // Create a variable without secrets that can be sent to the client
 
 
 UrlOAuth={fb:"https://www.facebook.com/v3.0/dialog/oauth", google: "https://accounts.google.com/o/oauth2/v2/auth", idplace:'https://idplace.org', idL:'http://localhost:5000', id192:'http://192.168.0.5:5000'};
