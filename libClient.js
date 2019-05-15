@@ -1,17 +1,17 @@
-
+"use strict"
 
 //
 // Storage, DOM etc
 //
 
-getItem=function(name){    var tmp=localStorage.getItem(name);   if(tmp!==null) tmp=JSON.parse(tmp);  return tmp;   }
-setItem=function(name,value){  if(typeof value=='undefined') value=null; localStorage[name]=JSON.stringify(value); }
-getItemS=function(name){    var tmp=sessionStorage.getItem(name);    if(tmp!==null) tmp=JSON.parse(tmp);   return tmp;   }
-setItemS=function(name,value){  sessionStorage[name]=JSON.stringify(value); }
+var getItem=function(name){    var tmp=localStorage.getItem(name);   if(tmp!==null) tmp=JSON.parse(tmp);  return tmp;   }
+var setItem=function(name,value){  if(typeof value=='undefined') value=null; localStorage[name]=JSON.stringify(value); }
+var getItemS=function(name){    var tmp=sessionStorage.getItem(name);    if(tmp!==null) tmp=JSON.parse(tmp);   return tmp;   }
+var setItemS=function(name,value){  sessionStorage[name]=JSON.stringify(value); }
 
 
-uVipp0="lib/image/vipp0.png";
-uVipp1="lib/image/vipp1.png";
+var uVipp0="lib/image/vipp0.png";
+var uVipp1="lib/image/vipp1.png";
 var vippButtonExtend=function($el){
 "use strict"
   $el.setStat=function(bo1){
@@ -30,7 +30,7 @@ var vippButtonExtend=function($el){
 // Hardware checking
 //
 
-getBrowser=function(){
+var getBrowser=function(){
     var ua=navigator.userAgent.toLowerCase();
 
     var match = /(chrome)[ \/]([\w.]+)/.exec( ua ) ||
@@ -45,7 +45,7 @@ getBrowser=function(){
     
     return {brand:brand,version:version};
 };
-detectIE=function() {
+var detectIE=function() {
     var ua = window.navigator.userAgent;
 
     var msie = ua.indexOf('MSIE ');
@@ -71,7 +71,7 @@ detectIE=function() {
     return false;
 }
 
-isGeneratorSupported = function(){
+var isGeneratorSupported = function(){
     try {
        eval("(function*(){})()");
        return true;
@@ -82,8 +82,7 @@ isGeneratorSupported = function(){
 
 
 
-msort=function(compare){
-"use strict"
+var msort=function(compare){
   var length = this.length,  middle = Math.floor(length / 2);
   //if(length < 2) return this;
   if(length==0) return [];
@@ -93,10 +92,8 @@ msort=function(compare){
   return merge(    msort.call(a,compare),    msort.call(b,compare),    compare    );
 }
 
-merge=function(left, right, compare){
-"use strict"
+var merge=function(left, right, compare){
   var result = [];
-
   while (left.length > 0 || right.length > 0){
     if(left.length > 0 && right.length > 0){
       if(compare(left[0], right[0]) <= 0){ result.push(left[0]);  left = left.slice(1);  }
@@ -173,7 +170,7 @@ var scrollLeft=function(){ return window.pageXOffset || (document.documentElemen
 
 EventTarget.prototype.on=function(){ this.addEventListener.apply(this, [...arguments]); return this; }
 EventTarget.prototype.off=function(){ this.removeEventListener.apply(this, [...arguments]); return this; }
-if(!Node.prototype.append) Node.prototype.append=Node.prototype.appendChild;
+//if(!Node.prototype.append) Node.prototype.append=Node.prototype.appendChild;
 if(!Node.prototype.prepend) Node.prototype.prepend=function(el){ this.insertBefore(el, this.firstChild);  }
 Node.prototype.myAppend=function(){ this.append.apply(this, [...arguments]); return this; }
 Node.prototype.myAppendB=function(){
@@ -181,7 +178,8 @@ Node.prototype.myAppendB=function(){
   arg.forEach(ele=>{
     if(typeof ele=='string') {
       if(!elTmp) elTmp=createElement('div');
-      elTmp.innerHTML=ele; argB.push(...elTmp.childNodes);
+      elTmp.innerHTML=ele;  // Convert html to nodes (found in elTmp.childNodes)
+      argB.push(...elTmp.childNodes);
     } else argB.push(ele);
   }); 
   this.append.call(this, ...argB); return this;
@@ -267,12 +265,12 @@ NodeList.prototype.toggle=function(b){
   this.forEach(function(ele){ ele.toggle(b); });
   return this;
 }
-createTextNode=function(str){ return document.createTextNode(str); }
-createElement=function(str){ return document.createElement(str); }
-createFragment=function(){ fr=document.createDocumentFragment(); if(arguments.length) fr.append(...arguments); return fr; }
+var createTextNode=function(str){ return document.createTextNode(str); }
+var createElement=function(str){ return document.createElement(str); }
+var createFragment=function(){ var fr=document.createDocumentFragment(); if(arguments.length) fr.append(...arguments); return fr; }
 
-getNodeIndex=function( elm ){ return [...elm.parentNode.children].indexOf(elm); }
-Element.prototype.myIndex=function() {return [...this.parentNode.children].indexOf(this);}
+var getNodeIndex=function( elm ){ return [...elm.parentNode.childNodes].indexOf(elm); }
+Element.prototype.myIndex=function() {return [...this.parentNode.childNodes].indexOf(this);}
 
 Element.prototype.offset=function() {
   var rect = this.getBoundingClientRect();
@@ -289,18 +287,16 @@ Element.prototype.visibilityToggle=function(b){
 
 Node.prototype.detach=function(){ this.remove(); return this; }
 
-isVisible=function(el) {
+var isVisible=function(el) {
   return !!( el.offsetWidth || el.offsetHeight || el.getClientRects().length );
 }
-
-
 
 
 
 /*******************************************************************************************************************
  * popupHover: popup a elBubble when you hover over elArea
  *******************************************************************************************************************/
-popupHover=function(elArea,elBubble){
+var popupHover=function(elArea,elBubble){
   elBubble.css({position:'absolute', 'box-sizing':'border-box', margin:'0px'}); //
   function setBubblePos(e){
     var xClear=6, yClear=6;

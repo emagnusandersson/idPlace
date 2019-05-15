@@ -100,15 +100,17 @@
 /******************************************************************************
  * ReqBE
  ******************************************************************************/
-//var ReqBE=app.ReqBE=function(req, res){
-  //this.req=req; this.res=res; this.site=req.site;  this.Str=[]; 
-  //this.Out={GRet:{}, dataArr:[]}; this.GRet=this.Out.GRet; 
+//app.ReqBE=function(req, res){
+  //this.req=req; this.res=res; this.site=req.site; this.sessionCache=req.sessionCache;  this.Str=[]; 
+  //this.Out={GRet:{userInfoFrDBUpd:{}}, dataArr:[]}; this.GRet=this.Out.GRet; 
 //}
-var ReqBE=app.ReqBE=function(req, res){
-  this.req=req; this.res=res; this.site=req.site;  this.Str=[]; 
-  this.Out={GRet:{userInfoFrDBUpd:{}}, dataArr:[]}; this.GRet=this.Out.GRet; 
-}
 
+app.ReqBE=function(objReqRes){
+  Object.assign(this, objReqRes);
+  this.sessionCache=this.req.sessionCache;
+  this.site=this.req.site;
+  this.Str=[];  this.Out={GRet:{userInfoFrDBUpd:{}}, dataArr:[]};  this.GRet=this.Out.GRet; 
+}
 
   // Method "mesO" and "mesEO" are only called from "go". Method "mes" can be called from any method.
 ReqBE.prototype.mes=function(str){ this.Str.push(str); }
@@ -126,7 +128,7 @@ ReqBE.prototype.mesO=function(e){
   this.GRet.strMessageText=this.Str.join(', '); 
   
 
-  this.res.end(JSON.stringify(this.Out));
+  this.res.end(serialize(this.Out));
 }
 
 ReqBE.prototype.mesEO=function(e){
@@ -146,8 +148,8 @@ ReqBE.prototype.mesEO=function(e){
   this.Str.push(strEBrowser);
   this.GRet.strMessageText=this.Str.join(', ');
   
-  this.res.writeHead(500, {"Content-Type": "text/plain"}); 
-  this.res.end(JSON.stringify(this.Out));
+  //this.res.writeHead(500, {"Content-Type": MimeType.txt}); 
+  this.res.end(serialize(this.Out));
 }
 
 
@@ -165,34 +167,35 @@ ReqBE.prototype.go=function*(){
       //form.uploadDir='tmp';
       
       var err, fields, files;
-      form.parse(req, function(errT, fieldsT, filesT) { err=errT; fields=fieldsT; files=filesT; flow.next();  });  yield;
-      if(err){ this.mesEO(err);  return; } 
+      form.parse(req, function(errT, fieldsT, filesT) { err=errT; fields=fieldsT; files=filesT; flow.next();  });  yield;  if(err){ this.mesEO(err);  return; } 
       
       this.File=files['fileToUpload[]'];
       if('kind' in fields) this.kind=fields.kind; else this.kind='u';
-      if('captcha' in fields) this.captchaIn=fields.captcha; else this.captchaIn='';
+      //if('captcha' in fields) this.captchaIn=fields.captcha; else this.captchaIn='';
+      if('g-recaptcha-response' in fields) this.captchaIn=fields['g-recaptcha-response']; else this.captchaIn='';
       if('strName' in fields) this.strName=fields.strName; else this.strName='';
       if(!(this.File instanceof Array)) this.File=[this.File];
-      jsonInput=fields.vec;
-
+      jsonInput=fields.vec;   
+      
     }else{
       var buf, myConcat=concat(function(bufT){ buf=bufT; flow.next();  });    req.pipe(myConcat);    yield;
       jsonInput=buf.toString();
     }
   }
-  else if(1){ this.mesEO('send me a POST'); return; }
-  else if(req.method=='GET'){
-    var objUrl=url.parse(req.url), qs=objUrl.query||''; jsonInput=urldecode(qs);
-  }
+  else if(1){ this.mesEO(new Error('send me a POST')); return; }
+  //else if(req.method=='GET'){ var objUrl=url.parse(req.url), qs=objUrl.query||''; jsonInput=urldecode(qs);}
   
   try{ var beArr=JSON.parse(jsonInput); }catch(e){ this.mesEO(e);  return; }
   
-  var redisVar=req.sessionID+'_Main'; this.sessionMain=yield *getRedis(flow, redisVar, true);
-  if(!this.sessionMain || typeof this.sessionMain!='object') { this.sessionMain={};  this.GRet.userInfoFrDB={};  var tmp=yield* cmdRedis(flow, 'del',[redisVar]); }  
-  else { yield* expireRedis(flow, redisVar); }
+  if(!req.boCookieStrictOK) {this.mesEO(new Error('Strict cookie not set'));  return;   }
+  
+  //var redisVar=req.sessionID+'_Cache';
+  //this.sessionCache=yield *getRedis(flow, redisVar, true);
+  //if(!this.sessionCache || typeof this.sessionCache!='object') { this.sessionCache={};  this.GRet.userInfoFrDB={};  yield* delRedis(flow, redisVar); }  
+  //else { yield* expireRedis(flow, redisVar, maxUnactivity); }
   
 
-  res.setHeader("Content-type", "application/json");
+  res.setHeader("Content-type", MimeType.json);
 
     // Remove 'CSRFCode' and 'caller' form beArr
   var CSRFIn, caller='index';
@@ -249,6 +252,7 @@ ReqBE.prototype.go=function*(){
     var strFun=beArr[k][0];
     if(in_array(strFun,allowed)) {
       var inObj=beArr[k][1],     tmpf; if(strFun in this) tmpf=this[strFun]; else tmpf=global[strFun];
+      if(typeof inObj=='undefined' || typeof inObj=='object') {} else {this.mesO('inObj should be of type object or undefined'); return;}
       var fT=[tmpf,inObj];   Func.push(fT);
     }
   }
@@ -256,8 +260,6 @@ ReqBE.prototype.go=function*(){
 
   for(var k=0; k<Func.length; k++){
     var [func,inObj]=Func[k],   [err, result]=yield* func.call(this, inObj);
-    //if(typeof objT=='object') {    if('err' in objT) err=objT.err; else err=objT;    }    else if(typeof objT=='undefined') err='Error when calling BE-fun: '+k;    else err=objT;
-    
     if(res.finished) return;
     else if(err){
       if(typeof err=='object' && err.name=='ErrorClient') this.mesO(err); else this.mesEO(err);     return;
@@ -276,7 +278,6 @@ ReqBE.prototype.loginGetGraph=function*(inObj){
   var req=this.req, flow=req.flow, res=this.res, site=req.site, sessionID=req.sessionID, objQS=req.objQS;
   var strFun=inObj.fun;
   var Ou={};
-  //if(!this.sessionMain.userInfoFrDB){ this.sessionMain.userInfoFrDB=extend({},specialistDefault); yield* setRedis(flow, req.sessionID+'_Main', this.sessionMain, maxUnactivity); }
   
 
   var strIP=inObj.IP;
@@ -284,14 +285,13 @@ ReqBE.prototype.loginGetGraph=function*(inObj){
   var uRedir=req.strSchemeLong+site.wwwSite+'/'+leafLoginBack;
     // getToken
   var objForm={grant_type:'authorization_code', client_id:objIPCred.id, redirect_uri:uRedir, client_secret:objIPCred.secret, code:inObj.code};
-  if(strIP=='fb') {
-    var uToGetToken = "https://graph.facebook.com/v3.0/oauth/access_token";
-  }else if(strIP=='google') {
-    var uToGetToken = "https://accounts.google.com/o/oauth2/token"; 
-  }else if(strIP=='idplace') {
-    var uToGetToken = urlAuthIdplace+"/access_token";
-  } 
+  if(strIP=='fb' || strIP=='google') { var uToGetToken=UrlToken[strIP]; }
+  else{ return [new Error('strIP=='+strIP)];}
+  //else if(strIP=='idplace') {
+    //var uToGetToken = urlAuthIdplace+"/access_token";
+  //} 
 
+  
   var arrT = Object.keys(objForm).map(function (key) { return key+'='+objForm[key]; }), strQuery=arrT.join('&'); 
   //if(strQuery.length) uToGetToken+='?'+strQuery;
   var semY=0, semCB=0, err, response, body;
@@ -307,16 +307,19 @@ ReqBE.prototype.loginGetGraph=function*(inObj){
 
 
     // Get Graph
-  if(strIP=='fb') {
-    var uGraph = "https://graph.facebook.com/v3.0/me";
-    var objForm={access_token:this.access_token, fields:"id,name,picture,email"};
-  }else if(strIP=='google') {
-    var uGraph = "https://www.googleapis.com/plus/v1/people/me";
-    var objForm={access_token:this.access_token, fields:"id,name,verified,image,email"};
-  }else if(strIP=='idplace') {
-    var uGraph = urlAuthIdplace+"/me";
-    var objForm={access_token:this.access_token};
-  } 
+  var uGraph=UrlGraph[strIP];
+  
+  if(strIP=='fb') { var objForm={access_token:this.access_token, fields:"id,name,picture,email"}; }  //,verified
+  else if(strIP=='google') { var objForm={access_token:this.access_token, fields:"id,name,verified,image,email"}; }
+  //else if(strIP=='idplace') {
+    //var uGraph = urlAuthIdplace+"/me";
+    //var objForm={access_token:this.access_token};
+  //}
+  else{ return [new Error('strIP=='+strIP)];}
+  
+  
+ 
+  
   var arrT = Object.keys(objForm).map(function (key) { return key+'='+objForm[key]; }), strQuery=arrT.join('&'); 
   if(strQuery.length) uGraph+='?'+strQuery;
   var semY=0, semCB=0, err, response, body;
@@ -365,14 +368,14 @@ ReqBE.prototype.userFun=function*(inObj){
   Sql.push("CALL "+siteName+"loginWExternalIP(?,?,?,?,?);"); Val.push(this.idIP, this.nameIP, this.image, this.email, this.timeZone);
 
   var sql=Sql.join('\n');
-  var [err, results]=yield* myQueryGen(flow, sql, Val, mysqlPool); if(err) return [err];
+  var [err, results]=yield* this.myMySql.query(flow, sql, Val); if(err) return [err];
   
   var messA=results[0][0].mess;
   var boOK=messA=='ok';
   if(!boOK) { return [new Error(messA)]; }
   var idUser=Number(results[1][0].idUser);
-  this.sessionMain.idUser=idUser;
-  yield* setRedis(flow, req.sessionID+'_Main', this.sessionMain, maxUnactivity);
+  this.sessionCache.idUser=idUser;
+  yield* setRedis(flow, req.sessionID+'_Cache', this.sessionCache, maxUnactivity);
   return [null, Ou];
 }
 
@@ -380,27 +383,29 @@ ReqBE.prototype.fetchFun=function*(inObj){
   var req=this.req, flow=req.flow, res=this.res, site=req.site,  siteName=site.siteName, userTab=site.TableName.userTab;
   var Ou={}; 
    
-  if(typeof this.sessionMain!='object' || !('idUser' in this.sessionMain)) { return [new ErrorClient('No session')];}
-  var idUser=this.sessionMain.idUser;
+  //if(typeof this.sessionCache!='object' || !('idUser' in this.sessionCache)) { return [new ErrorClient('No session')];}
+  var idUser=this.sessionCache.idUser; if(!idUser){ return [new ErrorClient('No session')];}
 
   var password=randomHash();
   var Sql=[], Val=[]; 
-  Sql.push("UPDATE "+userTab+" SET \n\
-tIdFB=IF(idFB IS NULL OR idFB!=?, now(), tIdFB), \n\
-tName=IF(name!=?, now(), tName), \n\
-tImage=IF(image!=? AND imageHash IS NULL, now(), tImage), \n\
-tEmail=IF(email!=?, now(), tEmail), \n\
-boEmailVerified=IF(email!=?, 0, boEmailVerified), \n\
-nIdFB=nIdFB+(idFB IS NULL OR idFB!=?), \n\
-nName=nName+(name!=?), \n\
-nImage=nImage+(image!=? AND imageHash IS NULL), \n\
-nEmail=nEmail+(email!=?), \n\
-idFB=?, name=?, image=?, email=?, timeZone=? WHERE idUser=?;");
+  Sql.push(`UPDATE `+userTab+` SET
+tIdFB=IF(idFB<=>?, tIdFB, now()),
+tName=IF(name<=>?, tName, now()),
+tImage=IF(!(image<=>?) AND imageHash IS NULL, now(), tImage),
+tEmail=IF(email<=>?, tEmail, now()),
+boEmailVerified=IF(email<=>?, boEmailVerified, 0),
+nIdFB=nIdFB+!(idFB<=>?),
+nName=nName+!(name<=>?),
+nImage=nImage+(!(image<=>?) AND imageHash IS NULL),
+nEmail=nEmail+!(email<=>?),
+idFB=?, name=?, image=?, email=?, timeZone=? WHERE idUser=?;`);
+//tIdFB=IF(idFB IS NULL OR idFB!=?, now(), tIdFB),
+//nIdFB=nIdFB+!(idFB IS NULL OR idFB!=?),
 Val.push(this.idIP, this.nameIP, this.image, this.email, this.email);
 Val.push(this.idIP, this.nameIP, this.image, this.email);
 Val.push(this.idIP, this.nameIP, this.image, this.email, this.timeZone, idUser);
   var sql=Sql.join('\n');
-  var [err, results]=yield* myQueryGen(flow, sql, Val, mysqlPool); if(err) return [err];
+  var [err, results]=yield* this.myMySql.query(flow, sql, Val); if(err) return [err];
 
   var c=results.affectedRows, boOK, mestmp; 
   if(c>0) {boOK=1; mestmp="Data changed"; } else {boOK=1; mestmp="Nothing changed"; }
@@ -412,8 +417,8 @@ ReqBE.prototype.getSecretFun=function*(inObj){
   var req=this.req, flow=req.flow, res=this.res, site=req.site,  siteName=site.siteName, {userTab, appTab}=site.TableName;;
   var Ou={};
    
-  if(typeof this.sessionMain!='object' || !('idUser' in this.sessionMain)) { return [new ErrorClient('No session')];}
-  var idUser=this.sessionMain.idUser;
+  //if(typeof this.sessionCache!='object' || !('idUser' in this.sessionCache)) { return [new ErrorClient('No session')];}
+  var idUser=this.sessionCache.idUser; if(!idUser){ return [new ErrorClient('No session')];}
 
   var Sql=[], Val=[]; 
   Sql.push("SELECT @idUser:=idUser FROM "+userTab+" WHERE idFB=?;");
@@ -422,7 +427,7 @@ ReqBE.prototype.getSecretFun=function*(inObj){
   //var sql="SELECT idUser, secret FROM "+userTab+" u JOIN "+appTab+" a ON u.idUser=a.idOwner WHERE u.idFB=? AND a.idApp=?;";
   //var Val=[this.idIP, inObj.idApp];
   var sql=Sql.join('\n');
-  var [err, results]=yield* myQueryGen(flow, sql, Val, mysqlPool); if(err) return [err];
+  var [err, results]=yield* this.myMySql.query(flow, sql, Val); if(err) return [err];
   //if(results.length!=1) {  return [new ErrorClient('results.length='+results.length)]; }
   if(results[1][0].idUser!=idUser) return [new ErrorClient('Wrong user')];
   if(results[2].length!=1) return [new Error('Found '+results[2].length+' results')];
@@ -436,14 +441,14 @@ ReqBE.prototype.deleteExtId=function*(inObj){ // Remove link to the external IP
   var req=this.req, flow=req.flow, res=this.res, site=req.site,  siteName=site.siteName, userTab=site.TableName.userTab;
    
   var Ou={}; 
-  if(typeof this.sessionMain!='object' || !('idUser' in this.sessionMain)) {return [new ErrorClient('No session')]; }
-  var idUser=this.sessionMain.idUser;
+  //if(typeof this.sessionCache!='object' || !('idUser' in this.sessionCache)) {return [new ErrorClient('No session')]; }
+  var idUser=this.sessionCache.idUser; if(!idUser){ return [new ErrorClient('No session')];}
 
   var Sql=[], Val=[]; 
   Sql.push("UPDATE "+userTab+" SET idFB=NULL, image='', tIdFB=now(), tImage=IF(imageHash IS NULL, now(), tImage) WHERE idUser=?"); Val.push(idUser);
 
   var sql=Sql.join('\n');
-  var [err, results]=yield* myQueryGen(flow, sql, Val, mysqlPool); if(err) return [err];
+  var [err, results]=yield* this.myMySql.query(flow, sql, Val); if(err) return [err];
 
   var c=results.affectedRows, boOK, mestmp; 
   if(c>0) {boOK=1; mestmp="Data deleted"; } else {boOK=1; mestmp="Nothing changed"; }
@@ -457,16 +462,17 @@ ReqBE.prototype.deleteExtId=function*(inObj){ // Remove link to the external IP
 ReqBE.prototype.setupById=function*(inObj){
   var req=this.req, flow=req.flow, site=req.site,  siteName=site.siteName, Ou={};
   var userTab=site.TableName.userTab;
-  if(typeof this.sessionMain!='object' || !('idUser' in this.sessionMain)) { return [new ErrorClient('No session')];}
+  //if(typeof this.sessionCache!='object' || !('idUser' in this.sessionCache)) { return [new ErrorClient('No session')];}
+  var idUser=this.sessionCache.idUser; if(!idUser){ return [new ErrorClient('No session')];}
 
 
   var idApp=inObj.idApp||null;
 
   var Sql=[], Val=[];
-  Sql.push("CALL "+siteName+"getUserAppInfo(?,?);"); Val.push(this.sessionMain.idUser, idApp);
+  Sql.push("CALL "+siteName+"getUserAppInfo(?,?);"); Val.push(idUser, idApp);
 
   var sql=Sql.join('\n');
-  var [err, results]=yield* myQueryGen(flow, sql, Val, mysqlPool); if(err) return [err];
+  var [err, results]=yield* this.myMySql.query(flow, sql, Val); if(err) return [err];
 
 
   //this.GRet.userInfoFrDB={};
@@ -476,7 +482,9 @@ ReqBE.prototype.setupById=function*(inObj){
     //if(results[1].length) this.GRet.userInfoFrDB.imageHash=results[1][0].imageHash;
   } else{
     if(idUser!==null) { 
-      this.sessionMain={};  this.GRet.userInfoFrDB={};  var tmp=yield* cmdRedis(flow, 'del',[req.sessionID+'_Main']);
+      this.sessionCache={};  this.GRet.userInfoFrDB={};
+      //yield* delRedis(flow, req.sessionID+'_Cache');
+      yield* setRedis(flow, req.sessionID+'_Cache', this.sessionCache, maxUnactivity);
       idUser=null;
     }
     // return [new Error("User not found?!? (try reload)")];
@@ -491,7 +499,9 @@ ReqBE.prototype.setupById=function*(inObj){
 
 ReqBE.prototype.logout=function*(inObj){
   var req=this.req, flow=req.flow, Ou={};
-  this.sessionMain={};  this.GRet.userInfoFrDB={};  var tmp=yield* cmdRedis(flow, 'del',[req.sessionID+'_Main']);
+  this.sessionCache={};  this.GRet.userInfoFrDB={};
+  //yield* delRedis(flow, req.sessionID+'_Cache');
+  yield* setRedis(flow, req.sessionID+'_Cache', this.sessionCache, maxUnactivity);
   this.mes('Logged out'); return [null, [Ou]];
 }
 
@@ -507,14 +517,14 @@ ReqBE.prototype.loginWEmail=function*(inObj){
   Val.push(inObj.email);
 
   var sql=Sql.join('\n');
-  var [err, results]=yield* myQueryGen(flow, sql, Val, mysqlPool); if(err) return [err];
+  var [err, results]=yield* this.myMySql.query(flow, sql, Val); if(err) return [err];
   
   if(results.length==0) return [new ErrorClient('Email not found')];
   var objT=results[0];
   if(objT.password!==inObj.password) { return [new ErrorClient('Wrong password')]; }
   //this.GRet.userInfoFrDB=objT;
-  var idUser=this.sessionMain.idUser=Number(objT.idUser);
-  yield* setRedis(flow, req.sessionID+'_Main', this.sessionMain, maxUnactivity);
+  var idUser=this.sessionCache.idUser=Number(objT.idUser);
+  yield* setRedis(flow, req.sessionID+'_Cache', this.sessionCache, maxUnactivity);
 
   return [null, [Ou]];
 }
@@ -529,65 +539,71 @@ ReqBE.prototype.UUpdate=function*(inObj){ // writing needSession
   var req=this.req, flow=req.flow, site=req.site, siteName=site.siteName;
   var userTab=site.TableName.userTab;
   var Ou={}; 
-  if(typeof this.sessionMain!='object' || !('idUser' in this.sessionMain)) { return [new ErrorClient('No session')];}
-  var idUser=this.sessionMain.idUser;
+  //if(typeof this.sessionCache!='object' || !('idUser' in this.sessionCache)) { return [new ErrorClient('No session')];}
+  var idUser=this.sessionCache.idUser; if(!idUser){ return [new ErrorClient('No session')];}
 
   if(!/\S+@\S+/.test(inObj.email)) return [new ErrorClient('Invalid email')];
     
 
   var Sql=[], Val=[];
 
-  Sql.push("UPDATE "+userTab+" SET \n\
-tName=IF(name!=?, now(), tName), \n\
-tEmail=IF(email!=?, now(), tEmail), \n\
-boEmailVerified=IF(email!=?, 0, boEmailVerified), \n\
-tTelephone=IF(telephone!=?, now(), tTelephone), \n\
-tCountry=IF(country!=?, now(), tCountry), \n\
-tFederatedState=IF(federatedState!=?, now(), tFederatedState), \n\
-tCounty=IF(county!=?, now(), tCounty), \n\
-tCity=IF(city!=?, now(), tCity), \n\
-tZip=IF(zip!=?, now(), tZip), \n\
-tAddress=IF(address!=?, now(), tAddress), \n\
-tIdNational=IF(idNational!=?, now(), tIdNational), \n\
-tBirthdate=IF(birthdate!=?, now(), tBirthdate), \n\
-tMotherTongue=IF(motherTongue!=?, now(), tMotherTongue), \n\
-tGender=IF(gender!=?, now(), tGender), \n\
-nName=nName+(name!=?), \n\
-nEmail=nEmail+(email!=?), \n\
-nTelephone=nTelephone+(telephone!=?), \n\
-nCountry=nCountry+(country!=?), \n\
-nFederatedState=nFederatedState+(federatedState!=?), \n\
-nCounty=nCounty+(county!=?), \n\
-nCity=nCity+(city!=?), \n\
-nZip=nZip+(zip!=?), \n\
-nAddress=nAddress+(address!=?), \n\
-nIdNational=nIdNational+(idNational!=?), \n\
-nBirthdate=nBirthdate+(birthdate!=?), \n\
-nMotherTongue=nMotherTongue+(motherTongue!=?), \n\
-nGender=nGender+(gender!=?), \n\
-name=?, \n\
-email=?, \n\
-telephone=?, \n\
-country=?, federatedState=?, county=?, city=?, zip=?, address=?, \n\
-idNational=?, \n\
-birthdate=?, \n\
-motherTongue=?, \n\
-gender=? \n\
-WHERE idUser=?;");
+  Sql.push(`UPDATE `+userTab+` SET
+tName=IF(name!=?, now(), tName),
+tEmail=IF(email!=?, now(), tEmail),
+boEmailVerified=IF(email!=?, 0, boEmailVerified),
+tTelephone=IF(telephone!=?, now(), tTelephone),
+tCountry=IF(country!=?, now(), tCountry),
+tFederatedState=IF(federatedState!=?, now(), tFederatedState),
+tCounty=IF(county!=?, now(), tCounty),
+tCity=IF(city!=?, now(), tCity),
+tZip=IF(zip!=?, now(), tZip),
+tAddress=IF(address!=?, now(), tAddress),
+tIdNational=IF(idNational!=?, now(), tIdNational),
+tBirthdate=IF(birthdate!=?, now(), tBirthdate),
+tMotherTongue=IF(motherTongue!=?, now(), tMotherTongue),
+tGender=IF(gender!=?, now(), tGender),
+nName=nName+(name!=?),
+nEmail=nEmail+(email!=?),
+nTelephone=nTelephone+(telephone!=?),
+nCountry=nCountry+(country!=?),
+nFederatedState=nFederatedState+(federatedState!=?),
+nCounty=nCounty+(county!=?),
+nCity=nCity+(city!=?),
+nZip=nZip+(zip!=?),
+nAddress=nAddress+(address!=?),
+nIdNational=nIdNational+(idNational!=?),
+nBirthdate=nBirthdate+(birthdate!=?),
+nMotherTongue=nMotherTongue+(motherTongue!=?),
+nGender=nGender+(gender!=?),
+name=?,
+email=?,
+telephone=?,
+country=?, federatedState=?, county=?, city=?, zip=?, address=?,
+idNational=?,
+birthdate=?,
+motherTongue=?,
+gender=?
+WHERE idUser=?;`);
 
 
-//tImage=IF(boImageOwn!=? OR image!=?OR eTagImage!=?, now(), tImage), \n\
-//tIdFB=IF(idFB!=?, now(), tIdFB), \n\
-//tIdGoogle=IF(idGoogle!=?, now(), tIdGoogle), \n\
-//boImageOwn=?, eTagImage=?, sizeImage=?, \n\
-//idFB=?, \n\
-//idGoogle=?, \n\
+//tImage=IF(boImageOwn!=? OR image!=?OR eTagImage!=?, now(), tImage),
+//tIdFB=IF(idFB!=?, now(), tIdFB),
+//tIdGoogle=IF(idGoogle!=?, now(), tIdGoogle),
+//boImageOwn=?, eTagImage=?, sizeImage=?,
+//idFB=?,
+//idGoogle=?,
 //boImageOwn, eTagImage, idFB, idGoogle, 
 //boImageOwn, eTagImage, sizeImage, idFB, idGoogle, 
-//timeZone=?, \n\
+//timeZone=?,
 //timeZone,
 
-
+  for(var name in inObj){
+    var value=inObj[name];
+    if(name=='email') {
+      var boOK=validator.isEmail(value); if(!boOK) return [new ErrorClient(name+" didn't pass validation test. Searching/contacting support might be an idea.")];
+    } else if(typeof value=='string') inObj[name]=myJSEscape(value);
+    
+  };
 
   var o=inObj;
   Val=Val.concat(o.name, o.email, o.email, o.telephone, o.country, o.federatedState, o.county, o.city, o.zip, o.address, o.idNational, o.birthdate, o.motherTongue, o.gender);
@@ -596,7 +612,7 @@ WHERE idUser=?;");
   Val=Val.concat(idUser);
 
   var sql=Sql.join('\n');
-  var [err, results]=yield* myQueryGen(flow, sql, Val, mysqlPool); if(err) return [err];
+  var [err, results]=yield* this.myMySql.query(flow, sql, Val); if(err) return [err];
   this.mes('Data updated');      
   return [null, [Ou]];
 }
@@ -608,41 +624,52 @@ ReqBE.prototype.createUser=function*(inObj){ // writing needSession
   var userTab=site.TableName.userTab;
   var Ou={}; //debugger
 
-  //var tmp=this.sessionMain.userInfoFrIP, IP=tmp.IP, idIP=tmp.idIP, nameIP=tmp.nameIP, image=tmp.image;
+  //var tmp=this.sessionCache.userInfoFrIP, IP=tmp.IP, idIP=tmp.idIP, nameIP=tmp.nameIP, image=tmp.image;
 
     // Check reCaptcha with google
+  var strCaptchaIn=inObj['g-recaptcha-response'];
   var uGogCheck = "https://www.google.com/recaptcha/api/siteverify"; 
-  var objForm={  secret:strReCaptchaSecretKey, response:inObj['g-recaptcha-response'], remoteip:req.connection.remoteAddress  };
-
+  var objForm={  secret:strReCaptchaSecretKey, response:strCaptchaIn, remoteip:req.connection.remoteAddress  };
+  
   var semY=0, semCB=0, err, response, body;
-  var reqStream=requestMod.post({url:uGogCheck, form: objForm},  function(errT, responseT, bodyT) { err=errT; response=responseT; body=bodyT; if(semY)flow.next(); semCB=1;  }); if(!semCB){semY=1; yield;}
+  var reqStream=requestMod.post({url:uGogCheck, form:objForm}, function(errT, responseT, bodyT) { err=errT; response=responseT; body=bodyT; if(semY)flow.next(); semCB=1;  }); if(!semCB){semY=1; yield;}
   var buf=body;
   try{ var data = JSON.parse(buf.toString()); }catch(e){ return [e]; }
   //console.log('Data: ', data);
   if(!data.success) return [new ErrorClient('reCaptcha test not successfull')];
   
-  if(!/\S+@\S+/.test(inObj.email)) return [new ErrorClient('Invalid email')]; 
+  
+  //if(!/\S+@\S+/.test(inObj.email)) return [new ErrorClient('Invalid email')]; 
+  
+  for(var name in inObj){
+    var value=inObj[name];
+    if(/link/.test(name)) {
+      var boOK=validator.isURL(value, {protocols: ['http','https'], require_tld:boRequireTLD}); if(!boOK) return [new ErrorClient(name+' validation failed.')];
+    } else if(/email/i.test(name)) {
+      var boOK=validator.isEmail(value); if(!boOK) return [new ErrorClient(name+" didn't pass validation test. Searching/contacting support might be an idea.")];
+    } else if(typeof value=='string') inObj[name]=myJSEscape(value);
+  };
   
   var Sql=[]; 
-  Sql.push("INSERT INTO "+userTab+" SET name=?, password=?, email=?, telephone=?, country=?, federatedState=?, county=?, city=?, zip=?, address=?, timeZone=?, idNational=?, birthdate=?, motherTongue=?, gender=?,\n\
-  tCreated=now(), tName=now(), tImage=now(), tEmail=now(), tTelephone=now(), tCountry=now(), tFederatedState=now(), tCounty=now(), tCity=now(), tZip=now(), tAddress=now(), tIdFB=now(), tIdGoogle=now(), tIdNational=now(), tBirthdate=now(), tMotherTongue=now(), tGender=now();");
+  Sql.push(`INSERT INTO `+userTab+` SET name=?, password=?, email=?, telephone=?, country=?, federatedState=?, county=?, city=?, zip=?, address=?, timeZone=?, idNational=?, birthdate=?, motherTongue=?, gender=?,
+  tCreated=now(), tName=now(), tImage=now(), tEmail=now(), tTelephone=now(), tCountry=now(), tFederatedState=now(), tCounty=now(), tCity=now(), tZip=now(), tAddress=now(), tIdFB=now(), tIdGoogle=now(), tIdNational=now(), tBirthdate=now(), tMotherTongue=now(), tGender=now();`);
   var Val=[inObj.name, inObj.password, inObj.email, inObj.telephone, inObj.country, inObj.federatedState, inObj.county, inObj.city, inObj.zip, inObj.address, inObj.timeZone, inObj.idNational, inObj.birthdate, inObj.motherTongue, inObj.gender];
   Sql.push("SELECT LAST_INSERT_ID() AS idUser;");
   //Sql.push("UPDATE "+userTab+" SET imageHash=LAST_INSERT_ID()%32 WHERE idUser=LAST_INSERT_ID();");
 
   var sql=Sql.join('\n');
-  var [err, results]=yield* myQueryGen(flow, sql, Val, mysqlPool); 
+  var [err, results]=yield* this.myMySql.query(flow, sql, Val); 
   
   var boOK, mestmp;
   if(err && (typeof err=='object') && err.code=='ER_DUP_ENTRY'){boOK=0; mestmp='dup email';}
   else if(err) return [err];
   else{
     boOK=1; mestmp="Done"; 
-    var idUser=this.sessionMain.idUser=Number(results[1][0].idUser);
+    var idUser=this.sessionCache.idUser=Number(results[1][0].idUser);
   }
   this.mes(mestmp);
   extend(Ou, {boOK:boOK});
-  yield* setRedis(flow, req.sessionID+'_Main', this.sessionMain, maxUnactivity);
+  yield* setRedis(flow, req.sessionID+'_Cache', this.sessionCache, maxUnactivity);
   
   return [null, [Ou]];
 }
@@ -651,12 +678,14 @@ ReqBE.prototype.createUser=function*(inObj){ // writing needSession
 ReqBE.prototype.setConsent=function*(inObj){
   var req=this.req, flow=req.flow, site=req.site, siteName=site.siteName, {appTab, user2AppTab}=site.TableName;
   var Ou={};
-  if(typeof this.sessionMain!='object' || !('idUser' in this.sessionMain)) { return [new ErrorClient('No session')];}
-  var idUser=this.sessionMain.idUser;
+  //if(typeof this.sessionCache!='object' || !('idUser' in this.sessionCache)) { return [new ErrorClient('No session')];}
+  var idUser=this.sessionCache.idUser; if(!idUser){ return [new ErrorClient('No session')];}
   //var access_token=randomHash();
   //var code=randomHash();
   //var sql="INSERT INTO "+user2AppTab+" (idUser, idApp, scope, tAccess, access_token, maxUnactivityToken, code) VALUES (?,?,?,now(),?,?,?) ON DUPLICATE KEY UPDATE scope=?, access_token=?, maxUnactivityToken=?, code=?;";
   //var Val=[idUser, inObj.idApp, inObj.scope, access_token, inObj.maxUnactivityToken, code,    inObj.scope, access_token, inObj.maxUnactivityToken, code ];
+
+  inObj.scope=myJSEscape(inObj.scope);
 
   var Sql=[], Val=[];
   Sql.push("CALL "+siteName+"setConsent(?,?,?,?);"); Val.push(idUser, inObj.idApp, inObj.scope, inObj.maxUnactivityToken);
@@ -666,7 +695,7 @@ ReqBE.prototype.setConsent=function*(inObj){
   //var Val=[idUser, inObj.idApp, inObj.scope, access_token, maxUnactivityToken];
   
   var sql=Sql.join('\n');
-  var [err, results]=yield* myQueryGen(flow, sql, Val, mysqlPool); 
+  var [err, results]=yield* this.myMySql.query(flow, sql, Val); 
   
   var boOK, mestmp;
   //if(err && (typeof err=='object') && err.code=='ER_DUP_ENTRY'){boOK=0; mestmp='dup key';} 
@@ -686,21 +715,23 @@ ReqBE.prototype.UDelete=function*(inObj){  // writing needSession
   var req=this.req, flow=req.flow, res=this.res, site=req.site;
   var userTab=site.TableName.userTab;
   var Ou={};
-  if(typeof this.sessionMain!='object' || !('idUser' in this.sessionMain)) { return [new ErrorClient('No session')];}
-  var idUser=this.sessionMain.idUser;
+  //if(typeof this.sessionCache!='object' || !('idUser' in this.sessionCache)) { return [new ErrorClient('No session')];}
+  var idUser=this.sessionCache.idUser; if(!idUser){ return [new ErrorClient('No session')];}
   
   var Sql=[], Val=[];
   Sql.push("DELETE FROM "+userTab+" WHERE idUser=?;"); Val.push(idUser);
   Sql.push("SELECT count(*) AS n FROM "+userTab+";");
   var sql=Sql.join('\n'); 
-  var [err, results]=yield* myQueryGen(flow, sql, Val, mysqlPool); if(err) return [err];
+  var [err, results]=yield* this.myMySql.query(flow, sql, Val); if(err) return [err];
 
   var c=results[0].affectedRows, boOK, mestmp; 
   if(c==0) return [new Error("Nothing changed")];
   this.mes("Entry deleted");  
   //site.boNUserChanged=1; // variabel should be called boNUsers changed or something..
   site.nUser=Number(results[1][0].n);
-  this.sessionMain={};  this.GRet.userInfoFrDB={};  var tmp=yield* cmdRedis(flow, 'del',[req.sessionID+'_Main']);
+  this.sessionCache={};  this.GRet.userInfoFrDB={};
+  //yield* delRedis(flow, req.sessionID+'_Cache');
+  yield* setRedis(flow, req.sessionID+'_Cache', this.sessionCache, maxUnactivity);
   return [null, [Ou]];
 }
 
@@ -710,13 +741,13 @@ ReqBE.prototype.UDelete=function*(inObj){  // writing needSession
  ********************************************************************************/
 ReqBE.prototype.userAppListGet=function*(inObj){ 
   var req=this.req, flow=req.flow, site=req.site, {appTab, user2AppTab}=site.TableName;
-  if(typeof this.sessionMain!='object' || !('idUser' in this.sessionMain)) { return [new ErrorClient('No session')];}
-  var idUser=this.sessionMain.idUser;
+  //if(typeof this.sessionCache!='object' || !('idUser' in this.sessionCache)) { return [new ErrorClient('No session')];}
+  var idUser=this.sessionCache.idUser; if(!idUser){ return [new ErrorClient('No session')];}
 
   var sql="SELECT a.idApp AS idApp, a.name AS appName, scope, UNIX_TIMESTAMP(tAccess) AS tAccess, imageHash FROM "+user2AppTab+" ua JOIN  "+appTab+" a ON ua.idApp=a.idApp WHERE idUser=?;";
 
   var Val=[idUser];
-  var [err, results]=yield* myQueryGen(flow, sql, Val, mysqlPool); if(err) return [err];
+  var [err, results]=yield* this.myMySql.query(flow, sql, Val); if(err) return [err];
   
   var Ou=arrObj2TabNStrCol(results); 
   this.mes("Got "+results.length+" entries"); 
@@ -726,11 +757,12 @@ ReqBE.prototype.userAppListGet=function*(inObj){
   //idUser, idApp, scope, tAccess, access_token, maxUnactivityToken
 ReqBE.prototype.userAppSet=function*(inObj){
   var req=this.req, flow=req.flow, site=req.site, {appTab, user2AppTab}=site.TableName;
-  if(typeof this.sessionMain!='object' || !('idUser' in this.sessionMain)) { return [new ErrorClient('No session')];}
-  var idUser=this.sessionMain.idUser;
+  //if(typeof this.sessionCache!='object' || !('idUser' in this.sessionCache)) { return [new ErrorClient('No session')];}
+  var idUser=this.sessionCache.idUser; if(!idUser){ return [new ErrorClient('No session')];}
   var Ou={};
   var access_token=randomHash();
   var code=randomHash();
+  inObj.scope=myJSEscape(inObj.scope);
   var sql="INSERT INTO "+user2AppTab+" (idUser, idApp, scope, tAccess, access_token, maxUnactivityToken, code) VALUES (?,?,?,now(),?,?,?) ON DUPLICATE KEY UPDATE scope=?, access_token=?, maxUnactivityToken=?, code=?;";
   var Val=[idUser, inObj.idApp, inObj.scope, access_token, inObj.maxUnactivityToken, code,    inObj.scope, access_token, inObj.maxUnactivityToken, code ];
   //var sql="UPDATE "+user2AppTab+" SET scope=? WHERE idUser=? AND idApp=?;"; 
@@ -738,7 +770,7 @@ ReqBE.prototype.userAppSet=function*(inObj){
   //var sql="INSERT INTO "+user2AppTab+" (idUser, idApp, scope, tAccess, access_token, maxUnactivityToken) VALUES (?, ?, ?, now(), ?, ?);";
   //var Val=[idUser, inObj.idApp, inObj.scope, access_token, maxUnactivityToken];
   
-  var [err, results]=yield* myQueryGen(flow, sql, Val, mysqlPool);
+  var [err, results]=yield* this.myMySql.query(flow, sql, Val);
   
   var boOK, mestmp;
   //if(err && (typeof err=='object') && err.code=='ER_DUP_ENTRY'){boOK=0; mestmp='dup key';} 
@@ -754,14 +786,14 @@ ReqBE.prototype.userAppSet=function*(inObj){
 }
 ReqBE.prototype.userAppDelete=function*(inObj){ 
   var req=this.req, flow=req.flow, site=req.site, {appTab, user2AppTab}=site.TableName;
-  if(typeof this.sessionMain!='object' || !('idUser' in this.sessionMain)) { return [new ErrorClient('No session')];}
-  var idUser=this.sessionMain.idUser;
+  //if(typeof this.sessionCache!='object' || !('idUser' in this.sessionCache)) { return [new ErrorClient('No session')];}
+  var idUser=this.sessionCache.idUser; if(!idUser){ return [new ErrorClient('No session')];}
   var Ou={};
   
   //var sql="DELETE au FROM "+user2AppTab+" ua JOIN  "+appTab+" a ON ua.idApp=a.idApp WHERE au.idUser=?;";
   var sql="DELETE FROM "+user2AppTab+" WHERE idUser=? AND idApp=?;";
   var Val=[idUser, inObj.idApp];
-  var [err, results]=yield* myQueryGen(flow, sql, Val, mysqlPool); if(err) return [err];
+  var [err, results]=yield* this.myMySql.query(flow, sql, Val); if(err) return [err];
   
   var c=results.affectedRows, boOK, mestmp; 
   if(c>0) {boOK=1; mestmp="Entry deleted"; } else {boOK=1; mestmp="Nothing changed"; }
@@ -776,13 +808,13 @@ ReqBE.prototype.userAppDelete=function*(inObj){
 ReqBE.prototype.devAppListGet=function*(inObj){ 
   var req=this.req, flow=req.flow, site=req.site;
   var appTab=site.TableName.appTab;
-  if(typeof this.sessionMain!='object' || !('idUser' in this.sessionMain)) { return [new ErrorClient('No session')];}
-  var idUser=this.sessionMain.idUser;
+  //if(typeof this.sessionCache!='object' || !('idUser' in this.sessionCache)) { return [new ErrorClient('No session')];}
+  var idUser=this.sessionCache.idUser; if(!idUser){ return [new ErrorClient('No session')];}
 
   var GRet=this.GRet;
   var sql="SELECT idApp, name AS appName, redir_uri, imageHash, UNIX_TIMESTAMP(created) AS created FROM "+appTab+" WHERE idOwner=?;";
   var Val=[idUser];
-  var [err, results]=yield* myQueryGen(flow, sql, Val, mysqlPool); if(err) return [err];
+  var [err, results]=yield* this.myMySql.query(flow, sql, Val); if(err) return [err];
   
   var Ou=arrObj2TabNStrCol(results);
   this.mes("Got "+results.length+" entries"); 
@@ -791,14 +823,14 @@ ReqBE.prototype.devAppListGet=function*(inObj){
 }
 ReqBE.prototype.devAppSecret=function*(inObj){ 
   var req=this.req, flow=req.flow, site=req.site, {userTab, appTab}=site.TableName;
-  if(typeof this.sessionMain!='object' || !('idUser' in this.sessionMain)) { return [new ErrorClient('No session')];}
-  var idUser=this.sessionMain.idUser;
+  //if(typeof this.sessionCache!='object' || !('idUser' in this.sessionCache)) { return [new ErrorClient('No session')];}
+  var idUser=this.sessionCache.idUser; if(!idUser){ return [new ErrorClient('No session')];}
 
   var Ou={};
   //var sql="SELECT secret FROM "+appTab+" WHERE idOwner=? AND idApp=?;";
   var sql="SELECT password, secret FROM "+userTab+" u JOIN "+appTab+" a ON u.idUser=a.idOwner WHERE u.idUser=? AND a.idApp=?;";
   var Val=[idUser, inObj.idApp];
-  var [err, results]=yield* myQueryGen(flow, sql, Val, mysqlPool); if(err) return [err];
+  var [err, results]=yield* this.myMySql.query(flow, sql, Val); if(err) return [err];
   if(results.length!=1){ debugger;  return [new Error('results.length='+results.length)];}
   if(results[0].password!=inObj.password) return [new ErrorClient('password missmatch')];
   Ou.secret=results[0].secret;
@@ -807,8 +839,16 @@ ReqBE.prototype.devAppSecret=function*(inObj){
 ReqBE.prototype.devAppSet=function*(inObj){
   var req=this.req, flow=req.flow, site=req.site;
   var appTab=site.TableName.appTab;
-  if(typeof this.sessionMain!='object' || !('idUser' in this.sessionMain)) { return [new ErrorClient('No session')];}
-  var idUser=this.sessionMain.idUser;
+  //if(typeof this.sessionCache!='object' || !('idUser' in this.sessionCache)) { return [new ErrorClient('No session')];}
+  var idUser=this.sessionCache.idUser; if(!idUser){ return [new ErrorClient('No session')];}
+  
+  
+
+  var boOK=validator.isURL(inObj.redir_uri, {protocols: ['http','https'], require_tld:boRequireTLD});
+  if(!boOK) return [new ErrorClient('redir_uri validation failed.')];
+  inObj.appName=myJSEscape(inObj.appName);
+  
+  
   var GRet=this.GRet;
   var Ou={};
   var Sql=[], Val=[];
@@ -828,7 +868,7 @@ ReqBE.prototype.devAppSet=function*(inObj){
   }
   
   var sql=Sql.join('\n');
-  var [err, results]=yield* myQueryGen(flow, sql, Val, mysqlPool);
+  var [err, results]=yield* this.myMySql.query(flow, sql, Val);
   
   
   var mestmp, idApp=inObj.idApp, imageHash;
@@ -849,13 +889,13 @@ ReqBE.prototype.devAppSet=function*(inObj){
 ReqBE.prototype.devAppDelete=function*(inObj){ 
   var req=this.req, flow=req.flow, site=req.site;
   var appTab=site.TableName.appTab;
-  if(typeof this.sessionMain!='object' || !('idUser' in this.sessionMain)) { return [new ErrorClient('No session')];}
-  var idUser=this.sessionMain.idUser;
+  //if(typeof this.sessionCache!='object' || !('idUser' in this.sessionCache)) { return [new ErrorClient('No session')];}
+  var idUser=this.sessionCache.idUser; if(!idUser){ return [new ErrorClient('No session')];}
   var GRet=this.GRet;
   var Ou={};
   var sql="DELETE FROM "+appTab+" WHERE idOwner=? AND idApp=?";
   var Val=[idUser, inObj.idApp];
-  var [err, results]=yield* myQueryGen(flow, sql, Val, mysqlPool); if(err) return [err];
+  var [err, results]=yield* this.myMySql.query(flow, sql, Val); if(err) return [err];
   
   var c=results.affectedRows, boOK, mestmp; 
   if(c>0) {boOK=1; mestmp="Entry deleted"; } else {boOK=1; mestmp="Nothing changed"; }
@@ -870,8 +910,8 @@ ReqBE.prototype.changePW=function*(inObj){
   var req=this.req, flow=req.flow, site=req.site, siteName=site.siteName;
   var userTab=site.TableName.userTab;
   var Ou={boOK:0};
-  if(typeof this.sessionMain!='object' || !('idUser' in this.sessionMain)) { return [new ErrorClient('No session')];}
-  var idUser=this.sessionMain.idUser
+  //if(typeof this.sessionCache!='object' || !('idUser' in this.sessionCache)) { return [new ErrorClient('No session')];}
+  var idUser=this.sessionCache.idUser; if(!idUser){ return [new ErrorClient('No session')];}
   var passwordOld=inObj.passwordOld;
   var passwordNew=inObj.passwordNew;
 
@@ -881,7 +921,7 @@ ReqBE.prototype.changePW=function*(inObj){
   Sql.push("CALL "+siteName+"setPassword(?,?,?);"); Val.push(idUser, passwordOld, passwordNew);
 
   var sql=Sql.join('\n');
-  var [err, results]=yield* myQueryGen(flow, sql, Val, mysqlPool); if(err) return [err];
+  var [err, results]=yield* this.myMySql.query(flow, sql, Val); if(err) return [err];
 
   var mess=results[0][0].mess;
   if(mess=='Password changed') Ou.boOK=1;
@@ -893,14 +933,13 @@ ReqBE.prototype.changePW=function*(inObj){
 ReqBE.prototype.verifyEmail=function*(inObj){ 
   var req=this.req, flow=req.flow, site=req.site;
   var userTab=site.TableName.userTab;
-  if(typeof this.sessionMain!='object' || !('idUser' in this.sessionMain)) { return [new ErrorClient('No session')];}
-  var idUser=this.sessionMain.idUser;
+  //if(typeof this.sessionCache!='object' || !('idUser' in this.sessionCache)) { return [new ErrorClient('No session')];}
+  var idUser=this.sessionCache.idUser; if(!idUser){ return [new ErrorClient('No session')];}
 
   var expirationTime=600;
 
   var code=randomHash()+randomHash();
-  var redisVar=code+'_verifyEmail';
-  var tmp=yield* setRedis(flow, redisVar, idUser, expirationTime);
+  var tmp=yield* setRedis(flow, code+'_verifyEmail', idUser, expirationTime);
   var Ou={};
 
   var Sql=[], Val=[];
@@ -908,17 +947,17 @@ ReqBE.prototype.verifyEmail=function*(inObj){
   Val.push(idUser);
 
   var sql=Sql.join('\n');
-  var [err, results]=yield* myQueryGen(flow, sql, Val, mysqlPool); if(err) return [err];
+  var [err, results]=yield* this.myMySql.query(flow, sql, Val); if(err) return [err];
 
   if(results.length==0) { this.mes('No such idUser in the database'); return [null, [Ou]];}
   var email=results[0].email;
   var wwwSite=req.wwwSite;
   var uVerification=req.strSchemeLong+wwwSite+'/'+leafVerifyEmailReturn+'?code='+code;
-  var strTxt='<h3>Email verification on '+wwwSite+'</h3> \n\
-<p>Someone (maybe you) uses '+wwwSite+' and claims that '+email+' is their email address. Is this you? If so use the link below to verify that you are the owner of this email address.</p> \n\
-<p>Otherwise neglect this message.</p> \n\
-<p><a href='+uVerification+'>'+uVerification+'</a></p>  \n\
-<p>Note! The links stops working '+expirationTime/60+' minutes after the email was sent.</p>';
+  var strTxt=`<h3>Email verification on `+wwwSite+`</h3>
+<p>Someone (maybe you) uses `+wwwSite+` and claims that `+email+` is their email address. Is this you? If so use the link below to verify that you are the owner of this email address.</p>
+<p>Otherwise neglect this message.</p>
+<p><a href=`+uVerification+`>`+uVerification+`</a></p>
+<p>Note! The links stops working `+expirationTime/60+` minutes after the email was sent.</p>`;
   
   const msg = { to: email, from: 'noreply@idplace.org', subject: 'Email verification', html: strTxt }; sgMail.send(msg);
   this.mes('Email sent');
@@ -940,24 +979,23 @@ ReqBE.prototype.verifyPWReset=function*(inObj){
   Val.push(email);
 
   var sql=Sql.join('\n');
-  var [err, results]=yield* myQueryGen(flow, sql, Val, mysqlPool); if(err) return [err];
+  var [err, results]=yield* this.myMySql.query(flow, sql, Val); if(err) return [err];
 
   if(results.length==0) { this.mes('No such email in the database'); return [null, [Ou]];}
 
   var expirationTime=600;
 
   var code=randomHash()+randomHash();
-  var redisVar=code+'_verifyPWReset';
-  var tmp=yield* setRedis(flow, redisVar, email, expirationTime);
+  var tmp=yield* setRedis(flow, code+'_verifyPWReset', email, expirationTime);
 
   var wwwSite=req.wwwSite;
   var uVerification=req.strSchemeLong+wwwSite+'/'+leafVerifyPWResetReturn+'?code='+code;
-  var strTxt='<h3>Password reset request on '+wwwSite+'</h3> \n\
-<p>Someone (maybe you) tries to reset their '+wwwSite+' password and entered '+email+' as their email.</p> \n\
-<p>Is this you, then use the link below to have a new password generated and sent to you.</p> \n\
-<p>Otherwise neglect this message.</p> \n\
-<p><a href='+uVerification+'>'+uVerification+'</a></p>  \n\
-<p>Note! The links stops working '+expirationTime/60+' minutes after the email was sent.</p>';
+  var strTxt=`<h3>Password reset request on `+wwwSite+`</h3>
+<p>Someone (maybe you) tries to reset their `+wwwSite+` password and entered `+email+` as their email.</p>
+<p>Is this you, then use the link below to have a new password generated and sent to you.</p>
+<p>Otherwise neglect this message.</p>
+<p><a href=`+uVerification+`>`+uVerification+`</a></p>
+<p>Note! The links stops working `+expirationTime/60+` minutes after the email was sent.</p>`;
   
   const msg = { to: email, from: 'noreply@idplace.org', subject: 'Password reset request', html: strTxt };  sgMail.send(msg);
   this.mes('Email sent'); Ou.boOK=1;
@@ -968,8 +1006,8 @@ ReqBE.prototype.verifyPWReset=function*(inObj){
 ReqBE.prototype.deleteImage=function*(inObj){
   var req=this.req, flow=req.flow, res=this.res, site=req.site, siteName=site.siteName;
   var Ou={};   
-  if(typeof this.sessionMain!='object' || !('idUser' in this.sessionMain)) { return [new ErrorClient('No session')];}
-  var idUser=this.sessionMain.idUser;
+  //if(typeof this.sessionCache!='object' || !('idUser' in this.sessionCache)) { return [new ErrorClient('No session')];}
+  var idUser=this.sessionCache.idUser; if(!idUser){ return [new ErrorClient('No session')];}
 
   var Sql=[], Val=[];
   if(inObj.kind=='u'){
@@ -980,7 +1018,7 @@ ReqBE.prototype.deleteImage=function*(inObj){
 
 
   var sql=Sql.join('\n');
-  var [err, results]=yield* myQueryGen(flow, sql, Val, mysqlPool); if(err) return [err];
+  var [err, results]=yield* this.myMySql.query(flow, sql, Val); if(err) return [err];
 
   if(inObj.kind=='u'){ 
     Ou.strMessage="Done";
@@ -1001,8 +1039,8 @@ ReqBE.prototype.deleteImage=function*(inObj){
 ReqBE.prototype.uploadImage=function*(inObj){
   var self=this, req=this.req, flow=req.flow, res=this.res, site=req.site, siteName=site.siteName,  {userTab, appTab}=site.TableName;
   var Ou={};
-  if(typeof this.sessionMain!='object' || !('idUser' in this.sessionMain)) { return [new ErrorClient('No session')];}
-  var idUser=this.sessionMain.idUser;
+  //if(typeof this.sessionCache!='object' || !('idUser' in this.sessionCache)) { return [new ErrorClient('No session')];}
+  var idUser=this.sessionCache.idUser; if(!idUser){ return [new ErrorClient('No session')];}
   var regImg=RegExp("^(png|jpeg|jpg|gif|svg)$");
 
   var File=this.File;
@@ -1045,7 +1083,7 @@ ReqBE.prototype.uploadImage=function*(inObj){
   }
 
   var sql=Sql.join('\n');
-  var [err, results]=yield* myQueryGen(flow, sql, Val, mysqlPool); if(err) return [err];
+  var [err, results]=yield* this.myMySql.query(flow, sql, Val); if(err) return [err];
 
   if(this.kind=='u'){ 
     Ou.strMessage="Done";

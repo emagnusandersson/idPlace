@@ -10,7 +10,7 @@ http.ServerResponse.prototype.setCodeNEnd=function(iCode,str){  str=str||''; thi
 
 app=(typeof window==='undefined')?global:window;
 
-port=5000;
+port=8000;
 
 
 require('./libReqBE.js');
@@ -26,16 +26,23 @@ leafLoginBack="loginBack.html";
  * Instructions:
  * On the IdP-site you will get the app-id + app-secret which you fill in below.
  * Usually the uRedir (found below) should also be filled in on the IdP site.
+ * 
+ * IdP-app: the app that runs the IdP.
  ********************************************************************/
 
-  // Fill in your data !!!!
-AppCred={
+
+AppCred={   // <-- Fill in the credentials of whatever IdP you want to test !!!!
   fb:{id:"your-fb-app-id", secret:"your-fb-app-secret"},
   google:{id: "your-google-app-id", secret:"your-google-app-secret"},
-  idplace:{id: "your-idplace-app-id", secret:"your-idplace-app-secret"}
+  idplace:{id: "your-idplace-app-id", secret:"your-idplace-app-secret"},
+  idL:{id:1, secret:''},  // <-- The following lines could/should be commented out (or removed)  (only for the developer of idplace)
+  id192:{id:1, secret:'8lpvhbiqh5cemu4r8i7jza'},  // <-- The following lines could/should be commented out (or removed)  (only for the developer of idplace) (if this app is running on 192.168.0.4:5000)
+  id192:{id:11000, secret:'xcce3335tjft3vp3q9b7e'}  // <-- The following lines could/should be commented out (or removed)  (only for the developer of idplace) (if this app is running on localhost:5000)
 }
 
+
 var wwwApp='localhost:'+port;
+//var wwwApp='192.168.0.4:'+port;
 var wwwRedir=wwwApp+"/"+leafLoginBack;
 uRedir='http://'+wwwRedir;  // <-- This url should be quite often be entered on the IdP site
 
@@ -47,10 +54,11 @@ uRedir='http://'+wwwRedir;  // <-- This url should be quite often be entered on 
 AppId={};   for(var k in AppCred){   AppId[k]=AppCred[k].id;    } // Create a variable without secrets that can be sent to the client
 
 
-UrlOAuth={fb:"https://www.facebook.com/v3.0/dialog/oauth", google: "https://accounts.google.com/o/oauth2/v2/auth", idplace:'https://idplace.org', idL:'http://localhost:5000', id192:'http://192.168.0.5:5000'};
-UrlGraph={fb:"https://graph.facebook.com/v3.0/me", google: "https://www.googleapis.com/plus/v1/people/me", idplace:'https://idplace.org/me', idL:'http://localhost:5000/me', id192:'http://192.168.0.5:5000/me'};
+strFBVersion="v4.0"
+UrlOAuth={fb:"https://www.facebook.com/"+strFBVersion+"/dialog/oauth", google: "https://accounts.google.com/o/oauth2/v2/auth", idplace:'https://idplace.org', idL:'http://localhost:5000', id192:'http://192.168.0.4:5000'};
+UrlGraph={fb:"https://graph.facebook.com/"+strFBVersion+"/me", google: "https://www.googleapis.com/plus/v1/people/me", idplace:'https://idplace.org/me', idL:'http://localhost:5000/me', id192:'http://192.168.0.4:5000/me'};
 
-UrlCode2Token={fb:"https://graph.facebook.com/v3.0/oauth/access_token", google: "https://accounts.google.com/o/oauth2/token", idplace:'https://idplace.org/access_token', idL:'http://localhost:5000/access_token', id192:'http://192.168.0.5:5000/access_token'};
+UrlCode2Token={fb:"https://graph.facebook.com/"+strFBVersion+"/oauth/access_token", google: "https://accounts.google.com/o/oauth2/token", idplace:'https://idplace.org/access_token', idL:'http://localhost:5000/access_token', id192:'http://192.168.0.4:5000/access_token'};
 
 
 var handler=function(req, res){
