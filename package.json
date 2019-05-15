@@ -10,18 +10,21 @@
   "author": "Magnus Andersson",
   "license": "BSD-2-Clause",
   "dependencies": {
-    "@sendgrid/mail": "^6.3.1",
+    "@sendgrid/mail": "^6.4.0",
     "concat-stream": "^2.0.0",
     "formidable": "1.2.1",
     "gm": "^1.23.1",
-    "image-size": "^0.7.1",
+    "image-size": "^0.8.3",
     "ip": "^1.1.5",
     "minimist": "^1.2.0",
-    "mysql": "^2.16.0",
+    "mysql": "^2.17.1",
     "node-zip": "^1.1.1",
     "redis": "2.8.x",
     "request": "^2.88.0",
-    "uglify-js": "^3.4.9"
+    "serialize-javascript": "^2.1.1",
+    "streamify-string": "^1.0.1",
+    "uglify-js": "^3.7.1",
+    "validator": "^12.1.0"
   },
   "devDependencies": {},
   "private": true,
@@ -30,7 +33,7 @@
     "url": "http://github.com/"
   },
   "engines": {
-    "node": "11.x",
+    "node": "12.x",
     "npm": ""
   }
 }

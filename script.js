@@ -32,8 +32,12 @@ redis = require("redis");
 //sendgrid  = require('sendgrid');
 sgMail = require('@sendgrid/mail');
 ip = require('ip');
+Streamify= require('streamify-string');
+validator = require('validator');
+serialize = require('serialize-javascript');
 var argv = require('minimist')(process.argv.slice(2));
 //UglifyJS = require("uglify-js");
+app=(typeof window==='undefined')?global:window;
 require('./lib.js');
 require('./libServerGeneral.js');
 require('./libServer.js');
@@ -41,7 +45,6 @@ require('./lib/foundOnTheInternet/sha1.js');
 
 
 strAppName='idPlace';
-app=(typeof window==='undefined')?global:window;
 extend=util._extend;
 
 
@@ -80,19 +83,21 @@ if(  (urlRedis=process.env.REDISTOGO_URL)  || (urlRedis=process.env.REDISCLOUD_U
 
 
 
+var StrCookiePropProt=["HttpOnly", "Path=/","max-age="+3600*24*30];
+//if(boDO) { StrCookiePropProt.push("secure"); }
+var StrCookiePropStrict=StrCookiePropProt.concat("SameSite=Strict"),   StrCookiePropLax=StrCookiePropProt.concat("SameSite=Lax"),   StrCookiePropNormal=StrCookiePropProt.concat();
+strCookiePropStrict=";"+StrCookiePropStrict.join(';');  strCookiePropLax=";"+StrCookiePropLax.join(';');  strCookiePropNormal=";"+StrCookiePropNormal.join(';');
 
-//Fiber( function(){
-  //var fiber=Fiber.current;
 
 var flow=( function*(){
 
-
     // Default config variables
   boDbg=0; boAllowSql=1; port=5000; levelMaintenance=0; googleSiteVerification='googleXXX.html';
+  boRequireTLD=0;
   intDDOSMax=100; tDDOSBan=5; 
   strSalt='wqriinnabcradfcpose';
-  maxUnactivity=3600*24;
-  maxUnactivityToken=120*60;
+  maxUnactivity=3600*24;  // _Cache, _CSRFCodeIndex
+  //maxUnactivityToken=120*60;
   leafLoginBack="loginBack.html";
   
   port=argv.p||argv.port||5000;
@@ -128,14 +133,18 @@ var flow=( function*(){
   require('./libReqBE.js');
   require('./libReq.js'); 
 
-  setUpMysqlPool();
+  mysqlPool=setUpMysqlPool();
   SiteExtend();
-
+  
     // Do db-query if --sql XXXX was set in the argument
   if(typeof argv.sql!='undefined'){
     if(typeof argv.sql!='string') {console.log('sql argument is not a string'); process.exit(-1); return; }
     var tTmp=new Date().getTime();
-    var objSetupSql=new SetupSql(); yield *objSetupSql.doQuery(flow, argv.sql);
+    var setupSql=new SetupSql();
+    setupSql.myMySql=new MyMySql(mysqlPool);
+    var [err]=yield* setupSql.doQuery(flow, argv.sql);
+    setupSql.myMySql.fin();
+    if(err) {  console.error(err);  return;}
     console.log('Time elapsed: '+(new Date().getTime()-tTmp)/1000+' s'); 
     process.exit(0);
   }
@@ -168,32 +177,19 @@ var flow=( function*(){
         var tmpUrl=isRedirAppropriate(req); if(tmpUrl) { res.out301(tmpUrl); return; }
       }
     
-      var cookies = parseCookies(req);
-      var sessionID;  if('sessionID' in cookies) sessionID=cookies.sessionID; else { sessionID=randomHash();   res.setHeader("Set-Cookie", "sessionID="+sessionID+"; SameSite=Lax"); }  //+ " HttpOnly" 
-
-
-
-      var ipClient=getIP(req);
-      var redisVarSession=sessionID+'_Main';
-      var redisVarCounter=sessionID+'_Counter', redisVarCounterIP=ipClient+'_Counter'; 
-
-
-        // get intCount
-      var semY=0, semCB=0, err, intCount;
-      var tmp=redisClient.send_command('eval',[luaCountFunc, 3, redisVarSession, redisVarCounter, redisVarCounterIP, tDDOSBan], function(errT,intCountT){
-        err=errT; intCount=intCountT; if(semY) { req.flow.next(); } semCB=1;
-      });
-      if(!semCB) { semY=1; yield;}
-      if(err) {console.log(err); return;}
-      if(intCount>intDDOSMax) {res.outCode(429,"Too Many Requests ("+intCount+"), wait "+tDDOSBan+"s\n"); return; }
-  
+      
+      //res.setHeader("X-Frame-Options", "deny");  // Deny for all (note: this header is removed for images (see reqMediaImage) (should also be removed for videos))
+      res.setHeader("Content-Security-Policy", "frame-ancestors 'none'");  // Deny for all (note: this header is removed in certain requests
+      res.setHeader("X-Content-Type-Options", "nosniff");  // Don't try to guess the mime-type (I prefer the rendering of the page to fail if the mime-type is wrong)
+      //if(boDO) res.setHeader("Strict-Transport-Security", "max-age="+3600*24*365); // All future requests must be with https (forget this after a year)
+      res.setHeader("Referrer-Policy", "origin");  //  Don't write the refer unless the request comes from the origin
       
       var domainName=req.headers.host; 
       var objUrl=url.parse(req.url), qs=objUrl.query||'', objQS=querystring.parse(qs),  pathNameOrg=objUrl.pathname;
       var wwwReq=domainName+pathNameOrg;
-      var tmp=Site.getSite(wwwReq);  
-      if(!tmp){ res.out404("404 Nothing at that url\n"); return; }
-      var siteName=tmp.siteName, wwwSite=tmp.wwwSite, pathName=wwwReq.substr(wwwSite.length); if(pathName.length==0) pathName='/';
+      var {siteName,wwwSite}=Site.getSite(wwwReq);  
+      if(!siteName){ res.out404("404 Nothing at that url\n"); return; }
+      var pathName=wwwReq.substr(wwwSite.length); if(pathName.length==0) pathName='/';
       var site=Site[siteName];
 
 
@@ -202,7 +198,54 @@ var flow=( function*(){
         else { res.writeHead(400);  res.end('You must use https'); return;}
       }
 
+
+      var cookies = parseCookies(req);
+      req.cookies=cookies;
+
+      req.boCookieNormalOK=req.boCookieLaxOK=req.boCookieStrictOK=false;
+      
+        // Check if a valid sessionID-cookie came in
+      var boSessionCookieInInput='sessionIDNormal' in cookies, sessionID=null, redisVarSessionCache;
+      if(boSessionCookieInInput) {
+        sessionID=cookies.sessionIDNormal;  redisVarSessionCache=sessionID+'_Cache';
+        var [err, tmp]=yield* cmdRedis(req.flow, 'EXISTS', redisVarSessionCache); req.boCookieNormalOK=tmp;
+      } 
+      
+      if(req.boCookieNormalOK){
+          // Check if Lax / Strict -cookies are OK
+        req.boCookieLaxOK=('sessionIDLax' in cookies) && cookies.sessionIDLax===sessionID;
+        req.boCookieStrictOK=('sessionIDStrict' in cookies) && cookies.sessionIDStrict===sessionID;
+        var redisVarDDOSCounter=sessionID+'_Counter';
+      }else{
+        sessionID=randomHash();  redisVarSessionCache=sessionID+'_Cache';
+        var ipClient=getIP(req), redisVarDDOSCounter=ipClient+'_Counter';
+      }
+      
+        // Increase DDOS counter 
+      var luaCountFunc=`local c=redis.call('INCR',KEYS[1]); redis.call('EXPIRE',KEYS[1], ARGV[1]); return c`;
+      var [err, intCount]=yield* cmdRedis(req.flow, 'EVAL',[luaCountFunc, 1, redisVarDDOSCounter, tDDOSBan]);
+      
+      
+      res.setHeader("Set-Cookie", ["sessionIDNormal="+sessionID+strCookiePropNormal, "sessionIDLax="+sessionID+strCookiePropLax, "sessionIDStrict="+sessionID+strCookiePropStrict]);
+       
+        // Check if to many requests comes in a short time (DDOS)
+      if(intCount>intDDOSMax) {res.outCode(429,"Too Many Requests ("+intCount+"), wait "+tDDOSBan+"s\n"); return; }
+      
+      
+        // Refresh / create  redisVarSessionCache
+      if(req.boCookieNormalOK){
+        var luaCountFunc=`local c=redis.call('GET',KEYS[1]); redis.call('EXPIRE',KEYS[1], ARGV[1]); return c`;
+        var [err, value]=yield* cmdRedis(req.flow, 'EVAL',[luaCountFunc, 1, redisVarSessionCache, maxUnactivity]); req.sessionCache=JSON.parse(value)
+      } else { 
+        yield* setRedis(req.flow, redisVarSessionCache, {}, maxUnactivity); 
+        req.sessionCache={};
+      }
+      
  
+        // Set mimetype if the extention is recognized
+      var regexpExt=RegExp('\.([a-zA-Z0-9]+)$');
+      var Match=pathName.match(regexpExt), strExt; if(Match) strExt=Match[1];
+      if(strExt in MimeType) res.setHeader('Content-type', MimeType[strExt]);
       var strScheme='http'+(site.boTLS?'s':''),  strSchemeLong=strScheme+'://';
 
 
@@ -214,32 +257,30 @@ var flow=( function*(){
       req.rootDomain=RootDomain[site.strRootDomain];
 
       var objReqRes={req:req, res:res};
-      if(pathName.substr(0,5)=='/sql/'){
-        if(!boDbg && !boAllowSql){ res.out200('Set boAllowSql=1 (or boDbg=1) in the config.js-file');  return }
-        var reqSql=new ReqSql(req, res),  objSetupSql=new SetupSql();
-        req.pathNameWOPrefix=pathName.substr(5);
-        if(req.pathNameWOPrefix=='zip'){       reqSql.createZip(objSetupSql);     }
-        else {  reqSql.toBrowser(objSetupSql); }             
+      objReqRes.myMySql=new MyMySql(mysqlPool);
+      if(levelMaintenance){res.outCode(503, "Down for maintenance, try again in a little while."); return;}
+      if(pathName=='/'+leafBE){  var reqBE=new ReqBE(objReqRes);  yield* reqBE.go();    }
+      else if(pathName=='/' ){  yield* reqIndex.call(objReqRes);    }
+      else if(pathName.indexOf('/image/')==0){  yield* reqImage.call(objReqRes);   } //RegExp('^/image/').test(pathName)
+      //else if(pathName=='/captcha.png'){  yield* reqCaptcha.call(objReqRes);   }
+      else if(regexpLib.test(pathName) || regexpLooseJS.test(pathName)  || pathName=='/conversion.html'){
+        if(pathName=='/conversion.html') res.removeHeader("Content-Security-Policy");
+        yield* reqStatic.call(objReqRes);
       }
-      else {
-        if(levelMaintenance){res.outCode(503, "Down for maintenance, try again in a little while."); return;}
-        if(pathName=='/'+leafBE){  var reqBE=new ReqBE(req, res);  yield* reqBE.go();    }
-        else if(pathName=='/' ){  yield* reqIndex.call(objReqRes);    }
-        else if(pathName.indexOf('/image/')==0){  yield* reqImage.call(objReqRes);   } //RegExp('^/image/').test(pathName)
-        //else if(pathName=='/captcha.png'){  yield* reqCaptcha.call(objReqRes);   }
-        else if(regexpLib.test(pathName) || regexpLooseJS.test(pathName)  || pathName=='/conversion.html'){   yield* reqStatic.call(objReqRes);   }
-        else if(pathName=='/'+leafLoginBack){    yield* reqLoginBack.call(objReqRes);   }
-        else if(pathName=='/access_token' ){  yield* reqToken.call(objReqRes);   }
-        else if(pathName=='/me' ){  yield* reqMe.call(objReqRes);   }
-        else if(pathName=='/'+leafVerifyEmailReturn ){  yield* reqVerifyEmailReturn.call(objReqRes);   }
-        else if(pathName=='/'+leafVerifyPWResetReturn ){  yield* reqVerifyPWResetReturn.call(objReqRes);   }
-        else if(pathName=='/monitor.html'){  yield* reqMonitor.call(objReqRes);   }
-        else if(pathName=='/stat.html'){  yield* reqStat.call(objReqRes);   }
-        else if(pathName=='/createDumpCommand'){  var str=createDumpCommand(); res.out200(str);     }
-        else if(pathName=='/debug'){    debugger;  res.end();}
-        else if(pathName=='/'+googleSiteVerification) res.end('google-site-verification: '+googleSiteVerification);
-        else {res.out404("404 Not Found\n"); return; }
-      }
+      else if(pathName=='/'+leafLoginBack){    yield* reqLoginBack.call(objReqRes);   }
+      else if(pathName=='/access_token' ){  yield* reqToken.call(objReqRes);   }
+      else if(pathName=='/me' ){  yield* reqMe.call(objReqRes);   }
+      else if(pathName=='/'+leafVerifyEmailReturn ){  yield* reqVerifyEmailReturn.call(objReqRes);   }
+      else if(pathName=='/'+leafVerifyPWResetReturn ){  yield* reqVerifyPWResetReturn.call(objReqRes);   }
+      else if(pathName=='/monitor.html'){  yield* reqMonitor.call(objReqRes);   }
+      else if(pathName=='/stat.html'){  yield* reqStat.call(objReqRes);   }
+      else if(pathName=='/createDumpCommand'){  var str=createDumpCommand(); res.out200(str);     }
+      else if(pathName=='/debug'){    debugger;  res.end();}
+      else if(pathName=='/'+googleSiteVerification) res.end('google-site-verification: '+googleSiteVerification);
+      else {res.out404("404 Not Found\n"); return; }
+      objReqRes.myMySql.fin();
+      
+      
     })(); req.flow.next();
     //}).run();
   }

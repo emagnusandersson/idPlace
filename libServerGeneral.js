@@ -1,5 +1,6 @@
-parseCookies=function(req) {
+
 "use strict"
+app.parseCookies=function(req) {
   var list={}, rc=req.headers.cookie;
   if(typeof rc=='string'){
     rc.split(';').forEach(function( cookie ) {
@@ -11,52 +12,48 @@ parseCookies=function(req) {
 }
 
 
+//
+// Mysql
+//
 
-myQueryGen=function*(flow, sql, Val, pool){ 
-  var err, connection, results, fields;
-  for(var i=0;i<nDBRetry;i++){
-    pool.getConnection(function(errT, connectionT) { err=errT; connection=connectionT; flow.next(); }); yield;
-    if(err) {
-      console.error('Error when getting mysql connection, attemptCounter: '+i);
-      if(typeof err=='object' && 'code' in err) {
-        console.error('err.code: '+err.code);
-        if(err.code=='PROTOCOL_CONNECTION_LOST' || err.code=='ECONNREFUSED' || err.code=='ECONNRESET'){
-          setTimeout(function(){ flow.next();}, 2000); yield;  continue;
-        } else { console.error('Can\'t handle: err.code: '+err.code); return [err]; }
-      }
-      else { console.error('No \'code\' in err'); return [err]; }
-    }
-  
-    connection.query(sql, Val, function(errT, resultsT, fieldsT) { err=errT; results=resultsT; fields=fieldsT; flow.next();}); yield;
-    connection.release();
-    if(err) {
-      console.error('Error when making mysql query, attemptCounter: '+i);
-      if(typeof err=='object' && 'code' in err) {
-        console.error('err.code: '+err.code); debugger
-        if(err.code=='PROTOCOL_CONNECTION_LOST' || err.code=='ECONNREFUSED'){
-          setTimeout(function(){ flow.next();}, 2000); yield;   continue;
-        } else { console.error('Can\'t handle: err.code: '+err.code); break; }
-      }
-      else { console.error('No \'code\' in err'); break; }
-    }
-    else {break;}
-  }
-  return [err, results, fields];
-  
+app.MyMySql=function(pool){ this.pool=pool; this.connection=null;  }
+MyMySql.prototype.getConnection=function*(flow){
+  var err, connection;      this.pool.getConnection(function(errT, connectionT) { err=errT; connection=connectionT; flow.next(); }); yield;   this.connection=connection; return [err];
 }
+MyMySql.prototype.startTransaction=function*(flow){
+  if(!this.connection) {var [err]=yield* this.getConnection(flow); if(err) return [err];}
+  var err;     this.connection.beginTransaction(function(errT) { err=errT; flow.next(); }); yield;   if(err) return [err];
+  this.transactionState='started';
+  return [null];
+}
+MyMySql.prototype.query=function*(flow, sql, Val){
+  if(!this.connection) {var [err]=yield* this.getConnection(flow); if(err) return [err];}
+  var err, results, fields;    this.connection.query(sql, Val, function (errT, resultsT, fieldsT) { err=errT; results=resultsT; fields=fieldsT; flow.next(); }); yield;   return [err, results, fields];
+}
+MyMySql.prototype.rollback=function*(flow){  this.connection.rollback(function() { flow.next(); }); yield;   }
+MyMySql.prototype.commit=function*(flow){
+  var err; this.connection.commit(function(errT){ err=errT; flow.next(); }); yield;   return [err];
+}
+MyMySql.prototype.rollbackNRelease=function*(flow){  this.connection.rollback(function() { flow.next(); }); yield;  this.connection.release(); }
+MyMySql.prototype.commitNRelease=function*(flow){
+  var err; this.connection.commit(function(errT){ err=errT; flow.next(); }); yield;  this.connection.release();  return [err];
+}
+MyMySql.prototype.fin=function(){   if(this.connection) { this.connection.destroy();this.connection=null;};  }
 
-ErrorClient=class extends Error {
+
+
+app.ErrorClient=class extends Error {
   constructor(message) {
     super(message);
     this.name = 'ErrorClient';
   }
 }
 
-getETag=function(headers){var t=false, f='if-none-match'; if(f in headers) t=headers[f]; return t;}
-getRequesterTime=function(headers){if("if-modified-since" in headers) return new Date(headers["if-modified-since"]); else return false;}
+app.getETag=function(headers){var t=false, f='if-none-match'; if(f in headers) t=headers[f]; return t;}
+app.getRequesterTime=function(headers){if("if-modified-since" in headers) return new Date(headers["if-modified-since"]); else return false;}
 
 var tmp=http.ServerResponse.prototype;
-tmp.outCode=function(iCode,str){  str=str||''; this.statusCode=iCode; if(str) this.setHeader("Content-Type", "text/plain");   this.end(str);}
+tmp.outCode=function(iCode,str){  str=str||''; this.statusCode=iCode; if(str) this.setHeader("Content-Type", MimeType.txt);   this.end(str);}
 tmp.out200=function(str){ this.outCode(200, str); }
 tmp.out201=function(str){ this.outCode(201, str); }
 tmp.out204=function(str){ this.outCode(204, str); }
@@ -65,22 +62,21 @@ tmp.out301Loc=function(url){  this.writeHead(301, {Location: '/'+url});  this.en
 tmp.out403=function(){ this.outCode(403, "403 Forbidden\n");  }
 tmp.out304=function(){  this.outCode(304);   }
 tmp.out404=function(str){ str=str||"404 Not Found\n"; this.outCode(404, str);    }
-//tmp.out500=function(e){ var eN=(e instanceof Error)?e:(new MyError(e)); console.log(error.stack); this.writeHead(500, {"Content-Type": "text/plain"});  this.end(e+ "\n");   }
+//tmp.out500=function(e){ var eN=(e instanceof Error)?e:(new MyError(e)); console.log(error.stack); this.writeHead(500, {"Content-Type": MimeType.txt});  this.end(e+ "\n");   }
 tmp.out500=function(e){
   if(e instanceof Error) {var mess=e.name + ': ' + e.message; console.error(e);} else {var mess=e; console.error(mess);} 
-  this.writeHead(500, {"Content-Type": "text/plain"});  this.end(mess+ "\n");
+  this.writeHead(500, {"Content-Type": MimeType.txt});  this.end(mess+ "\n");
 }
 tmp.out501=function(){ this.outCode(501, "Not implemented\n");   }
 
 
 
 
-checkIfLangIsValid=function(langShort){
+app.checkIfLangIsValid=function(langShort){
   for(var i=0; i<arrLang.length; i++){ var langRow=arrLang[i]; if(langShort==langRow[0]){return true;} }  return false;
 }
 
-getBrowserLang=function(req){
-"use strict"
+app.getBrowserLang=function(req){
   //echo _SERVER['accept-language']; exit;
   var Lang=[];
   if('accept-language' in req.headers) {
@@ -106,7 +102,7 @@ getBrowserLang=function(req){
 }
 
 
-MimeType={
+app.MimeType={
   txt:'text/plain; charset=utf-8',
   jpg:'image/jpg',
   jpeg:'image/jpg',
@@ -121,12 +117,14 @@ MimeType={
   css:'text/css',
   pdf:'application/pdf',
   html:'text/html',
-  xml:'text/xml'
+  xml:'text/xml',
+  json:'application/json',
+  zip:'application/zip'
 };
 
 
 
-genRandomString=function(len) {
+app.genRandomString=function(len) {
   var characters = 'abcdefghijklmnopqrstuvwxyz';
   //var characters = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
   var str ='';    
@@ -135,33 +133,53 @@ genRandomString=function(len) {
   }
   return string;
 }
-md5=function(str){return crypto.createHash('md5').update(str).digest('hex');}
+app.md5=function(str){return crypto.createHash('md5').update(str).digest('hex');}
+
+
 
 
   // Redis
-cmdRedis=function*(flow, strCommand,arr){
-  var value;
-  redisClient.send_command(strCommand,arr, function(err, valueT){  value=valueT; flow.next();  }); yield;
-  return value;
+app.cmdRedis=function*(flow, strCommand, arr){
+  if(!(arr instanceof Array)) arr=[arr];
+  var err, value; redisClient.send_command(strCommand, arr, function(errT, valueT){  err=errT; value=valueT; flow.next();  }); yield;
+  return [err,value];
 }
-
-getRedis=function*(flow, strVar, boObj=false){
-  var strTmp=yield* cmdRedis(flow, 'get', [strVar]);  if(boObj) return JSON.parse(strTmp); else return strTmp;
+app.getRedis=function*(flow, strVar, boObj=false){
+  var [err,strTmp]=yield* cmdRedis(flow, 'GET', [strVar]);  if(boObj) return JSON.parse(strTmp); else return strTmp;
 }
-setRedis=function*(flow, strVar, val, tExpire=-1){
+app.setRedis=function*(flow, strVar, val, tExpire=-1){
   if(typeof val!='string') var strA=JSON.stringify(val); else var strA=val;
-  if(tExpire>0) var strTmp=yield* cmdRedis(flow, 'setex',[strVar,tExpire,strA]);
-  else  var strTmp=yield* cmdRedis(flow, 'set',[strVar,strA]);
+  var arr=[strVar,strA];  if(tExpire>0) arr.push('EX',tExpire);   var [err,strTmp]=yield* cmdRedis(flow, 'SET', arr);
 }
-expireRedis=function*(flow, strVar, tExpire=maxUnactivity){
-  var tmp=yield* cmdRedis(flow, 'expire',[strVar,tExpire]);
+app.expireRedis=function*(flow, strVar, tExpire=-1){
+  if(tExpire==-1) var [err,strTmp]=yield* cmdRedis(flow, 'PERSIST', [strVar]);
+  else var [err,strTmp]=yield* cmdRedis(flow, 'EXPIRE', [strVar,tExpire]);
 }
-delRedis=function*(flow, strVar){
-  var tmp=yield* cmdRedis(flow, 'del',[strVar]);
+app.delRedis=function*(flow, arr){ 
+  if(!(arr instanceof Array)) arr=[arr];
+  var [err,strTmp]=yield* cmdRedis(flow, 'DEL', arr);
 }
 
 
-getIP=function(req){
+    // closebymarket
+  //var StrSuffix=['_Cache', '_LoginIdP', '_LoginIdUser', '_UserInfoFrDB', '_Counter'];  var StrCaller=['index'], for(var i=0;i<StrCaller.length;i++){  StrSuffix.push('_CSRFCode'+ucfirst(StrCaller[i])); }
+  //var err=yield* changeSessionId.call(this, sessionIDNew, StrSuffix);
+app.changeSessionId=function*(sessionIDNew, StrSuffix){
+  for(var i=0;i<StrSuffix.length;i++){
+    var strSuffix=StrSuffix[i];
+    var redisVarO=this.req.sessionID+strSuffix, redisVarN=sessionIDNew+strSuffix; 
+    var [err,value]=yield* cmdRedis(this.req.flow, 'rename', [redisVarO, redisVarN]); //if(err) return err;
+  }
+  this.req.sessionID=sessionIDNew;
+  return null;
+}
+
+
+
+
+
+
+app.getIP=function(req){
   var ipClient='', Match;
     // AppFog ipClient
   if('x-forwarded-for' in req.headers){
@@ -187,7 +205,7 @@ getIP=function(req){
   return false
 }
 
-luaCountFunc="\n\
+app.luaCountFunc="\n\
 local boSessionExist=redis.call('EXISTS',KEYS[1]);\n\
 local c;\n\
 if(boSessionExist>0) then c=redis.call('INCR',KEYS[2]); redis.call('EXPIRE',KEYS[2], ARGV[1]);\n\
@@ -196,7 +214,7 @@ end;\n\
 return c";
 
 
-CacheUriT=function(){
+app.CacheUriT=function(){
   this.set=function*(flow, key, buf, type, boZip, boUglify){
     var eTag=crypto.createHash('md5').update(buf).digest('hex'); 
     //if(boUglify) {
@@ -215,7 +233,7 @@ CacheUriT=function(){
 }
 
 var regFileType=RegExp('\\.([a-z0-9]+)$','i'),    regZip=RegExp('^(css|js|txt|html)$'),   regUglify=RegExp('^js$');
-readFileToCache=function*(flow, strFileName) {
+app.readFileToCache=function*(flow, strFileName) {
   var type, Match=regFileType.exec(strFileName);    if(Match && Match.length>1) type=Match[1]; else type='txt';
   var boZip=regZip.test(type),  boUglify=regUglify.test(type);
   var err, buf;
@@ -224,7 +242,7 @@ readFileToCache=function*(flow, strFileName) {
   return [err];
 }
 
-makeWatchCB=function(strFolder, StrFile) {
+app.makeWatchCB=function(strFolder, StrFile) {
   return function(ev,filename){
     if(StrFile.indexOf(filename)!=-1){
       var strFileName=path.normalize(strFolder+'/'+filename)
@@ -236,7 +254,7 @@ makeWatchCB=function(strFolder, StrFile) {
   }
 }
 
-isRedirAppropriate=function(req){
+app.isRedirAppropriate=function(req){
   if(typeof RegRedir=='undefined') return false;
   for(var i=0;i<RegRedir.length;i++){
     var url=RegRedir[i](req); if(url) return url;
@@ -244,6 +262,8 @@ isRedirAppropriate=function(req){
   return false;
 }
 
-
-
+app.myJSEscape=function(str){return str.replace(/&/g,"&amp;").replace(/</g,"&lt;");}
+  // myAttrEscape
+  // Only one of " or ' must be escaped depending on how it is wrapped when on the client.
+app.myAttrEscape=function(str){return str.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/\//g,"&#47;");} // This will keep any single quataions.
 

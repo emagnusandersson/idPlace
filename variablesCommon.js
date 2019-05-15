@@ -19,14 +19,16 @@ leafVerifyEmailReturn='verifyEmail';
 leafVerifyPWResetReturn='verifyPWReset';
 
 
-StrImageExt=['jpg','jpeg','png','gif','svg'];
+lenGZ=100;
+nHash=1000;
 
+
+StrImageExt=['jpg','jpeg','png','gif','svg'];
 
 
 version='100';
 maxGroupsInFeat=20;
 preDefault="u.";
-
 
 
 
@@ -71,7 +73,7 @@ SiteExtend=function(){
     for(var i=0;i<SiteName.length;i++){
       var siteName=SiteName[i];   var tmp; if(tmp=Site[siteName].testWWW(wwwReq)) {return {siteName:siteName, wwwSite:tmp};  }
     }
-    return false;
+    return {siteName:null};
   }
   for(var i=0;i<SiteName.length;i++){
     var siteName=SiteName[i], StrPlugIn=[];
@@ -91,10 +93,10 @@ nDBConnectionLimit=10; nDBQueueLimit=100;
 nDBRetry=14;
 
 setUpMysqlPool=function(){
-  var uriObj=url.parse(uriDB); 
+  var uriObj=url.parse(uriDB);
   var StrMatch=RegExp('^(.*):(.*)$').exec(uriObj.auth);
   var nameDB=uriObj.pathname.substr(1);
-  mysqlPool  = mysql.createPool({
+  var mysqlPool  = mysql.createPool({
     connectionLimit : nDBConnectionLimit,
     host            : uriObj.host,
     user            : StrMatch[1],
@@ -107,6 +109,7 @@ setUpMysqlPool=function(){
     flags:'-FOUND_ROWS'
   });
   mysqlPool.on('error',function(e){debugger});
+  return mysqlPool;
 }
 
 

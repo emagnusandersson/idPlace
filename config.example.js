@@ -19,13 +19,9 @@ apiKeySendGrid="XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 //sendgridName="appXXXXXXX@heroku.com"; sendgridPassword="XXXXXXXXXXXX";
 
   //
-  // This "if"-statement allows you to keep the same config-file for multiple infrastructure
-  //
-  // If you are running on:
-  //   * heroku.com, then create a environment variable strInfrastructure='heroku' 
-  //   * appfog.com, then create a environment variable strInfrastructure='af' 
-  //   * digitalocean.com, then create a environment variable strInfrastructure='do' 
-  //   * localhost, then you can enter your settings in the "else"-statement below
+  //  Since one might want use the software on several different infrastrucures (heroku.com, appfog.com, digitalocean.com, localhost ...),
+  //  then I personally use an environment variable "strInfrastructure" on respective site, set to either to 'heroku', 'af', 'do' or nothing assigned (localhost)
+  //  This way one can use the same config file for all the infrastructures.
   //
 
 if(process.env.strInfrastructure=='heroku'){  

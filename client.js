@@ -77,10 +77,10 @@ oAJAX
 */
 
 
-(function(){
-
-popUpExtend=function(el){
 "use strict"
+window.onload=function(){
+
+var popUpExtend=function(el){
   el.openPop=function() {
     el.append(spanMessageText);
     container.empty().append(el);  elBody.append(blanket);  elBody.append(container);
@@ -94,7 +94,6 @@ popUpExtend=function(el){
 }
 
 var vippButtonExtend=function(el){
-"use strict"
   el.setStat=function(bo1){
     if(!bo1) {el.css(o0);} else {el.css(o1);} 
     el.attr({boOn:bo1});
@@ -122,7 +121,7 @@ var toggleButtonExtend=function(el){
 }
 
 
-spanMessageTextCreate=function(){
+var spanMessageTextCreate=function(){
   var el=createElement('span');
   var spanInner=createElement('span');
   el.appendChild(spanInner, imgBusy)
@@ -150,53 +149,43 @@ spanMessageTextCreate=function(){
 }
 
 
-/*******************************************************************************************************************
- *******************************************************************************************************************
- *
- * History stuff
- *
- *******************************************************************************************************************
- *******************************************************************************************************************/
+  //
+  // History stuff
+  //
 
-histGoTo=function(view){}
-doHistBack=function(){  history.back();}
-doHistPush=function(obj){ 
-    // Set "scroll" of stateNew  (If the scrollable div is already visible) 
+app.histGoTo=function(view){}
+app.historyBack=function(){  history.back();}
+app.doHistPush=function(obj){
+    // Set "scroll" of stateNew  (If the scrollable div is already visible)
   var view=obj.view;
   var scrollT=window.scrollTop();
-  if(typeof view.setScroll=='function') view.setScroll(scrollT); else history.StateMy[history.state.ind].scroll=scrollT;  //view.intScroll=scrollT; 
+  if(typeof view.setScroll=='function') view.setScroll(scrollT); else history.StateMy[history.state.ind].scroll=scrollT;  //view.intScroll=scrollT;
 
   if((boChrome || boOpera) && !boTouch)  history.boFirstScroll=true;
 
   var indNew=history.state.ind+1;
   stateTrans={hash:history.state.hash, ind:indNew};  // Should be called stateLast perhaps
   history.pushState(stateTrans, strHistTitle, uCanonical);
-  history.StateMy=history.StateMy.slice(0,indNew);
+  history.StateMy=history.StateMy.slice(0, indNew);
   history.StateMy[indNew]=obj;
 }
-
-
-doHistReplace=function(obj, indDiff){
-  if(typeof indDiff=='undefined') indDiff=0;
+app.doHistReplace=function(obj, indDiff=0){
   history.StateMy[history.state.ind+indDiff]=obj;
 }
-changeHist=function(obj){
+app.changeHist=function(obj){
   history.StateMy[history.state.ind]=obj;
 }
-getHistStatName=function(){
+app.getHistStatName=function(){
   return history.StateMy[history.state.ind].view.toString();
 }
-
-
 history.distToGoal=function(viewGoal){
   var ind=history.state.ind;
   var indGoal;
   for(var i=ind; i>=0; i--){
     var obj=history.StateMy[i];
-    if(typeof obj=='object') var view=obj.view; else continue;
+    var view; if(typeof obj=='object') view=obj.view; else continue;
     if(view===viewGoal) {indGoal=i; break;}
   }
-  
   var dist; if(typeof indGoal!='undefined') dist=indGoal-ind;
   return dist;
 }
@@ -211,12 +200,10 @@ history.fastBack=function(viewGoal, boRefreshHash){
 
 
 
-
 /*******************************************************************************************************************
  * top-line-div
  *******************************************************************************************************************/
 var loginInfoExtend=function(el){
-"use strict"
   el.setStat=function(){
     var boIn=Boolean(Object.keys(userInfoFrDB).length);
     if(boIn){
@@ -234,7 +221,7 @@ var loginInfoExtend=function(el){
     e.preventDefault();
     //userInfoFrDB={}; 
     userAppList.boStale=1;  devAppList.boStale=1;
-    var vec=[['logout',1, el.cb]];
+    var vec=[['logout',{}, el.cb]];
     majax(oAJAX,vec);
     return false;
   });
@@ -254,7 +241,6 @@ var loginInfoExtend=function(el){
  *******************************************************************************************************************/
 
 var mainDivExtend=function(el){
-"use strict"
   el.toString=function(){return 'mainDiv';}
 
   el.setUp=function(){
@@ -352,7 +338,7 @@ var createUPop=function(IP, uRedir, nonce, boReauthenticate){
   if(boReauthenticate) arrQ.push("auth_type=reauthenticate");
   return UrlOAuth[IP]+'?'+arrQ.join('&');
 }
-getOAuthCode=function*(flow, boReauthenticate=false){
+var getOAuthCode=function*(flow, boReauthenticate=false){
   var strQS, nonce=randomHash(), uPop=createUPop(strIPPrim, uSite+'/'+leafLoginBack, nonce, boReauthenticate);
   window.loginReturn=function(strQST){ strQS=strQST; flow.next();}
   if('wwwLoginScope' in site) document.domain = site.wwwLoginScope;
@@ -368,7 +354,7 @@ getOAuthCode=function*(flow, boReauthenticate=false){
 
 
   // Used in loginSelectorDiv and createUserSelectorDiv
-idPLoginDivExtend=function(el){
+var idPLoginDivExtend=function(el){
   var strButtonSize='2em';
   var imgFb=createElement('img').prop({src:uFb}).on('click',function(){
     var flow=(function*(){
@@ -389,10 +375,12 @@ idPLoginDivExtend=function(el){
   return el;
 }
 
-formLoginExtend=function(el){  
-  var login=function(){  
-    var tmp=SHA1(formLogin.inpPass.value+strSalt);
-    var vec=[['loginWEmail',{email:formLogin.inpEmail.value, password:tmp}], ['setupById',{idApp:idApp}, el.cb]];   majax(oAJAX,vec); 
+var formLoginExtend=function(el){  
+  var login=function(e){
+    e.preventDefault();
+    //var hashPW=SHA1(formLogin.inpPass.value+strSalt);
+    var hashPW=formLogin.inpPass.value+strSalt; for(var i=0;i<nHash;i++) hashPW=SHA1(hashPW);
+    var vec=[['loginWEmail',{email:formLogin.inpEmail.value, password:hashPW}], ['setupById',{idApp:idApp}, el.cb]];   majax(oAJAX,vec); 
     formLogin.inpPass.value='';
     return false;
   }
@@ -401,13 +389,12 @@ formLoginExtend=function(el){
   el.labPass=el.querySelector("label[name='password']"); el.inpPass=el.querySelector("input[name='password']").css({'max-width':'100%'});
   el.buttLogin=el.querySelector("button[name='submit']").css({"margin-top": "1em"}).on('click',login);
 
-  [...el.querySelectorAll('input[type=text],[type=email],[type=number],[type=password]')].forEach(ele=>ele.css({display:'block'}).on('keypress', function(e){ if(e.which==13) { login(); }} ) );
+  [...el.querySelectorAll('input[type=text],[type=email],[type=number],[type=password]')].forEach(ele=>ele.css({display:'block'}).on('keypress', function(e){ if(e.which==13) { login(e); }} ) );
   return el;
 }
 
 
 var loginSelectorDivExtend=function(el){
-"use strict"
   el.toString=function(){return 'loginSelectorDiv';}
   el.myToggle=function(boOn){
     if(boOn) el.show();else el.hide(); if(boOn) formLogin.inpPass.focus();
@@ -435,8 +422,7 @@ var loginSelectorDivExtend=function(el){
 }
 
 
-devAppSecretDivExtend=function(el){
-"use strict"
+var devAppSecretDivExtend=function(el){
   el.toString=function(){return 'devAppSecretDiv';}
   var ret=function(data){
     spanSecret.myText(data.secret); inpPass.value=''
@@ -449,8 +435,9 @@ devAppSecretDivExtend=function(el){
     inpPass.focus()
   }
   var send=function(){
-    var tmp=SHA1(inpPass.value+strSalt);
-    var vec=[['devAppSecret',{idApp:idApp, password:tmp},ret]];   majax(oAJAX,vec);
+    //var hashPW=SHA1(inpPass.value+strSalt);
+    var hashPW=inpPass.value+strSalt; for(var i=0;i<nHash;i++) hashPW=SHA1(hashPW);
+    var vec=[['devAppSecret',{idApp:idApp, password:hashPW},ret]];   majax(oAJAX,vec);
     
   }
   el.setVis=function(){
@@ -491,7 +478,7 @@ devAppSecretDivExtend=function(el){
   
   var spanSecret=createElement('span');//.css({'font-weight': 'bold'});
   var p=createElement('div').myAppend(hSecret, spanSecret).css({margin:'0.5em 0',border:'solid 1px',background:'yellow'});
-  var cancel=createElement('button').addClass('highStyle').myText('Back').on('click',doHistBack).css({display:'block', margin:'1em 0em'});
+  var cancel=createElement('button').addClass('highStyle').myText('Back').on('click',historyBack).css({display:'block', margin:'1em 0em'});
 
   var blanket=createElement('div').addClass("blanket");
   var centerDiv=createElement('div').addClass("Center").myAppend(head, divRow, p,cancel).css({'min-width':'17em','max-width':'25em', padding:'0.1em'}); // height:'19em', 
@@ -502,7 +489,6 @@ devAppSecretDivExtend=function(el){
 
 
 var createUserSelectorDivExtend=function(el){
-"use strict"
   el.toString=function(){return 'createUserSelectorDiv';}
   el.setUp=function(){ divRight.append(idPLoginDiv);   }
   var cssCol={display:'inline-block','box-sizing': 'border-box',padding:'1em',flex:1}; //width:'50%',
@@ -527,7 +513,6 @@ var createUserSelectorDivExtend=function(el){
 }
 
 var divDisclaimerExtend=function(el){
-"use strict"
   el.setUp=function(boFrMem){
     var boShowDisclaimer;
     if(typeof boFrMem=='undefined') { boShowDisclaimer=butTog.myText()=='Show';}
@@ -547,7 +532,6 @@ var divDisclaimerExtend=function(el){
 }
 
 var createUserDivExtend=function(el){
-"use strict"
   el.toString=function(){return 'createUserDiv';}
   var save=function(){ 
     resetMess();  
@@ -562,12 +546,13 @@ var createUserDivExtend=function(el){
     if(boErr) return;
 */
     for(var i=0;i<Inp.length;i++){
-      var inp=Inp.myIndex(i),  strName=inp.attr('name');
+      var inp=Inp[i],  strName=inp.attr('name');
       //var tmp=Prop[strName].saveInp(inp); if(tmp===false) return; else o[strName]=tmp; 
       var tmp=Prop[strName].saveInp(inp); if(tmp[0]) {setMess(tmp[0]); return; } else o[strName]=tmp[1];
     };
     var strTmp=grecaptcha.getResponse(); if(!strTmp) {setMess("Captcha response is empty"); return; }
-    extend(o, {password:SHA1(inpPass.value.trim()+strSalt),  'g-recaptcha-response': grecaptcha.getResponse()});
+    var hashPW=inpPass.value.trim()+strSalt; for(var i=0;i<nHash;i++) hashPW=SHA1(hashPW);
+    extend(o, {password:hashPW,  'g-recaptcha-response': strTmp});
 
     var vec=[['createUser',o], ['setupById',{idApp:idApp}, el.cb]];   majax(oAJAX,vec); 
     inpPass.value=''; inpPassB.value='';
@@ -592,9 +577,10 @@ var createUserDivExtend=function(el){
     divCont.append(divReCaptcha);
   }
   el.setUp=function(){
-    if(divReCaptcha.hasChildNodes()){
-      grecaptcha.render(divReCaptcha, {sitekey:strReCaptchaSiteKey});
-    }
+    //if(divReCaptcha.hasChildNodes()){
+      //grecaptcha.render(divReCaptcha, {sitekey:strReCaptchaSiteKey});
+    //}
+    divReCaptcha.setUp();
     return true;
   }
   //el.setUp=function(){
@@ -610,7 +596,8 @@ var createUserDivExtend=function(el){
 
   var divCont=el.divCont=createElement('div').css({padding:'0 0.3em 0 0', overflow:'hidden', 'max-width':menuMaxWidth+'px', 'text-align':'left', margin:'1em auto'});
   
-  var divReCaptcha=createElement('div');
+  //var divReCaptcha=createElement('div');
+  var divReCaptcha=divReCaptchaExtend(createElement('div'));
   
   var h1=createElement('h1').myText('Create account');  
   el.divDisclaimerW=createElement('div').css({'margin':'0em', 'padding':'0em'});
@@ -632,20 +619,29 @@ var createUserDivExtend=function(el){
   return el;
 }
 
+var divReCaptchaExtend=function(el){
+  el.setUp=function(){
+    //if(typeof grecaptcha=='undefined') var grecaptcha={render:function(){console.log('no grecaptcha');}};
+    if(typeof grecaptcha=='undefined' || !('render' in grecaptcha)) {console.log('no grecaptcha'); return; }
+    if(el.children.length==0){    grecaptcha.render(el, {sitekey:strReCaptchaSiteKey});    } else grecaptcha.reset();
+  }
+  el.addClass("g-recaptcha");
+  //el.prop({"data-sitekey": strReCaptchaSiteKey});
+  return el;
+}
 
 var deleteAccountPopExtend=function(el){
-"use strict"
   el.toString=function(){return 'deleteAccountPop';}
   //var el=popUpExtend(el);
   var yes=createElement('button').addClass('highStyle').myText(langHtml.Yes).on('click',function(){
-    //var vec=[['VDelete',1,function(data){doHistBack();doHistBack();}]];   majax(oAJAX,vec);
+    //var vec=[['VDelete',{},function(data){historyBack();historyBack();}]];   majax(oAJAX,vec);
     userInfoFrDB={};
-    var vec=[['UDelete',1, function(data){
+    var vec=[['UDelete',{}, function(data){
       history.fastBack(mainDiv,true);
     }]];   majax(oAJAX,vec);
   });
-  var cancel=createElement('button').addClass('highStyle').myText(langHtml.Cancel).on('click',doHistBack);
-  //el.myAppendB(langHtml.deleteBox.regret,'<br>',yes,cancel);
+  var cancel=createElement('button').addClass('highStyle').myText(langHtml.Cancel).on('click',historyBack);
+  //el.myAppendHtml(langHtml.deleteBox.regret,'<br>',yes,cancel);
   //el.css({padding:'1.1em',border:'1px solid'});
   el.setVis=function(){
     el.show();   
@@ -663,7 +659,6 @@ var deleteAccountPopExtend=function(el){
 }
 
 var changePWPopExtend=function(el){
-"use strict"
   el.toString=function(){return 'changePWPop';}
   var save=function(){ 
     resetMess();
@@ -671,7 +666,9 @@ var changePWPopExtend=function(el){
     if(inpPass.value.trim()!==inpPassB.value.trim()) { setMess('The new password fields are not equal'); return; }
     var lTmp=boDbg?2:6; if(inpPass.value.trim().length<lTmp) { setMess('The password must be at least '+lTmp+' characters long'); return; }
 
-    var o={passwordOld:SHA1(inpPassOld.value.trim()+strSalt), passwordNew:SHA1(inpPass.value.trim()+strSalt)};
+    var hashPWO=inpPassOld.value.trim()+strSalt; for(var i=0;i<nHash;i++) hashPWO=SHA1(hashPWO);
+    var hashPWN=inpPass.value.trim()+strSalt; for(var i=0;i<nHash;i++) hashPWN=SHA1(hashPWN);
+    var o={passwordOld:hashPWO, passwordNew:hashPWN};
 
     var vec=[['changePW',o,changePWRet]];   majax(oAJAX,vec); 
     setMess('',null,true); 
@@ -687,7 +684,7 @@ var changePWPopExtend=function(el){
     return true;
   }
   var changePWRet=function(data){
-    if(data.boOK) { inpPassOld.value=''; inpPass.value=''; inpPassB.value='';  doHistBack(); }
+    if(data.boOK) { inpPassOld.value=''; inpPass.value=''; inpPassB.value='';  historyBack(); }
   }
 
   var h1=createElement('h3').myText('Change your password');
@@ -699,7 +696,7 @@ var changePWPopExtend=function(el){
   [inpPassOld, inpPass, inpPassB].forEach(ele=>ele.css({display:'block', 'margin-bottom':'0.5em'}).on('keypress', function(e){ if(e.which==13) {okF();return false;}} )   );
 
   var ok=createElement('button').myText(langHtml.OK).addClass('highStyle').on('click',save);
-  var cancel=createElement('button').myText(langHtml.Cancel).addClass('highStyle').on('click',doHistBack);
+  var cancel=createElement('button').myText(langHtml.Cancel).addClass('highStyle').on('click',historyBack);
   var divBottom=createElement('div').myAppend(cancel,ok);  //buttonCancel,
 
   var centerDiv=createElement('div').myAppend(h1, messDiv,   labPassOld, inpPassOld, labPass, inpPass, labPassB, inpPassB, divBottom);
@@ -710,10 +707,9 @@ var changePWPopExtend=function(el){
   return el;
 }
 var verifyEmailPopExtend=function(el){
-"use strict"
   el.toString=function(){return 'verifyEmailPop';}
   var okF=function(){
-    var vec=[['verifyEmail',1, okRet]];   majax(oAJAX,vec); 
+    var vec=[['verifyEmail',{}, okRet]];   majax(oAJAX,vec); 
     //var vec=[['verifyEmail',{email:userInfoFrDB.email}, okRet]];   majax(oAJAX,vec);
     
   };
@@ -727,7 +723,7 @@ var verifyEmailPopExtend=function(el){
     return true;
   }
   var okRet=function(data){
-    if(data.boOK) {  doHistBack(); }
+    if(data.boOK) {  historyBack(); }
   }
 
   var h1=createElement('h3').myText('Verify emailaddress');
@@ -737,7 +733,7 @@ var verifyEmailPopExtend=function(el){
   var blanket=createElement('div').addClass("blanket");
 
   var ok=createElement('button').myText(langHtml.OK).addClass('highStyle').on('click',okF);
-  //var cancel=createElement('button').myText(langHtml.Cancel).on('click',doHistBack);
+  //var cancel=createElement('button').myText(langHtml.Cancel).on('click',historyBack);
   var divBottom=createElement('div').myAppend(ok);  //cancel,
 
   var centerDiv=createElement('div').myAppend(h1, pTxt, pBottom, divBottom);
@@ -749,7 +745,6 @@ var verifyEmailPopExtend=function(el){
 }
 
 var forgottPWPopExtend=function(el){
-"use strict"
   el.toString=function(){return 'forgottPWPop';}
   var okF=function(){
     var vec=[['verifyPWReset',{email:inpEmail.value.trim()}, okRet]];   majax(oAJAX,vec);
@@ -765,7 +760,7 @@ var forgottPWPopExtend=function(el){
     return true;
   }
   var okRet=function(data){
-    if(data.boOK) { inpEmail.value='';  doHistBack(); }
+    if(data.boOK) { inpEmail.value='';  historyBack(); }
   }
 
   var h1=createElement('h3').myText('Forgott your password?');
@@ -775,7 +770,7 @@ var forgottPWPopExtend=function(el){
   inpEmail.css({display:'block', 'margin-bottom':'0.5em'});
 
   var ok=createElement('button').myText(langHtml.OK).addClass('highStyle').on('click',okF);
-  var cancel=createElement('button').myText(langHtml.Cancel).addClass('highStyle').on('click',doHistBack);
+  var cancel=createElement('button').myText(langHtml.Cancel).addClass('highStyle').on('click',historyBack);
   var divBottom=createElement('div').myAppend(cancel,ok);  //buttonCancel,
 
   var centerDiv=createElement('div').myAppend(h1, labEmail, inpEmail, divBottom);
@@ -786,7 +781,6 @@ var forgottPWPopExtend=function(el){
   return el;
 }
 var consentDivExtend=function(el){
-"use strict"
   el.toString=function(){return 'consentDiv';}
 
   el.setUp=function(){
@@ -804,8 +798,8 @@ var consentDivExtend=function(el){
   var spanApp=createElement('b');
   var listPerm=createElement('ul');
   var spanPermOld=createElement('b');
-  var pA=createElement('p').myAppendB('The app: ', spanApp, ", would like to be able to read these data: ", listPerm);
-  var pOldPerm=createElement('p').myAppendB('(Old permission: ', spanPermOld, ')');
+  var pA=createElement('p').myAppend('The app: ', spanApp, ", would like to be able to read these data: ", listPerm);
+  var pOldPerm=createElement('p').myAppend('(Old permission: ', spanPermOld, ')');
   var pB=createElement('p').myText('(You can withdraw this right later.)').css({'font-size':'85%'});
   var buttCancel=createElement('button').addClass('highStyle').myText('Cancel').on('click',function(){
     el.cb(false);
@@ -851,7 +845,8 @@ var uploadImageDivExtend=function(el){
      
 
   
-    var vecIn=[['uploadImage'], ['CSRFCode',CSRFCode]];
+    //var vecIn=[['uploadImage'], ['CSRFCode',CSRFCode]];
+    var vecIn=[['uploadImage'], ['CSRFCode',getItem('CSRFCode')]];
     var arrRet=[sendFunRet];
     formData.append('vec', JSON.stringify(vecIn));
     var xhr = new XMLHttpRequest();
@@ -916,7 +911,7 @@ var uploadImageDivExtend=function(el){
   formFile.append(inpFile);   formFile.css({display:'inline'});
    
 
-  var closeButton=createElement('button').myText('Close').addClass('highStyle').on('click',doHistBack);
+  var closeButton=createElement('button').myText('Close').addClass('highStyle').on('click',historyBack);
   var menuBottom=createElement('div').myAppend(closeButton, uploadButton).css({'margin-top':'1.2em'});
 
   //el.append(head, formFile, progress, divMess,menuBottom); 
@@ -933,7 +928,6 @@ var uploadImageDivExtend=function(el){
 
 
 var userSettingDivExtend=function(el){
-"use strict"
   el.toString=function(){return 'userSetting';}
   var save=function(){ 
     resetMess();  
@@ -984,7 +978,7 @@ var userSettingDivExtend=function(el){
     doHistPush({view:deleteAccountPop});
     deleteAccountPop.setVis();
   }).css({margin:'0.2em 0 0 0'});  //'float':'right',
-  var divCreated=createElement('div').myHtml('Account created <b></b> ago ', buttonDelete).css({'font-size':'90%', 'border-bottom':'2px solid grey', 'margin-bottom':'1em', 'padding-bottom':'0.5em'});
+  var divCreated=createElement('div').myAppendHtml('Account created <b></b> ago ', buttonDelete).css({'font-size':'90%', 'border-bottom':'2px solid grey', 'margin-bottom':'1em', 'padding-bottom':'0.5em'});
   el.divDisclaimerW=createElement('div').css({'margin':'0em', 'padding':'0em'});
 
   var divCont=el.divCont=createElement('div').myAppend(divCreated,el.divDisclaimerW).css({padding:'0 0.3em 0 0', overflow:'hidden', 'max-width':menuMaxWidth+'px', 'text-align':'left', margin:'1em auto'}); 
@@ -1000,7 +994,6 @@ var userSettingDivExtend=function(el){
 }
 
 
-"use strict"
 var headExtend=function(el, tableDiv, StrName, BoAscDefault, Label, strTR='tr', strTD='td'){  // tableDiv must have a property table, tbody and nRowVisible (int)
   el.setArrow=function(strName,dir){
     boAsc=dir==1;
@@ -1061,13 +1054,11 @@ var headExtend=function(el, tableDiv, StrName, BoAscDefault, Label, strTR='tr', 
  *******************************************************************************************************************
  *******************************************************************************************************************/
 
-userAppSetDivExtend=function(el){
-"use strict"
+var userAppSetDivExtend=function(el){
   el.toString=function(){return 'userAppSetDiv';}
   return el;
 }
-userAppDeleteDivExtend=function(el){
-"use strict"
+var userAppDeleteDivExtend=function(el){
   el.toString=function(){return 'userAppDeleteDiv';}
   var ok=createElement('button').myText('OK').addClass('highStyle').css({'margin-top':'1em'}).on('click',function(){    
     var idApp=elR.attr('idApp'), vec=[['userAppDelete',{idApp:idApp},okRet]];   majax(oAJAX,vec);    
@@ -1075,7 +1066,7 @@ userAppDeleteDivExtend=function(el){
   var okRet=function(data){
     if(!data.boOK) return;
     userAppList.myRemove(elR);
-    doHistBack();
+    historyBack();
   }
   el.openFunc=function(){
     elR=this.parentNode.parentNode; spanApp.myText(elR.r.appName);
@@ -1097,8 +1088,7 @@ userAppDeleteDivExtend=function(el){
   el.addClass("Center-Container").myAppend(centerDiv,blanket); 
   return el;
 }
-userAppListExtend=function(el){
-"use strict"
+var userAppListExtend=function(el){
   el.toString=function(){return 'userAppList';}
   //el.setUp=function(){};
   var TDProt={
@@ -1134,16 +1124,16 @@ userAppListExtend=function(el){
       if('mySetVal' in td) { td.mySetVal(val);}   else td.append(val);
       if('mySetSortVal' in td) { td.mySetSortVal(val);}   else td.valSort=val;
     }
-    tbody.append(elR); 
-    el.nRowVisible=tbody.children.length;
+    tBody.append(elR); 
+    el.nRowVisible=tBody.children.length;
     return el;
   }
   el.myRemove=function(elR){
     elR.remove();  return el; 
-    el.nRowVisible=tbody.children.length;
+    el.nRowVisible=tBody.children.length;
   }
   el.myEdit=function(r){
-    var elR=tbody.querySelector('[idApp="'+r.idApp+'"]');
+    var elR=tBody.querySelector('[idApp="'+r.idApp+'"]');
     elR.attr({idApp:r.idApp});
     //for(var i=0;i<StrCol.length;i++) { var name=StrCol[i], val=r[name], td=elR.children('td:eq('+i+')'); if(td.mySetVal) td.mySetVal(val); else td.empty().myAppend(val); }
     for(var i=0;i<StrCol.length;i++) { var name=StrCol[i], val=r[name], td=elR.children[i]; if(td.mySetVal) td.mySetVal(val); else td.empty().myAppend(val); }
@@ -1151,14 +1141,14 @@ userAppListExtend=function(el){
   }
   el.setUp=function(){
     if(el.boStale) {
-      var vec=[['userAppListGet',1,setUpRet]];   majax(oAJAX,vec);
+      var vec=[['userAppListGet',{},setUpRet]];   majax(oAJAX,vec);
       el.boStale=0;
     }
   }
   var setUpRet=function(data){
     var tab=data.tab||[];
     var StrColTmp=data.StrCol; 
-    tbody.empty(); 
+    tBody.empty(); 
     for(var i=0;i<tab.length;i++) {  
       var obj={}; for(var j=0;j<StrColTmp.length;j++){ obj[StrColTmp[j]]=tab[i][j];}
       tab[i]=obj;
@@ -1168,15 +1158,15 @@ userAppListExtend=function(el){
   }
   el.boStale=1;
 
-  var tbody=el.tbody=createElement('tbody');
-  el.table=createElement('table').myAppend(tbody); //.css({width:'100%',position:'relative'});
+  var tBody=el.tBody=createElement('tbody');
+  el.table=createElement('table').myAppend(tBody); //.css({width:'100%',position:'relative'});
   el.divCont=createElement('div').myAppend(el.table).css({'margin':'1em auto','text-align':'left',display:'inline-block'});
 
   var StrCol=['idApp', 'appName','scope', 'imageHash', 'tAccess'], BoAscDefault={tAccess:0};
   var Label={tAccess:'Accessed',imageHash:'Image'};
-  var thead=headExtend(createElement('thead'),el,StrCol,BoAscDefault,Label);
-  thead.css({background:'white', width:'inherit'});  //,height:'calc(12px + 1.2em)'
-  el.table.prepend(thead);
+  var tHead=headExtend(createElement('thead'),el,StrCol,BoAscDefault,Label);
+  tHead.css({background:'white', width:'inherit'});  //,height:'calc(12px + 1.2em)'
+  el.table.prepend(tHead);
   el.nRowVisible=0;
 
   var imgDelete=imgProt.cloneNode().prop({src:uDelete});
@@ -1192,8 +1182,7 @@ userAppListExtend=function(el){
 }
 
 
-devAppSetDivExtend=function(el){
-"use strict"
+var devAppSetDivExtend=function(el){
   el.toString=function(){return 'devAppSetDiv';}
   var save=function(){
     r.appName=inpAppName.value.trim(); if(r.appName.length==0){ setMess('empty app name',2);  return;}
@@ -1210,7 +1199,7 @@ devAppSetDivExtend=function(el){
     if('imageHash' in data)  { r.imageHash=data.imageHash; }
     if(boUpd) {  devAppList.myEdit(r); } 
     else {r.created=unixNow(); devAppList.myAdd(r); }
-    doHistBack();
+    historyBack();
   }
   el.setUp=function(){
     inpAppName.value=r.appName; inpURL.value=r.redir_uri;
@@ -1257,8 +1246,7 @@ devAppSetDivExtend=function(el){
 }
 
 
-devAppDeleteDivExtend=function(el){
-"use strict"
+var devAppDeleteDivExtend=function(el){
   el.toString=function(){return 'devAppDeleteDiv';}
   var ok=createElement('button').myText('OK').addClass('highStyle').css({'margin-top':'1em'}).on('click',function(){    
     var idApp=elR.attr('idApp'), vec=[['devAppDelete',{idApp:idApp},okRet]];   majax(oAJAX,vec);    
@@ -1266,7 +1254,7 @@ devAppDeleteDivExtend=function(el){
   var okRet=function(data){
     if(!data.boOK) return;
     devAppList.myRemove(elR);
-    doHistBack();
+    historyBack();
   }
   el.openFunc=function(){
     elR=this.parentNode.parentNode; spanApp.myText(elR.r.appName);
@@ -1289,38 +1277,9 @@ devAppDeleteDivExtend=function(el){
   return el;
 }
 
-/*
-devAppSecretDivExtend=function(el){
-"use strict"
-  el.toString=function(){return 'devAppSecretDiv';}
-  var ret=function(data){
-    spanSecret.myText(data.secret);
-  }
-  el.openFunc=function(){
-    var elR=this.parentNode.parentNode, idApp=elR.r.idApp;
-    var vec=[['devAppSecret',{idApp:idApp},ret]];   majax(oAJAX,vec);
-    spanSecret.myText('');
-    doHistPush({view:devAppSecretDiv});
-    el.setVis();
-  }
-  el.setVis=function(){
-    el.show(); return 1;
-  }
- 
-  var head=createElement('h3').myText('Secret');
-  var spanSecret=createElement('span');//.css({'font-weight': 'bold'});
-  var p=createElement('div').myAppend(spanSecret);
-
-  var blanket=createElement('div').addClass("blanket");
-  var centerDiv=createElement('div').addClass("Center").myAppend(head,p).css({'min-width':'17em','max-width':'25em', padding:'0.1em'}); //,cancel  height:'10em', 
-  //if(boIE) centerDiv.css({'width':'20em'}); 
-  el.addClass("Center-Container").myAppend(centerDiv,blanket); 
-  return el;
-}*/
 
 //idApp, name, redir_uri, imageHash, created
-devAppListExtend=function(el){
-"use strict"
+var devAppListExtend=function(el){
   el.toString=function(){return 'devAppList';}
   var TDProt={
     created:{
@@ -1344,7 +1303,7 @@ devAppListExtend=function(el){
       var imageHash=null; if('imageHash' in data) imageHash=data.imageHash;
       var uImg; if(imageHash!=null) uImg=uAppImage+imageHash;  else uImg=uSite+"/lib/image/anonEmptyHash.png";
       if('imageHash' in data)  i.prop({src:uImg}); 
-      doHistBack();
+      historyBack();
     }
     uploadImageDiv.openFunc('a'+r.idApp, uploadCallback);
 
@@ -1370,16 +1329,16 @@ devAppListExtend=function(el){
       if('mySetVal' in td) { td.mySetVal(val);}   else td.append(val);
       if('mySetSortVal' in td) { td.mySetSortVal(val);}   else td.valSort=val;
     }
-    tbody.append(elR); 
-    el.nRowVisible=tbody.children.length;
+    tBody.append(elR); 
+    el.nRowVisible=tBody.children.length;
     return el;
   }
   el.myRemove=function(elR){
     elR.remove();  return el; 
-    el.nRowVisible=tbody.children.length;
+    el.nRowVisible=tBody.children.length;
   }
   el.myEdit=function(r){
-    var elR=tbody.querySelector('[idApp="'+r.idApp+'"]');
+    var elR=tBody.querySelector('[idApp="'+r.idApp+'"]');
     elR.attr({idApp:r.idApp});
     //for(var i=0;i<StrCol.length;i++) { var name=StrCol[i], val=r[name], td=elR.children('td:eq('+i+')'); if(td.mySetVal) td.mySetVal(val); else td.empty().myAppend(val); }
     for(var i=0;i<StrCol.length;i++) { var name=StrCol[i], val=r[name], td=elR.children[i]; if(td.mySetVal) td.mySetVal(val); else td.empty().myAppend(val); }
@@ -1387,14 +1346,14 @@ devAppListExtend=function(el){
   }
   el.setUp=function(){
     if(el.boStale) {
-      var vec=[['devAppListGet',1,setUpRet]];   majax(oAJAX,vec);
+      var vec=[['devAppListGet',{},setUpRet]];   majax(oAJAX,vec);
       el.boStale=0;
     }
   }
   var setUpRet=function(data){
     var tab=data.tab||[];
     var StrColTmp=data.StrCol; 
-    tbody.empty(); 
+    tBody.empty(); 
     for(var i=0;i<tab.length;i++) {  
       var obj={}; for(var j=0;j<StrColTmp.length;j++){ obj[StrColTmp[j]]=tab[i][j];}
       tab[i]=obj;
@@ -1404,15 +1363,15 @@ devAppListExtend=function(el){
   }
   el.boStale=1;
 
-  var tbody=el.tbody=createElement('tbody');
-  el.table=createElement('table').myAppend(tbody); //.css({width:'100%',position:'relative'});
+  var tBody=el.tBody=createElement('tbody');
+  el.table=createElement('table').myAppend(tBody); //.css({width:'100%',position:'relative'});
   el.divCont=createElement('div').myAppend(el.table).css({'margin':'1em auto','text-align':'left',display:'inline-block'});
 
   var StrCol=['idApp','appName','redir_uri', 'imageHash', 'created'], BoAscDefault={created:0};
   var Label={imageHash:'Image', created:'Age'};
-  var thead=headExtend(createElement('thead'),el,StrCol,BoAscDefault,Label);
-  thead.css({background:'white', width:'inherit'});  //,height:'calc(12px + 1.2em)'
-  el.table.prepend(thead);
+  var tHead=headExtend(createElement('thead'),el,StrCol,BoAscDefault,Label);
+  tHead.css({background:'white', width:'inherit'});  //,height:'calc(12px + 1.2em)'
+  el.table.prepend(tHead);
   el.nRowVisible=0;
 
   var imgDelete=imgProt.cloneNode().prop({src:uDelete});
@@ -1432,45 +1391,12 @@ devAppListExtend=function(el){
 
 
 
-
-//majax=function(oAJAX,vecIn){  // Each argument of vecIn is an array: [serverSideFunc, serverSideFuncArg, returnFunc]
-//"use strict"
-  //var makeRetF=function(vecT){ return function(data,textStatus,jqXHR){
-      //var dataArr=data.dataArr;  // Each argument of dataArr is an array, either [argument] or [altFuncArg,altFunc]
-      //delete data.dataArr;
-      //beRet(data,textStatus,jqXHR);
-      //for(var i=0;i<dataArr.length;i++){
-        //var r=dataArr[i];
-        //if(r.length==1) {var f=vecT[i][2]; if(f) f(r[0]);} else { window[r[1]].call(window,r[0]);   }
-      //}
-    //};
-  //}
-
-  //var oOut=$.extend(true, [], oAJAX);
-  //if('boFormData' in oAJAX && oAJAX.boFormData){
-    //var formData=vecIn[0][1]; vecIn[0][1]=0; // First element in vecIn contains the formData object. Rearrange it as "root object" and add the remainder to a property 'vec'
-    //var vecMod=$.extend(true, [], vecIn);
-    //for(var i=0; i<vecMod.length; i++){delete vecMod[i][2];}
-    //vecMod.push(['CSRFCode',CSRFCode]);  
-    //oOut.data=formData; oOut.data.append('vec', JSON.stringify(vecMod));
-  //}else{
-    //var vecMod=$.extend(true, [], vecIn);
-    //for(var i=0; i<vecMod.length; i++){delete vecMod[i][2];}
-    //vecMod.push(['CSRFCode',CSRFCode]);  
-    //oOut.data=JSON.stringify(vecMod);
-  //}
-  //busyLarge.show();
-  //oOut.success=makeRetF(vecIn);  return .ajax(oOut);
-//}
-
-
-
-'use strict';
-majax=function(trash, vecIn){  // Each argument of vecIn is an array: [serverSideFunc, serverSideFuncArg, returnFunc]
+var majax=function(trash, vecIn){  // Each argument of vecIn is an array: [serverSideFunc, serverSideFuncArg, returnFunc]
   var xhr = new XMLHttpRequest();
   xhr.open('POST', uBE, true);
   var arrRet=[]; vecIn.forEach(function(el,i){var f=null; if(el.length==3) f=el.pop(); arrRet[i]=f;}); // Put return functions in a separate array
-  vecIn.push(['CSRFCode',CSRFCode]);
+  //vecIn.push(['CSRFCode',CSRFCode]);
+  vecIn.push(['CSRFCode',getItem('CSRFCode')]);
   if(vecIn.length==2 && vecIn[0][1] instanceof FormData){
     var formData=vecIn[0][1]; vecIn[0][1]=0; // First element in vecIn contains the formData object. Rearrange it as "root object" and add the remainder to a property 'vec'
     formData.append('vec', JSON.stringify(vecIn));
@@ -1498,8 +1424,7 @@ majax=function(trash, vecIn){  // Each argument of vecIn is an array: [serverSid
 
 
 
-beRet=function(data){ //,textStatus,jqXHR
-"use strict"
+var beRet=function(data){ //,textStatus,jqXHR
   //if(typeof jqXHR!='undefined') var tmp=jqXHR.responseText;
   for(var key in data){
     window[key].call(this,data[key]); 
@@ -1507,12 +1432,12 @@ beRet=function(data){ //,textStatus,jqXHR
   busyLarge.hide();
 }
 
-GRet=function(data){
-"use strict"
+app.GRet=function(data){
   var tmp;
-  //if(typeof userInfoFrDB=='undefined') window.userInfoFrDB={};
-  tmp=data.strMessageText;   if(typeof tmp!="undefined") setMess(tmp);
-  tmp=data.CSRFCode;   if(typeof tmp!="undefined") CSRFCode=tmp;
+  //if(typeof userInfoFrDB=='undefined') window.userInfoFrDB={};navigator.vibrate(100);
+  tmp=data.strMessageText;   if(typeof tmp!="undefined") {setMess(tmp); if(/error/i.test(tmp)) navigator.vibrate(100);}
+  //tmp=data.CSRFCode;   if(typeof tmp!="undefined") CSRFCode=tmp;
+  if('CSRFCode' in data) setItem('CSRFCode',data.CSRFCode);
   //tmp=data.userInfoFrDB; if(typeof tmp!="undefined") {  for(var key in tmp){ userInfoFrDB[key]=tmp[key]; }   } 
   tmp=data.userInfoFrDB; if(typeof tmp!="undefined") {  userInfoFrDB=tmp; }
   tmp=data.objApp; if(typeof tmp!="undefined") {  objApp=tmp; }  
@@ -1527,7 +1452,7 @@ GRet=function(data){
 
 
  // el.StrProp=['name', 'password', 'image', 'email', 'telephone',   'country', 'federatedState', 'county', 'city', 'zip', 'address',     'idFB', 'idGoogle', 'idNational', 'birthdate', 'motherTongue', 'gender'];
-PropExtend=function(){
+var PropExtend=function(){
   var saveInpDefault=function(inp){ return [null, inp.value.trim()];}
   var crInpDefault=function(){
     //var strType=('strType' in this)?this.strType:'';
@@ -1538,14 +1463,19 @@ PropExtend=function(){
   var setInpDefault=function(inp){  var strName=inp.attr('name');   inp.value=userInfoFrDB[strName];  }
 
   var crStatisticSpanDefault=function(){
-    var spanNChange=createElement('span').css({'font-weight':'bold'}).attr('name','nChange'), spanLastChange=createElement('span').css({'font-weight':'bold'}).attr('name','lastChange');
-    var span=createElement('span').myAppendB('Last changed ', spanLastChange, ' ago (', spanNChange, ' times)').css({'font-size':'85%', 'margin-left':'0.4em'});
+    //var spanNChange=createElement('span').css({'font-weight':'bold'}).attr('name','nChange'), spanLastChange=createElement('span').css({'font-weight':'bold'}).attr('name','lastChange'), spanLastChangeW=createElement('span').myAppend('(', spanLastChange, ' ago)');
+    //var span=createElement('span').myAppend('Changed ', spanNChange, ' times ', spanLastChangeW).css({'font-size':'85%', 'margin-left':'0.4em'});
+    //return span;
+    var span=createElement('span').css({'font-size':'85%', 'margin-left':'0.4em'});
     return span;
   }
   var setStatisticSpanDefault=function(span){
-    var strNName='n'+ucfirst(span.attr('name'));       span.querySelector('span[name=nChange]').myText(userInfoFrDB[strNName]);
+    var strNName='n'+ucfirst(span.attr('name')), nChange=userInfoFrDB[strNName];//, spanNChange=span.querySelector('span[name=nChange]'); spanNChange.myText(nChange);
     var strTName='t'+ucfirst(span.attr('name')), arrTmp=getSuitableTimeUnit(unixNow()-userInfoFrDB[strTName]); arrTmp[0]=Math.round(arrTmp[0]);
-    span.querySelector('span[name=lastChange]').myText(arrTmp.join(' '));
+    //var spanTChange=span.querySelector('span[name=lastChange]'); spanTChange.myText(arrTmp.join(' ')); spanTChange.parentNode.toggle(nChange); 
+    if(nChange==0) span.myHtml('Changed <b>0</b> times');
+    else if(nChange==1) span.myHtml('Changed <b>1</b> time, <b>'+arrTmp.join(' ')+'</b> ago');
+    else if(nChange==2) span.myHtml('Changed <b>'+nChange+'</b> times, <b>'+arrTmp.join(' ')+'</b> ago');
   }
 
 
@@ -1627,7 +1557,7 @@ PropExtend=function(){
     c.spanYes=createElement('span').css({'color':'green', 'margin-right':'1em'}).myText('Yes');
     c.spanNo=createElement('span').css({'color':'red', 'margin-right':'1em'}).myText('No');
     c.butVerify=createElement('button').addClass('highStyle').myText(langHtml.emailVerificationOfEmail).on('click',function(){
-      //var vec=[['verifyEmail',1]];   majax(oAJAX,vec); 
+      //var vec=[['verifyEmail',{}]];   majax(oAJAX,vec); 
       verifyEmailPop.openFunc();
     });
     c.append(c.spanYes, c.spanNo, c.butVerify);  //langHtml.YourImage+': ',
@@ -1669,7 +1599,7 @@ PropExtend=function(){
     });
     var uploadCallback=function(){
       var tmpF=function(){
-        var tmp=calcImageUrlUser(); c.thumb.prop({src:tmp}); doHistBack();
+        var tmp=calcImageUrlUser(); c.thumb.prop({src:tmp}); historyBack();
       };
       var vec=[ ['setupById',{},tmpF]];   majax(oAJAX,vec);
     }
@@ -1677,14 +1607,14 @@ PropExtend=function(){
     c.append(c.thumb, c.butDeleteImg, buttUploadImage);  //langHtml.YourImage+': ',
     return c;
   };
-  calcImageUrl=function(rT){
+  app.calcImageUrl=function(rT){
     var uImg;
     if(rT.imageHash!==null) uImg=uUserImage+rT.imageHash;
     else if(rT.image.length) uImg=rT.image;
     else uImg=uSite+"/lib/image/anonEmptyHash.png";
     return uImg;
   };
-  calcImageUrlUser=function(){    return calcImageUrl(userInfoFrDB);     }
+  app.calcImageUrlUser=function(){    return calcImageUrl(userInfoFrDB);     }
   var tmpSetInp=function(c){
     var tmp=calcImageUrlUser();
     c.thumb.prop({src:tmp});
@@ -1696,10 +1626,10 @@ PropExtend=function(){
 
 }
 
-timerALogout=null;
+var timerALogout=null;
 
 
-langHtml={
+var langHtml={
   OK:'OK',
   Yes:'Yes',
   uploadNewImg:'Upload new image',
@@ -1767,331 +1697,324 @@ birthdate:'Birthdate',
 motherTongue:'Mother tongue',
 gender:'Gender'
 }
-helpBub={}
-
-setUp1=function(){
+var helpBub={}
 
 
-  elHtml=document.documentElement;  elBody=document.body
-  elBody.css({margin:'0px'});
+
+app.elHtml=document.documentElement;  app.elBody=document.body
+elBody.css({margin:'0px'});
+
+app.boTouch = Boolean('ontouchstart' in document.documentElement);
+//boTouch=1;
+
+
+var browser=getBrowser();
+var intBrowserVersion=parseInt(browser.version.slice(0, 2));
+
+
+var ua=navigator.userAgent, uaLC = ua.toLowerCase(); //alert(ua);
+app.boAndroid = uaLC.indexOf("android") > -1;
+app.boFF = uaLC.indexOf("firefox") > -1; 
+//boIE = uaLC.indexOf("msie") > -1; 
+app.versionIE=detectIE();
+app.boIE=versionIE>0; if(boIE) browser.brand='msie';
+
+app.boChrome= /chrome/i.test(uaLC);
+app.boIOS= /iPhone|iPad|iPod/i.test(uaLC);
+app.boEpiphany=/epiphany/.test(uaLC);    if(boEpiphany && !boAndroid) boTouch=false;  // Ugly workaround
+
+app.boOpera=RegExp('OPR\\/').test(ua); if(boOpera) boChrome=false; //alert(ua);
+
+
+
+if(boTouch){
+  if(boIOS) {  
+    [elBody,elHtml].forEach(ele=>ele.css({"height":"100%", "overflow-y":"scroll", "-webkit-overflow-scrolling":"touch"}));
+  }
+} 
+
+//boHistPushOK='pushState' in history && 'state' in history;
+var boHistPushOK='pushState' in history;
+if(!boHistPushOK) { alert('This browser does not support history'); return;}
+var boStateInHistory='state' in history;
+if(!boStateInHistory) { alert('This browser does not support history.state'); return;}
+
+
+var boIsGeneratorSupported=isGeneratorSupported();
+var boFormDataOK=1;  if(typeof FormData=='undefined') {  boFormDataOK=0;  }
+
+
+if(!(typeof sessionStorage=='object' && sessionStorage.getItem)) {console.log("Your browser doesn't support sessionStorage"); return;}
+
+var menuMaxWidth=500;
+var boImgCreationOK=1;
+
+PropExtend();
+
+var objQS=parseQS(location.search.substring(1));
+var boAuthReq=Boolean(Object.keys(objQS).length);
+var scopeAsked=objQS.scope||'';
+var idApp=Number(objQS.client_id)||null;
+
+var cssFixedTop={margin:'0em 0','text-align':'center',position:'fixed',top:0,width:'100%','border-top':'3px #aaa solid',background:'#fff'}; //,'z-index':5
+var cssFixed={margin:'0em 0','text-align':'center',position:'fixed',bottom:0,width:'100%','border-top':'3px #aaa solid',background:'#fff'}; //,'z-index':5
+var cssFixedDrag={margin:'0em 0','text-align':'center',position:'fixed',bottom:0,width:'100%',background:'#fff'}; //,'z-index':5
+if(boTouch) cssFixedDrag=cssFixed;
+
+
+var strScheme='http'+(boTLS?'s':''),    strSchemeLong=strScheme+'://',    uSite=strSchemeLong+site.wwwSite,      uBE=uSite+"/"+leafBE;
+var uCanonical=uSite;
+
+var uUserImage=uSite+'/image/u';
+var uAppImage=uSite+'/image/a';
+
+var wcseLibImageFolder='/'+flLibImageFolder+'/';
+var uLibImageFolder=uSite+wcseLibImageFolder;
+
+var uHelpFile=uLibImageFolder+'help.png';
+
+var uVipp0=uLibImageFolder+'vipp0.png';
+var uVipp1=uLibImageFolder+'vipp1.png';
+
+var uFBTiny=uLibImageFolder+'fb.png';
+//uFBFacebook=uLibImageFolder+'fbFacebook.png';
+var uFb=uLibImageFolder+'fbLogin.png';
+var uGoogle=uLibImageFolder+'googleWide.jpg';
+
+var uIncreasing=uLibImageFolder+'increasing.png';
+var uDecreasing=uLibImageFolder+'decreasing.png';
+var uUnsorted=uLibImageFolder+'unsorted.png';
+
+//uAnon=uLibImageFolder+'anon.png';
+var uBusy=uLibImageFolder+'busy.gif';
+var uBusyLarge=uLibImageFolder+'busyLarge.gif';
+
+var uDelete=uLibImageFolder+'delete.png';
+var uDelete1=uLibImageFolder+'delete1.png';
+var uIdPlaceCompare=uLibImageFolder+'idPlaceCompare.png';
+
+
+var imgHelp=createElement('img').prop({src:uHelpFile}).css({'vertical-align':'-0.4em'});
+var hovHelp=createElement('span').myText('?').css({'font-size':'88%',color:'#a7a7a7','vertical-align':'-0.4em'});
+
+var sizeIcon=1.5, strSizeIcon=sizeIcon+'em';
+var imgProt=createElement('img').css({height:strSizeIcon,width:strSizeIcon,'vertical-align':'text-bottom'}); 
+
+
+  //
+  // History
+  //
   
-  boTouch = Boolean('ontouchstart' in document.documentElement);
-  //boTouch=1;
+var strHistTitle=site.wwwSite;
 
+var histList=[];
+var stateLoaded=history.state;
+var tmpi=stateLoaded?stateLoaded.ind:0,    stateLoadedNew={hash:randomHash(), ind:tmpi};
+history.replaceState(stateLoadedNew, '', uCanonical);
+var stateTrans=stateLoadedNew;
+history.StateMy=[];
 
-  browser=getBrowser();
-  var intBrowserVersion=parseInt(browser.version.slice(0, 2));
-
-
-  var ua=navigator.userAgent, uaLC = ua.toLowerCase(); //alert(ua);
-  boAndroid = uaLC.indexOf("android") > -1;
-  boFF = uaLC.indexOf("firefox") > -1; 
-  //boIE = uaLC.indexOf("msie") > -1; 
-  versionIE=detectIE();
-  boIE=versionIE>0; if(boIE) browser.brand='msie';
-
-  boChrome= /chrome/i.test(uaLC);
-  boIOS= /iPhone|iPad|iPod/i.test(uaLC);
-  boEpiphany=/epiphany/.test(uaLC);    if(boEpiphany && !boAndroid) boTouch=false;  // Ugly workaround
-
-  boOpera=RegExp('OPR\\/').test(ua); if(boOpera) boChrome=false; //alert(ua);
-
-
-
-  boSmallAndroid=0;
-  
-  if(boTouch){
-    if(boIOS) {  
-      [elBody,elHtml].forEach(ele=>ele.css({"height":"100%", "overflow-y":"scroll", "-webkit-overflow-scrolling":"touch"}));
+window.on('popstate', function(event) {
+  var dir=history.state.ind-stateTrans.ind;
+  //if(Math.abs(dir)>1) {debugger; alert('dir=',dir); }
+  var boSameHash=history.state.hash==stateTrans.hash;
+  if(boSameHash){
+    var tmpObj=history.state;
+    if('boResetHashCurrent' in history && history.boResetHashCurrent) {
+      tmpObj.hash=randomHash();
+      history.replaceState(tmpObj, '', uCanonical);
+      history.boResetHashCurrent=false;
     }
-  } 
 
-  //boHistPushOK='pushState' in history && 'state' in history;
-  boHistPushOK='pushState' in history;
-  if(!boHistPushOK) { alert('This browser does not support history'); return;}
-  boStateInHistory='state' in history;
-  if(!boStateInHistory) { alert('This browser does not support history.state'); return;}
-
-
-  boIsGeneratorSupported=isGeneratorSupported();
-  boFormDataOK=1;  if(typeof FormData=='undefined') {  boFormDataOK=0;  }
-
-
-  if(!(typeof sessionStorage=='object' && sessionStorage.getItem)) {console.log("Your browser doesn't support sessionStorage"); return;}
-
-  menuMaxWidth=500;
-  boImgCreationOK=1;
-
-  PropExtend();
-
-  objQS=parseQS(location.search.substring(1));
-  boAuthReq=Boolean(Object.keys(objQS).length);
-  scopeAsked=objQS.scope||'';
-  idApp=Number(objQS.client_id)||null;
-
-  cssFixedTop={margin:'0em 0','text-align':'center',position:'fixed',top:0,width:'100%','border-top':'3px #aaa solid',background:'#fff'}; //,'z-index':5
-  cssFixed={margin:'0em 0','text-align':'center',position:'fixed',bottom:0,width:'100%','border-top':'3px #aaa solid',background:'#fff'}; //,'z-index':5
-  cssFixedDrag={margin:'0em 0','text-align':'center',position:'fixed',bottom:0,width:'100%',background:'#fff'}; //,'z-index':5
-  if(boTouch) cssFixedDrag=cssFixed;
-  sizeIcon=1.5; strSizeIcon=sizeIcon+'em';
- 
-
-  strScheme='http'+(boTLS?'s':'');    strSchemeLong=strScheme+'://';    uSite=strSchemeLong+wwwSite;      uBE=uSite+"/"+leafBE;
-  uCanonical=uSite;
-
-  uUserImage=uSite+'/image/u';
-  uAppImage=uSite+'/image/a';
-
-  wcseLibImageFolder='/'+flLibImageFolder+'/';
-  uLibImageFolder=uSite+wcseLibImageFolder;
-
-  uHelpFile=uLibImageFolder+'help.png';
-
-  uVipp0=uLibImageFolder+'vipp0.png';
-  uVipp1=uLibImageFolder+'vipp1.png';
-
-  uFBTiny=uLibImageFolder+'fb.png';
-  //uFBFacebook=uLibImageFolder+'fbFacebook.png';
-  uFb=uLibImageFolder+'fbLogin.png';
-  uGoogle=uLibImageFolder+'googleWide.jpg';
-
-  uIncreasing=uLibImageFolder+'increasing.png';
-  uDecreasing=uLibImageFolder+'decreasing.png';
-  uUnsorted=uLibImageFolder+'unsorted.png';
-
-  //uAnon=uLibImageFolder+'anon.png';
-  uBusy=uLibImageFolder+'busy.gif';
-  uBusyLarge=uLibImageFolder+'busyLarge.gif';
-
-  uDelete=uLibImageFolder+'delete.png';
-  uDelete1=uLibImageFolder+'delete1.png';
-  uIdPlaceCompare=uLibImageFolder+'idPlaceCompare.png';
-
-
-  imgHelp=createElement('img').prop({src:uHelpFile}).css({'vertical-align':'-0.4em'});
-  hovHelp=createElement('span').myText('?').css({'font-size':'88%',color:'#a7a7a7','vertical-align':'-0.4em'});
-
-  sizeIcon=1.5; strSizeIcon=sizeIcon+'em';
-  imgProt=createElement('img').css({height:strSizeIcon,width:strSizeIcon,'vertical-align':'text-bottom'}); 
-
-
-  strHistTitle=wwwSite;
-  histList=[];
-  stateLoaded=history.state; 
-  var tmpi=stateLoaded?stateLoaded.ind:0;    stateLoadedNew={hash:randomHash(), ind:tmpi};
-  history.replaceState(stateLoadedNew,'',uCanonical);
-  stateTrans=stateLoadedNew;
-  history.StateMy=[];
-
-
-  window.addEventListener('popstate', function(event) {
-    var dir=history.state.ind-stateTrans.ind;
-    if(Math.abs(dir)>1) alert('dir=',dir);
-    var boSameHash=history.state.hash==stateTrans.hash;
-    if(boSameHash){
-      var tmpObj=history.state;
-      if('boResetHashCurrent' in history && history.boResetHashCurrent) {
-        tmpObj.hash=randomHash();
-        history.replaceState(tmpObj,'',uCanonical);
-        history.boResetHashCurrent=false;
-      }
-
-      //var strName=tmpObj.strName, obj=window[''+strName];
-      //obj.setVis();       elBody.scrollTop(tmpObj.scroll);
-
-      var stateMy=history.StateMy[history.state.ind];
-      if(typeof stateMy!='object' ) {var tmpStr=window.location.href +" Error: typeof stateMy: "+(typeof stateMy); if(!boEpiphany) alert(tmpStr); else  console.log(tmpStr); return; }
-      var view=stateMy.view;
-      view.setVis();
-      if(typeof view.getScroll=='function') {
-        var scrollT=view.getScroll();
-        setTimeout(function(){window.scrollTop(scrollT);},1);
-      } else {
-        //var scrollT=stateMy.scroll;  setTimeout(function(){  window.scrollTop(scrollT);},1);
-      }
-      
-
-      if('funOverRule' in history && history.funOverRule) {history.funOverRule(); history.funOverRule=null;}
-      else{
-        if('fun' in stateMy && stateMy.fun) {var fun=stateMy.fun(stateMy); }
-      }
-
-      stateTrans=extend({},tmpObj);
-    }else{
-      stateTrans=history.state; extend(stateTrans,{hash:randomHash()}); history.replaceState(stateTrans,'',uCanonical);
-      history.go(sign(dir));
+    var stateMy=history.StateMy[history.state.ind];
+    if(typeof stateMy!='object' ) {
+      var tmpStr=window.location.href +" Error: typeof stateMy: "+(typeof stateMy)+', history.state.ind:'+history.state.ind+', history.StateMy.length:'+history.StateMy.length+', Object.keys(history.StateMy):'+Object.keys(history.StateMy);
+      if(!boEpiphany) alert(tmpStr); else  console.log(tmpStr);
+      debugger;
+      return;
     }
-  }); 
+    var view=stateMy.view;
+    view.setVis();
+    if(typeof view.getScroll=='function') {
+      var scrollT=view.getScroll();
+      setTimeout(function(){window.scrollTop(scrollT);}, 1);
+    } else {
+      //var scrollT=stateMy.scroll;  setTimeout(function(){  window.scrollTop(scrollT);}, 1);
+    }
+    
+    if('funOverRule' in history && history.funOverRule) {history.funOverRule(); history.funOverRule=null;}
+    else{
+      if('fun' in stateMy && stateMy.fun) {var fun=stateMy.fun(stateMy); }
+    }
 
-  if(boFF){
-    window.on('beforeunload', function(){   });
-  } 
-
-
-  errorFunc=function(jqXHR, textStatus, errorThrown){
-    setMess('responseText: '+jqXHR.responseText+', textStatus: '+' '+textStatus+', errorThrown: '+errorThrown);     throw 'bla';
+    stateTrans=extend({}, tmpObj);
+  }else{
+    stateTrans=history.state; extend(stateTrans, {hash:randomHash()}); history.replaceState(stateTrans, '', uCanonical);
+    history.go(sign(dir));
   }
-  //oAJAX={url:uBE, crossDomain:false, contentType:'application/json', error: errorFunc, type: "POST",dataType:'json', processData:false,success: beRet};
-  oAJAX={url:uBE, crossDomain:false, contentType:false, error: errorFunc, type: "POST", processData:false,success: beRet};  
-  oAJAXCacheable={url:uBE, crossDomain:false, error: errorFunc, type: "GET", dataType:'json', processData:false, success: beRet};
+});
+if(boFF){
+  window.on('beforeunload', function(){   });
+} 
 
 
-
-  imgBusy=createElement('img').prop({src:uBusy});
-  //messageText=messExtend(createElement('span'));  window.setMess=messageText.setMess;  window.resetMess=messageText.resetMess;   elBody.myText(messageText); 
-  spanMessageText=spanMessageTextCreate();  window.setMess=spanMessageText.setMess;  window.resetMess=spanMessageText.resetMess;  window.appendMess=spanMessageText.appendMess;  elBody.append(spanMessageText)
-
-  busyLarge=createElement('img').prop({src:uBusyLarge}).css({position:'fixed',top:'50%',left:'50%','margin-top':'-42px','margin-left':'-42px','z-index':'1000',border:'black solid 1px'}).hide();
-  elBody.append(busyLarge);
-
-
-  H1=elBody.querySelector('h1');//.detach()
-  H1.css({background:'#fff',border:'solid 1px',color:'black','font-size':'1.6em','font-weight':'bold','text-align':'center',
-      padding:'0.4em 0em 0.4em 0em',margin:'0.3em 0em 0em 0em'}); 
-
-  loginInfo=loginInfoExtend(createElement('div'));  loginInfo.css({padding:'0em 0em 0em 0em','font-size':'75%', height:'1em'});
-  elBody.prepend(loginInfo);
-  
-
-  mainDiv=mainDivExtend(createElement('div')); 
-  idPLoginDiv=idPLoginDivExtend(createElement('div'));
-  formLogin=formLoginExtend(elBody.querySelector('#formLogin'));
-  loginSelectorDiv=loginSelectorDivExtend(createElement('div'));
-  //loginForSecretDiv=loginForSecretDivExtend(createElement('div'));
-
-
-  deleteAccountPop=deleteAccountPopExtend(createElement('div'));
-  changePWPop=changePWPopExtend(createElement('div'));
-  verifyEmailPop=verifyEmailPopExtend(createElement('div'));
-  forgottPWPop=forgottPWPopExtend(createElement('div'));
-  uploadImageDiv=uploadImageDivExtend(createElement('div'));
-
-  devAppList=devAppListExtend(createElement('div'));
-  devAppSetDiv=devAppSetDivExtend(createElement('div'));
-  devAppDeleteDiv=devAppDeleteDivExtend(createElement('div'));
-  devAppSecretDiv=devAppSecretDivExtend(createElement('div'));
-  userAppSetDiv=userAppSetDivExtend(createElement('div'));
-  userAppDeleteDiv=userAppDeleteDivExtend(createElement('div'));
-  userAppList=userAppListExtend(createElement('div'));
-
-
-  divDisclaimer=divDisclaimerExtend(createElement('div')).css({'background':'#fff5f6', 'margin-bottom':'1em', 'padding':'0.2em', border:'1px red solid'});
-
-
-  createUserDiv=createUserDivExtend(createElement('div'));
-  createUserSelectorDiv=createUserSelectorDivExtend(createElement('div'));
-  userSettingDiv=userSettingDivExtend(createElement('div'));
-  consentDiv=consentDivExtend(createElement('div'));
-  
- 
-  StrMainDiv=['mainDiv', 'loginSelectorDiv', 'createUserSelectorDiv', 'createUserDiv', 'userSettingDiv', 'consentDiv', 'deleteAccountPop', 'verifyEmailPop', 'forgottPWPop', 'changePWPop', 'uploadImageDiv',
- 'devAppList', 'devAppSetDiv', 'devAppDeleteDiv', 'devAppSecretDiv', 'userAppSetDiv', 'userAppDeleteDiv', 'userAppList'];  //'loginInfo', 'H1', 
-
-
-  var MainDiv=[];  for(var i=0;i<StrMainDiv.length;i++){    MainDiv[i]=window[StrMainDiv[i]];  };
-
-
-  history.StateMy[history.state.ind]={view:mainDiv};
-
-  
-  mainDiv.setVis=function(){
-    MainDiv.forEach(ele=>ele.hide()); this.show();
-    mainDiv.setUp();
-    return true;
-  }
-  loginSelectorDiv.setVis=function(){
-    MainDiv.forEach(ele=>ele.hide()); this.show();
-    this.setUp();
-    return true;
-  }
-  createUserSelectorDiv.setVis=function(){
-    MainDiv.forEach(ele=>ele.hide()); this.show();
-    this.setUp();
-    return true;
-  }
-  createUserDiv.setVis=function(){
-    MainDiv.forEach(ele=>ele.hide()); this.show();
-    this.divDisclaimerW.append(divDisclaimer);
-    this.setUp();
-    return true;
-  }
-  userSettingDiv.setVis=function(){
-    MainDiv.forEach(ele=>ele.hide()); this.show();
-    this.setUp(); 
-    this.divDisclaimerW.append(divDisclaimer);
-    return true;
-  }
-  consentDiv.setVis=function(){
-    MainDiv.forEach(ele=>ele.hide()); this.show();
-    this.setUp();
-    return true; 
-  }
-
-  devAppList.setVis=function(){
-    MainDiv.forEach(ele=>ele.hide()); this.show();
-    this.setUp();
-    return true;
-  }
-  userAppList.setVis=function(){
-    MainDiv.forEach(ele=>ele.hide()); this.show();
-    this.setUp();
-    return true;
-  }
-
-  
-  MainDiv.forEach(ele=>ele.hide());
-  elBody.append(loginInfo, H1, ...MainDiv);
-
-
-  elBody.css({'text-align':'center'});
-  //MainDiv.css({'margin-left':'auto','margin-right':'auto'});
-  //MainDiv.not(H1).css({'text-align':'left',background:'#fff'});
-  [...MainDiv, loginInfo, H1].forEach(ele=>ele.css({'margin-left':'auto','margin-right':'auto'}));
-  [...MainDiv, loginInfo].forEach(ele=>ele.css({'text-align':'left',background:'#fff'}));
-  
-
-  var mainDivsNonFixWidth=[mainDiv, devAppList, userAppList, userSettingDiv, createUserDiv];
-  var mainDivsPop=[deleteAccountPop, verifyEmailPop, forgottPWPop, changePWPop, uploadImageDiv, devAppSetDiv, devAppDeleteDiv, devAppSecretDiv, userAppSetDiv, userAppDeleteDiv];
-  
-  mainDivsNonFixWidth.forEach(ele=>ele.css({display:'block','text-align':'center'}));
-  mainDivsPop.forEach(ele=>ele.css({display:'block','text-align':'left'}));
-  
-  var mainDivsFixWidth=AMinusB([...MainDiv, loginInfo, H1],[...mainDivsNonFixWidth, ...mainDivsPop]);  mainDivsFixWidth.forEach(ele=>ele.css({'max-width':'800px'}));
-
-
-  elBody.visible();
-  H1.show();
-  mainDiv.setVis();
-  loginInfo.setStat();
-
-  
-  setBottomMargin=function() { // This is not very beautiful. But how should one else make a fixed div at the bottom without hiding the bottom of the scrollable content behind??
-    if(devAppList.style.display!='none'){devAppList.divCont.css({'margin-bottom':devAppList.fixedDiv.offsetHeight+'px'});}
-    //else if(userAppList.style.display!='none'){userAppList.divCont.css({'margin-bottom':userAppList.fixedDiv.offsetHeight+'px'});}
-    else if(userSettingDiv.style.display!='none'){userSettingDiv.divCont.css({'margin-bottom':userSettingDiv.fixedDiv.offsetHeight+'px'});}
-    else if(createUserDiv.style.display!='none'){createUserDiv.divCont.css({'margin-bottom':createUserDiv.fixedDiv.offsetHeight+'px'});}
-  }
-  if(boFF) window.on("DOMMouseScroll", setBottomMargin, false); else   window.on('mousewheel', setBottomMargin);
-  window.scroll(setBottomMargin);
-  elBody.on('click',setBottomMargin);
-
-    // In normal case: go back to mainDiv after successfull login/logout/createUser
-  idPLoginDiv.cb=formLogin.cb=createUserDiv.cb=loginInfo.cb=function(){
-    if(history.StateMy[history.state.ind].view===mainDiv) {mainDiv.setVis();}
-    else history.fastBack(mainDiv);
-  };
-  if(boAuthReq){
-    var flow=(function*(){ yield *authFlowF(flow); })(); flow.next();
-    //var authFlowObj=new authFlowT();  authFlowObj.continueStart();
-  }
+app.errorFunc=function(jqXHR, textStatus, errorThrown){
+  setMess('responseText: '+jqXHR.responseText+', textStatus: '+' '+textStatus+', errorThrown: '+errorThrown);     throw 'bla';
 }
+//oAJAX={url:uBE, crossDomain:false, contentType:'application/json', error: errorFunc, type: "POST",dataType:'json', processData:false,success: beRet};
+var oAJAX={url:uBE, crossDomain:false, contentType:false, error: errorFunc, type: "POST", processData:false,success: beRet};  
+var oAJAXCacheable={url:uBE, crossDomain:false, error: errorFunc, type: "GET", dataType:'json', processData:false, success: beRet};
+
+
+
+var imgBusy=createElement('img').prop({src:uBusy});
+//messageText=messExtend(createElement('span'));  window.setMess=messageText.setMess;  window.resetMess=messageText.resetMess;   elBody.myText(messageText); 
+var spanMessageText=spanMessageTextCreate();  window.setMess=spanMessageText.setMess;  window.resetMess=spanMessageText.resetMess;  window.appendMess=spanMessageText.appendMess;  elBody.append(spanMessageText)
+
+var busyLarge=createElement('img').prop({src:uBusyLarge}).css({position:'fixed',top:'50%',left:'50%','margin-top':'-42px','margin-left':'-42px','z-index':'1000',border:'black solid 1px'}).hide();
+elBody.append(busyLarge);
+
+
+var H1=elBody.querySelector('h1');//.detach()
+H1.css({background:'#fff',border:'solid 1px',color:'black','font-size':'1.6em','font-weight':'bold','text-align':'center',
+    padding:'0.4em 0em 0.4em 0em',margin:'0.3em 0em 0em 0em'}); 
+
+var loginInfo=loginInfoExtend(createElement('div'));  loginInfo.css({padding:'0em 0em 0em 0em','font-size':'75%', height:'1em'});
+elBody.prepend(loginInfo);
+
+
+var mainDiv=mainDivExtend(createElement('div')); 
+var idPLoginDiv=idPLoginDivExtend(createElement('div'));
+var formLogin=formLoginExtend(elBody.querySelector('#formLogin'));
+var loginSelectorDiv=loginSelectorDivExtend(createElement('div'));
+//loginForSecretDiv=loginForSecretDivExtend(createElement('div'));
+
+
+var deleteAccountPop=deleteAccountPopExtend(createElement('div'));
+var changePWPop=changePWPopExtend(createElement('div'));
+var verifyEmailPop=verifyEmailPopExtend(createElement('div'));
+var forgottPWPop=forgottPWPopExtend(createElement('div'));
+var uploadImageDiv=uploadImageDivExtend(createElement('div'));
+
+var devAppList=devAppListExtend(createElement('div'));
+var devAppSetDiv=devAppSetDivExtend(createElement('div'));
+var devAppDeleteDiv=devAppDeleteDivExtend(createElement('div'));
+var devAppSecretDiv=devAppSecretDivExtend(createElement('div'));
+var userAppSetDiv=userAppSetDivExtend(createElement('div'));
+var userAppDeleteDiv=userAppDeleteDivExtend(createElement('div'));
+var userAppList=userAppListExtend(createElement('div'));
+
+
+var divDisclaimer=divDisclaimerExtend(createElement('div')).css({'background':'#fff5f6', 'margin-bottom':'1em', 'padding':'0.2em', border:'1px red solid'});
+
+
+var createUserDiv=createUserDivExtend(createElement('div'));
+var createUserSelectorDiv=createUserSelectorDivExtend(createElement('div'));
+var userSettingDiv=userSettingDivExtend(createElement('div'));
+var consentDiv=consentDivExtend(createElement('div'));
+
+
+//app.StrMainDiv=['mainDiv', 'loginSelectorDiv', 'createUserSelectorDiv', 'createUserDiv', 'userSettingDiv', 'consentDiv', 'deleteAccountPop', 'verifyEmailPop', 'forgottPWPop', 'changePWPop', 'uploadImageDiv',
+//'devAppList', 'devAppSetDiv', 'devAppDeleteDiv', 'devAppSecretDiv', 'userAppSetDiv', 'userAppDeleteDiv', 'userAppList'];  //'loginInfo', 'H1', 
+//var MainDiv=[];  for(var i=0;i<StrMainDiv.length;i++){    MainDiv[i]=window[StrMainDiv[i]];  };
+
+var MainDiv=[mainDiv, loginSelectorDiv, createUserSelectorDiv, createUserDiv, userSettingDiv, consentDiv, deleteAccountPop, verifyEmailPop, forgottPWPop, changePWPop, uploadImageDiv, devAppList, devAppSetDiv, devAppDeleteDiv, devAppSecretDiv, userAppSetDiv, userAppDeleteDiv, userAppList]; 
+
+
+
+
+history.StateMy[history.state.ind]={view:mainDiv};
+
+
+mainDiv.setVis=function(){
+  MainDiv.forEach(ele=>ele.hide()); this.show();
+  mainDiv.setUp();
+  return true;
+}
+loginSelectorDiv.setVis=function(){
+  MainDiv.forEach(ele=>ele.hide()); this.show();
+  this.setUp();
+  return true;
+}
+createUserSelectorDiv.setVis=function(){
+  MainDiv.forEach(ele=>ele.hide()); this.show();
+  this.setUp();
+  return true;
+}
+createUserDiv.setVis=function(){
+  MainDiv.forEach(ele=>ele.hide()); this.show();
+  this.divDisclaimerW.append(divDisclaimer);
+  this.setUp();
+  return true;
+}
+userSettingDiv.setVis=function(){
+  MainDiv.forEach(ele=>ele.hide()); this.show();
+  this.setUp(); 
+  this.divDisclaimerW.append(divDisclaimer);
+  return true;
+}
+consentDiv.setVis=function(){
+  MainDiv.forEach(ele=>ele.hide()); this.show();
+  this.setUp();
+  return true; 
+}
+
+devAppList.setVis=function(){
+  MainDiv.forEach(ele=>ele.hide()); this.show();
+  this.setUp();
+  return true;
+}
+userAppList.setVis=function(){
+  MainDiv.forEach(ele=>ele.hide()); this.show();
+  this.setUp();
+  return true;
+}
+
+
+MainDiv.forEach(ele=>ele.hide());
+elBody.append(loginInfo, H1, ...MainDiv);
+
+
+elBody.css({'text-align':'center'});
+//MainDiv.css({'margin-left':'auto','margin-right':'auto'});
+//MainDiv.not(H1).css({'text-align':'left',background:'#fff'});
+[...MainDiv, loginInfo, H1].forEach(ele=>ele.css({'margin-left':'auto','margin-right':'auto'}));
+[...MainDiv, loginInfo].forEach(ele=>ele.css({'text-align':'left',background:'#fff'}));
+
+
+var mainDivsNonFixWidth=[mainDiv, devAppList, userAppList, userSettingDiv, createUserDiv];
+var mainDivsPop=[deleteAccountPop, verifyEmailPop, forgottPWPop, changePWPop, uploadImageDiv, devAppSetDiv, devAppDeleteDiv, devAppSecretDiv, userAppSetDiv, userAppDeleteDiv];
+
+mainDivsNonFixWidth.forEach(ele=>ele.css({display:'block','text-align':'center'}));
+mainDivsPop.forEach(ele=>ele.css({display:'block','text-align':'left'}));
+
+var mainDivsFixWidth=AMinusB([...MainDiv, loginInfo, H1],[...mainDivsNonFixWidth, ...mainDivsPop]);  mainDivsFixWidth.forEach(ele=>ele.css({'max-width':'800px'}));
+
+
+elBody.visible();
+H1.show();
+mainDiv.setVis();
+loginInfo.setStat();
+
+
+var setBottomMargin=function() { // This is not very beautiful. But how should one else make a fixed div at the bottom without hiding the bottom of the scrollable content behind??
+  if(devAppList.style.display!='none'){devAppList.divCont.css({'margin-bottom':devAppList.fixedDiv.offsetHeight+'px'});}
+  //else if(userAppList.style.display!='none'){userAppList.divCont.css({'margin-bottom':userAppList.fixedDiv.offsetHeight+'px'});}
+  else if(userSettingDiv.style.display!='none'){userSettingDiv.divCont.css({'margin-bottom':userSettingDiv.fixedDiv.offsetHeight+'px'});}
+  else if(createUserDiv.style.display!='none'){createUserDiv.divCont.css({'margin-bottom':createUserDiv.fixedDiv.offsetHeight+'px'});}
+}
+if(boFF) window.on("DOMMouseScroll", setBottomMargin, false); else   window.on('mousewheel', setBottomMargin);
+window.scroll(setBottomMargin);
+elBody.on('click',setBottomMargin);
+
+
 
 //mainDiv
 //  loginSelectorDiv  (idPLoginDiv, formLogin)
 //  createUserSelectorDiv  (idPLoginDiv)
 //    createUserDiv
 
-authFlowF=function*(flow){
+var authFlowF=function*(flow){
   if(Object.keys(userInfoFrDB).length==0){
     idPLoginDiv.cb=function(){
       flow.next();
@@ -2133,52 +2056,19 @@ authFlowF=function*(flow){
   window.location.replace(uRedir);
 }
 
-/*
-authFlowT=function(){
-  this.continueStart=function(){
-    if(Object.keys(userInfoFrDB).length==0){
-      idPLoginDiv.cb=continueGotUser;
-      formLogin.cb=continueGotUser;
-      createUserDiv.cb=continueGotUser;
-    } else continueGotUser();
-  }
-  var continueGotUser=function(){
-    idPLoginDiv.cb=null;formLogin.cb=null; createUserDiv.cb=null;
-    var tmpScopeGranted=objUApp?objUApp.scope:'';
-    var boScopeOK=isScopeOK(tmpScopeGranted, scopeAsked);
-    var boRerequest=objQS.auth_type=='rerequest';
-    var boShowForm=boRerequest||!boScopeOK;
 
-    
-    if(boShowForm){
-      boAllow=false;
-      consentDiv.setVis();
-      consentDiv.cb=function(boAllowT){
-        boAllow=boAllowT;
-        continueGotConsent();
-      };
-    } else continueGotConsent();
-  }
-  var continueGotConsent=function(){
-    var urlT=decodeURIComponent(objQS.redirect_uri);
-    var regUrlCompare=RegExp("^[^#]+"), Match=regUrlCompare.exec(urlT), urlIn=Match[0];
-    if(objQS.response_type=='token') {
-      if(boAllow) var uRedir=createUriRedir(urlIn, objQS.state, objUApp.access_token, objUApp.maxUnactivityToken);
-      else var uRedir=createUriRedirDeny(urlIn, objQS.state);
-    }else if(objQS.response_type=='code'){
-      if(boAllow) var uRedir=createUriRedirCode(urlIn, objQS.state, objUApp.code);
-      else var uRedir=createUriRedirCodeDeny(urlIn, objQS.state);
-    }
-    window.location.replace(uRedir);
-  }
-  var boAllow=true;
+  // In normal case: go back to mainDiv after successfull login/logout/createUser
+idPLoginDiv.cb=formLogin.cb=createUserDiv.cb=loginInfo.cb=function(){
+  if(history.StateMy[history.state.ind].view===mainDiv) {mainDiv.setVis();}
+  else history.fastBack(mainDiv);
+};
+if(boAuthReq){
+  var flow=(function*(){ yield *authFlowF(flow); })(); flow.next();
+  //var authFlowObj=new authFlowT();  authFlowObj.continueStart();
 }
-*/
 
 
-window.onload=function(){  setUp1(); };
-
-})();
+}
 
 
 

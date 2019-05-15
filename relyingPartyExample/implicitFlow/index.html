@@ -5,10 +5,12 @@
 <meta name='viewport' content='initial-scale=1'/>
 
 <script>
+"use strict"
   
 /*******************************************************************************************************************
  *
- * This app (index.html and loginBack.html) can be used to test the "implicit flow" of OAuth 2.0
+ * This app (refered to as testApp in the comments below) (consisting of index.html and loginBack.html) can be used to test the OAuth 2.0-"implicit flow" of an ID-provider (IdP)
+ * Particularly it is created to debug idplace-app-software, (whether running in localhost:5000, 192.168.....:5000 or idplace.org). But it can also be used to test facebook- or google- login.
  *
  *******************************************************************************************************************/
 
@@ -24,6 +26,7 @@
   
 EventTarget.prototype.on=function(){ this.addEventListener.apply(this, [...arguments]); return this; }
 EventTarget.prototype.off=function(){ this.removeEventListener.apply(this, [...arguments]); return this; }
+Node.prototype.myAppend=function(){ this.append.apply(this, [...arguments]); return this; }
 Node.prototype.myText=function(str){
   if(typeof str=='undefined') { return this.textContent; }
   if(typeof str!='string') { if(str===null) str=' '; str=str.toString(); }
@@ -34,7 +37,16 @@ Node.prototype.myHtml=function(str=' '){
   if(typeof str!='string') { if(str===null) str=' '; str=str.toString(); }
   this.innerHTML=str||' '; return this;
 }
-createElement=function(str){ return document.createElement(str); }
+var createElement=function(str){ return document.createElement(str); }
+Element.prototype.css=function(style, value) {
+  if(!style) return;
+  if(typeof style=='string') {
+    if(arguments.length<2) return this.style[style];
+    this.style[style]=value; return this;
+  }
+  for(var key in style) { this.style[key]=style[key];}
+  return this;
+}
 
 
   //
@@ -49,28 +61,48 @@ var parseQS=function(str){
   }
   return params;
 }
-
+var basename=function(path){ return path.replace(/.*\//, '');}
+var dirname=function(path){ return path.match(/.*\//); }
 
 /*******************************************************************************************************************
  * Actual app
  *******************************************************************************************************************/
 
-  // Fill in your data !!!!
-var AppId={  fb:"your-fb-app-id",  google:"your-google-app-id",  idplace:"your-idplace-app-id"  }; // <--- Fill in your data !!!!
-var uRedir='http://localhost/loginBack.html';  // <--- Fill in your data !!!!
+var AppId={   // <-- Fill in the credentials of whatever IdP you want to test !!!!
+  fb:"your-fb-app-id",
+  google:"your-google-app-id",
+  idplace:"your-idplace-app-id",
+  idplace:1,
+  idL:1,  // <-- The following lines could/should be commented out (or removed)  (only for the developer of idplace)
+  id192:3,  // <-- The following lines could/should be commented out (or removed)  (only for the developer of idplace) (if testApp is localhost:5000)
+  id192:1,  // <-- The following lines could/should be commented out (or removed)  (only for the developer of idplace) (if testApp is 192.168.0.4:5000)
+}; 
+//var uRedir='http://localhost:8000/loginBack.html';  // <--- Fill in, depending on where your testApp is located. This url should also be entered at the IdP !!!!
+var uRedir=dirname(window.location.href)+'loginBack.html'; // <--- I'm not sure if this works in all situations.
 
 
   // Endpoints
-var UrlOAuth={fb:"https://www.facebook.com/v3.0/dialog/oauth", google: "https://accounts.google.com/o/oauth2/v2/auth", idplace:'https://idplace.org'};
-var UrlGraph={fb:"https://graph.facebook.com/v3.0/me", google: "https://www.googleapis.com/plus/v1/people/me", idplace:'https://idplace.org/me'};
+var UrlOAuth={
+  fb:"https://www.facebook.com/v4.0/dialog/oauth",
+  google: "https://accounts.google.com/o/oauth2/v2/auth",
+  idplace:"https://idplace.org",
+  idL:"http://localhost:5000",  // <-- The following lines could/should be commented out (or removed)  (only for the developer of idplace)
+  id192:"http://192.168.0.4:5000",  // <-- The following lines could/should be commented out (or removed) (only for the developer of idplace)
+};
+var UrlGraph={
+  fb:"https://graph.facebook.com/vv4.0/me",
+  google: "https://www.googleapis.com/plus/v1/people/me",
+  idplace:"https://idplace.org/me",
+  idL:"http://localhost:5000/me",  // <-- The following lines could/should be commented out (or removed)  (only for the developer of idplace)
+  id192:"http://192.168.0.4:5000/me",  // <-- The following lines could/should be commented out (or removed) (only for the developer of idplace)
+};
 
-  // Ignore this !!!
-  // (Only for the writer of this code, who might want to debug)
-var boDbg=0;  if(boDbg) {AppId.idplace="1"; uRedir='http://192.168.0.4:8000/loginBack.html';  UrlOAuth.idplace='http://192.168.0.4:5000'; UrlGraph.idplace='http://192.168.0.4:5000/me';  }
+
+
+  // python -m http.server 8000
 
 
 var setUp=function(){
-  "use strict"
   var elBody=document.body
 
 
@@ -79,8 +111,8 @@ var setUp=function(){
   }  
   var flowLoginF=function*(IP){
     divMess.myText('');
-    divParamMeReq.myText('');
-    divParamAccessTokenReq.myText('');
+    preParamMeReq.myText('');
+    preParamAccessTokenReq.myText('');
       // Get access_token
     var nonce=randomHash();
     var arrQ=["client_id="+AppId[IP], "redirect_uri="+encodeURIComponent(uRedir), "state="+nonce, "response_type=token"];
@@ -91,13 +123,9 @@ var setUp=function(){
     window.open(uPop, '_blank', 'width=580,height=400');
 
     var strQS, strHash;
-    window.loginReturn=function(strQST, strHashT){
-      strQS=strQST; strHash=strHashT;
-      flowLogin.next();
-    };
-    yield;
+    window.loginReturn=function(strQST, strHashT){ strQS=strQST; strHash=strHashT; flowLogin.next(); };  yield;
     var param=parseQS(strHash.substring(1));
-    var tmp='<b>Result of access_token request</b>:<pre>'+JSON.stringify(param, null,2)+"</pre>";   divParamAccessTokenReq.myHtml(tmp);
+    var tmp=JSON.stringify(param, null,2);   preParamAccessTokenReq.myText(tmp);
 
     if(!('state' in param) || param.state !== nonce) {    divMess.myText('Invalid state.'); return;  } 
 
@@ -129,7 +157,7 @@ var setUp=function(){
     var data=xhr.responseText;
     try{ var objGraph=JSON.parse(data); }catch(e){ console.log(e);  debugger; return; }
 
-    var tmp='<b>Result of "Me"-request</b>:<pre>'+JSON.stringify(objGraph, null,2)+"</pre>";   divParamMeReq.myHtml(tmp);
+    var tmp=JSON.stringify(objGraph, null,2);   preParamMeReq.myHtml(tmp);
 
   }
   var flowLogin;  
@@ -138,12 +166,20 @@ var setUp=function(){
   var buttonFB=createElement('button').on('click',function(){popupWin('fb');}).myText('Facebook');
   var buttonGoogle=createElement('button').on('click',function(){popupWin('google');}).myText('Google');
   var buttonIdPlace=createElement('button').on('click',function(){popupWin('idplace');}).myText('idPlace');
+  var buttonIdL=createElement('button').on('click',function(){popupWin('idL');}).myText('idL');   // <-- The following lines could/should be commented out (or removed)  (only for the developer of idplace)
+  var buttonId192=createElement('button').on('click',function(){popupWin('id192');}).myText('id192');   // <-- The following lines could/should be commented out (or removed)  (only for the developer of idplace)
 
-  var divParamAccessTokenReq=createElement('div');
-  var divParamMeReq=createElement('div');
+  var hParamAccessTokenReq=createElement('h3').myText('Result of access_token request:');
+  var preParamAccessTokenReq=createElement('pre').myText('').css({'background':'lightgrey'});
+  var divParamAccessTokenReq=createElement('div').myAppend(hParamAccessTokenReq,preParamAccessTokenReq);
+  var hParamMeReq=createElement('h3').myText('Result of "Me"-request:');
+  var preParamMeReq=createElement('pre').myText('').css({'background':'lightgrey'});
+  var divParamMeReq=createElement('div').myAppend(hParamMeReq,preParamMeReq);
   var divMess=createElement('div');
 
   elBody.append(buttonFB,buttonGoogle,buttonIdPlace, divParamAccessTokenReq, divParamMeReq, divMess); 
+  buttonIdPlace.insertAdjacentElement('afterend',buttonId192);   // <-- The following lines could/should be commented out (or removed)  (only for the developer of idplace)
+  buttonIdPlace.insertAdjacentElement('afterend',buttonIdL);   // <-- The following lines could/should be commented out (or removed)  (only for the developer of idplace)
 }
 
 window.onload=function(){  setUp();};

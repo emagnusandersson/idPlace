@@ -2,14 +2,11 @@
 
 
 
- 
+"use strict"
 
 
-
-
-
-randomHash=function(){ return Math.random().toString(36).slice(2)+Math.random().toString(36).slice(2);}
-parseQS=function(str){
+var randomHash=function(){ return Math.random().toString(36).slice(2)+Math.random().toString(36).slice(2);}
+var parseQS=function(str){
   var params = {},      regex = /([^&=]+)=([^&]*)/g, m;
   while (m = regex.exec(str)) {
     params[decodeURIComponent(m[1])] = decodeURIComponent(m[2]);
@@ -17,8 +14,7 @@ parseQS=function(str){
   return params;
 }
 
-setUp=function(){
-  "use strict"
+window.onload=function(){
   var $body=$('body');
 
   var popupWin=function(IP) {
@@ -75,15 +71,18 @@ setUp=function(){
   var $buttonFB=$('<button>').click(function(){popupWin('fb');}).append('Facebook');
   var $buttonGoogle=$('<button>').click(function(){popupWin('google');}).append('Google');
   var $buttonIdPlace=$('<button>').click(function(){popupWin('idplace');}).append('idPlace');
+  var $buttonIdL=$('<button>').click(function(){popupWin('idL');}).append('idL');   // <-- The following lines could/should be commented out (or removed)  (only for the developer of idplace)
+  var $buttonId192=$('<button>').click(function(){popupWin('id192');}).append('id192');   // <-- The following lines could/should be commented out (or removed)  (only for the developer of idplace)
 
   var $divParamAccessTokenReq=$('<div>');
   var $divParamMeReq=$('<div>');
   var $divMess=$('<div>'),  setMess=function(strMess){$divMess.html(strMess);}
 
   $body.append($buttonFB,$buttonGoogle,$buttonIdPlace, $divParamAccessTokenReq, $divParamMeReq, $divMess); 
+  $buttonIdPlace.after($buttonIdL,$buttonId192);   // <-- The following lines could/should be commented out (or removed)  (only for the developer of idplace)
 }
 
-window.onload=function(){  setUp();};
+
 
 
 
