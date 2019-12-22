@@ -267,3 +267,24 @@ app.myJSEscape=function(str){return str.replace(/&/g,"&amp;").replace(/</g,"&lt;
   // Only one of " or ' must be escaped depending on how it is wrapped when on the client.
 app.myAttrEscape=function(str){return str.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/\//g,"&#47;");} // This will keep any single quataions.
 
+
+app.setAccessControlAllowOrigin=function(req, res, RegAllowed){
+  if('origin' in req.headers){ //if cross site
+    var http_origin=req.headers.origin;
+    //var boAllowDbg=boDbg && RegExp("^http\:\/\/(localhost|192\.168\.0)").test(http_origin);
+    //var boAllowed=false; for(var i=0;i<RegAllowed.length;i++){ boAllowed=http_origin===RegAllowed[i]; if(boAllowed) break; }
+    var boAllowed=false;
+    if(RegAllowed.length==0) boAllowed=true;
+    else {
+      for(var i=0;i<RegAllowed.length;i++){ boAllowed=RegAllowed[i].test(http_origin); if(boAllowed) break; }
+    }
+    //if(boAllowDbg || http_origin == "https://control.closeby.market" || http_origin == "https://controlclosebymarket.herokuapp.com" || http_origin == "https://emagnusandersson.github.io" ){
+    if(boAllowed){
+      res.setHeader("Access-Control-Allow-Origin", http_origin);
+      res.setHeader("Vary", "Origin"); 
+    }
+  }
+}
+//RegAllowedOriginOfStaticFile=[RegExp("^https\:\/\/(control\.closeby\.market|controlclosebymarket\.herokuapp\.com|emagnusandersson\.github\.io)")];
+//if(boDbg) RegAllowedOriginOfStaticFile.push(RegExp("^http\:\/\/(localhost|192\.168\.0)"));
+//setAccessControlAllowOrigin(res, req, RegAllowedOriginOfStaticFile);
