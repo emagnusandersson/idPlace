@@ -109,7 +109,8 @@ app.ReqBE=function(objReqRes){
   Object.assign(this, objReqRes);
   this.sessionCache=this.req.sessionCache;
   this.site=this.req.site;
-  this.Str=[];  this.Out={GRet:{userInfoFrDBUpd:{}}, dataArr:[]};  this.GRet=this.Out.GRet; 
+  //this.Str=[];  this.Out={GRet:{userInfoFrDBUpd:{}}, dataArr:[]};  this.GRet=this.Out.GRet; 
+  this.Str=[];  this.dataArr=[];  this.GRet={userInfoFrDBUpd:{}}; 
 }
 
   // Method "mesO" and "mesEO" are only called from "go". Method "mes" can be called from any method.
@@ -127,11 +128,11 @@ ReqBE.prototype.mesO=function(e){
   this.Str.push(strEBrowser);
   this.GRet.strMessageText=this.Str.join(', '); 
   
-
-  this.res.end(serialize(this.Out));
+  var objOut=copySome({}, this, ["dataArr", "GRet"]);
+  this.res.end(serialize(objOut));
 }
 
-ReqBE.prototype.mesEO=function(e){
+ReqBE.prototype.mesEO=function(e, statusCode=500){
     // Prepare an error-message for the browser and one for the error log.
   var StrELog=[], strEBrowser;
   if(typeof e=='string'){strEBrowser=e; StrELog.push(e);}
@@ -149,7 +150,8 @@ ReqBE.prototype.mesEO=function(e){
   this.GRet.strMessageText=this.Str.join(', ');
   
   //this.res.writeHead(500, {"Content-Type": MimeType.txt}); 
-  this.res.end(serialize(this.Out));
+  var objOut=copySome({}, this, ["dataArr", "GRet"]);
+  this.res.end(serialize(objOut));
 }
 
 
@@ -264,7 +266,7 @@ ReqBE.prototype.go=function*(){
     else if(err){
       if(typeof err=='object' && err.name=='ErrorClient') this.mesO(err); else this.mesEO(err);     return;
     }
-    else this.Out.dataArr.push(result);
+    else this.dataArr.push(result);
   }
   this.mesO();
   
@@ -348,7 +350,7 @@ ReqBE.prototype.loginGetGraph=function*(inObj){
   if(typeof idIP=='undefined') { return [new Error("Error idIP is empty")];}
   if(typeof nameIP=='undefined' ) {nameIP=idIP;}
   var regTZ=RegExp('[-]?[0-9]+'), M=inObj.timeZone.match(regTZ), timeZone=M[0];  // timeZone converted from like "GMT+0100 (Central European Standard Time)" to "0100"
-  extend(this,{IP:IP, idIP:idIP, nameIP:nameIP, image:image, email:email, timeZone:timeZone});
+  extend(this,{IP, idIP, nameIP, image, email, timeZone});
   
   if(['userFun', 'fetchFun', 'getSecretFun'].indexOf(strFun)!=-1){
     var [err, result]=yield *this[strFun](inObj);  if(err) return [err];
@@ -668,7 +670,7 @@ ReqBE.prototype.createUser=function*(inObj){ // writing needSession
     var idUser=this.sessionCache.idUser=Number(results[1][0].idUser);
   }
   this.mes(mestmp);
-  extend(Ou, {boOK:boOK});
+  extend(Ou, {boOK});
   yield* setRedis(flow, req.sessionID+'_Cache', this.sessionCache, maxUnactivity);
   
   return [null, [Ou]];
@@ -704,8 +706,8 @@ ReqBE.prototype.setConsent=function*(inObj){
     boOK=1; mestmp="Done";
   }
   this.mes(mestmp);
-  //this.GRet.objUApp={scope:inObj.scope, tAccess:tAccess, access_token:access_token, maxUnactivityToken:inObj.maxUnactivityToken};
-  extend(Ou, {boOK:boOK});
+  //this.GRet.objUApp={scope:inObj.scope, tAccess, access_token, maxUnactivityToken:inObj.maxUnactivityToken};
+  extend(Ou, {boOK});
   return [null, [Ou]];
     
   
@@ -779,8 +781,8 @@ ReqBE.prototype.userAppSet=function*(inObj){
     boOK=1; mestmp="Done";
   }
   this.mes(mestmp);
-  //this.GRet.objUApp={scope:inObj.scope, tAccess:tAccess, access_token:access_token, maxUnactivityToken:inObj.maxUnactivityToken};
-  extend(Ou, {boOK:boOK});
+  //this.GRet.objUApp={scope:inObj.scope, tAccess, access_token, maxUnactivityToken:inObj.maxUnactivityToken};
+  extend(Ou, {boOK});
   return [null, [Ou]];
     
 }

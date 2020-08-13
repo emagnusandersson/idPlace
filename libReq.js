@@ -92,7 +92,11 @@ app.reqIndex=function*() {
   
 
   var ua=req.headers['user-agent']||''; ua=ua.toLowerCase();
-  var boMSIE=RegExp('msie').test(ua), boAndroid=RegExp('android').test(ua), boFireFox=RegExp('firefox').test(ua), boIOS= RegExp('iPhone|iPad|iPod','i').test(ua);
+  var boMSIE=RegExp('msie').test(ua);
+  var boAndroid=RegExp('android').test(ua);
+  var boFireFox=RegExp('firefox').test(ua);
+  //var boIOS= RegExp('iPhone|iPad|iPod','i').test(ua);
+  var boIOS= RegExp('iphone','i').test(ua);
   if(/facebookexternalhit/.test(ua)) { objQS.lang='en';  }
   if('fb_locale' in objQS) objQS.lang=objQS.fb_locale.substr(0,2);   
   var strLang='en';
@@ -107,7 +111,7 @@ app.reqIndex=function*() {
   
   var Str=[];
   var tmp=`<!DOCTYPE html>
-<html><head>
+<html lang="en"><head>
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
 <meta name="generator" content="maWiki">`;
   Str.push(tmp);
@@ -116,7 +120,7 @@ app.reqIndex=function*() {
   var uSite=req.strSchemeLong+wwwSite;
   var uIcon16=uSite+'/'+wIcon16,   uIcon114=uSite+'/'+wIcon114,   uIcon200=uSite+'/'+wIcon200;
   Str.push('<link rel="icon" type="image/png" href="'+uIcon16+'" />');
-  Str.push('<link rel="apple-touch-icon-precomposed" href="'+uIcon114+'"/>');
+  Str.push('<link rel="apple-touch-icon" href="'+uIcon114+'"/>');
 
   Str.push("<meta name='viewport' id='viewportMy' content='initial-scale=1'/>");
 
@@ -150,7 +154,8 @@ app.reqIndex=function*() {
 <meta property="og:locale:alternate" content="en_US" />`;
   if(!boDbg) Str.push(tmp);
 
-
+  
+  Str.push(`<script>var app=window;</script>`);
 
   var tmp=`
 <script>
@@ -161,9 +166,7 @@ app.reqIndex=function*() {
       xfbml      : true,
       version    : 'v4.0'
     });
-      
     FB.AppEvents.logPageView();   
-      
   };
 
   (function(d, s, id){
@@ -183,18 +186,23 @@ app.reqIndex=function*() {
   Str.push(`<script> (function(){
 try { eval("(function *(){})");} catch(err) { alert("This browser does not support generators:\\n"+ err); return;}
 try { eval("(function(a=0){})");} catch(err) { alert("This browser does not support default parameters:\\n"+ err); return;}
-var tmpf=function(){return {a:1};};
-try { eval("var {a}=tmpf();");} catch(err) { alert("This browser does not support destructuring assignment:\\n"+ err); return;}
-var tmpf=function(){return [1];}
-try { eval("[a]=tmpf();");} catch(err) { alert("This browser does not support destructuring assignment with arrays:\\n"+ err); return;}
+try { eval("var {a}={a:1};");} catch(err) { alert("This browser does not support destructuring assignment:\\n"+ err); return;}
+try { eval("[a]=[1];");} catch(err) { alert("This browser does not support destructuring assignment with arrays:\\n"+ err); return;}
 })();</script>`);
 
 
-  var uJQuery='https://code.jquery.com/jquery-3.3.1.min.js';    if(boDbg) uJQuery=uSite+'/'+flFoundOnTheInternetFolder+"/jquery-3.3.1.min.js";
-  Str.push('<script src="'+uJQuery+'" integrity="sha384-tsQFqpEReu7ZLhBV2VZlAu7zcOV+rXbYlF2cqB8txI/8aZajjp4Bqd+V6D5IgvKT" crossorigin="anonymous"></script>');
-  
-  Str.push('<script src="'+uSite+'/lib/foundOnTheInternet/sha1.js"></script>');
-  //Str.push('<script src="'+uSite+'/lib/foundOnTheInternet/md5.js"></script>');
+
+Str.push(`<style>
+:root { --maxWidth:800px; height:100%}
+body {margin:0; height:100%; display:flow-root; font-family:arial, verdana, helvetica; }  /*text-align:center;*/
+/*.mainDiv { margin: 0em auto; height:100%; width:100%; display:flex; flex-direction:column; max-width:var(--maxWidth) }*/
+/*.mainDivR { box-sizing:border-box; margin:0em auto; width:100%; display:flex; max-width:var(--maxWidth) }*/
+h1.mainH1 { box-sizing:border-box; margin:0em auto; width:100%; max-width:var(--maxWidth); border:solid 1px; color:black;font-size:1.6em; font-weight:bold; text-align:center; padding:0.4em 0em 0.4em 0em;  }
+</style>`);
+
+
+  Str.push('<script src="'+uSite+'/lib/foundOnTheInternet/sha1.js" async></script>');
+  //Str.push('<script src="'+uSite+'/lib/foundOnTheInternet/md5.js" async></script>');
 
     // If boDbg then set vTmp=0 so that the url is the same, this way the debugger can reopen the file between changes
 
@@ -206,7 +214,7 @@ try { eval("[a]=tmpf();");} catch(err) { alert("This browser does not support de
     // Include JS-files
   var StrTmp=['lib.js', 'libClient.js', 'client.js'];
   for(var i=0;i<StrTmp.length;i++){
-    var pathTmp='/'+StrTmp[i], vTmp=CacheUri[pathTmp].eTag; if(boDbgT) vTmp=0;    Str.push('<script src="'+uSite+pathTmp+'?v='+vTmp+'"></script>');
+    var pathTmp='/'+StrTmp[i], vTmp=CacheUri[pathTmp].eTag; if(boDbgT) vTmp=0;    Str.push('<script src="'+uSite+pathTmp+'?v='+vTmp+'" async></script>');
   }
 
 
@@ -231,9 +239,12 @@ try { eval("[a]=tmpf();");} catch(err) { alert("This browser does not support de
 
 
   Str.push("</head>");
-  Str.push('<body style="visibility:hidden">');
+  Str.push(`<body>
+<title>`+strTitle+`</title>
+<div id=divLoginInfo class="mainDivR" style="min-height:2rem; visibility:hidden;" ></div>
+<h1 class=mainH1>`+strH1+`</h1>
+<noscript><div style="text-align:center">You don't have javascript enabled, so this app won't work.</div></noscript>`);
 
-  Str.push("<title>"+strTitle+"</title>\n<h1>"+strH1+"</h1>\n");
 
 
 
@@ -242,16 +253,17 @@ try { eval("[a]=tmpf();");} catch(err) { alert("This browser does not support de
 
   //var objOut=copySome({}, app, ['wwwSite', 'CSRFCode', 'Prop', 'strSalt', 'boDbg', 'site', 'leafBE', 'flLibImageFolder', 'UrlOAuth', 'leafLoginBack', 'userInfoFrDB', 'objApp', 'objUApp', 'strReCaptchaSiteKey', 'strIPPrim', 'nHash']);
 
-  var objOut={wwwSite:wwwSite, CSRFCode:CSRFCode, Prop:Prop, strSalt:strSalt, boDbg:boDbg, site:site, leafBE:leafBE, flLibImageFolder:flLibImageFolder, UrlOAuth:UrlOAuth, leafLoginBack:leafLoginBack, userInfoFrDB:userInfoFrDB, objApp:objApp, objUApp:objUApp, strReCaptchaSiteKey:strReCaptchaSiteKey, strIPPrim:strIPPrim, nHash:nHash};
+  var objOut={wwwSite, CSRFCode, Prop, strSalt, boDbg, site, leafBE, flLibImageFolder, UrlOAuth, leafLoginBack, userInfoFrDB, objApp, objUApp, strReCaptchaSiteKey, strIPPrim, nHash};
   copySome(objOut,site,['boTLS']);
 
   Str.push(`<script>
 var app=window;
-var tmp=`+serialize(objOut)+`;
-extend(window, tmp);
-setItem('CSRFCode',CSRFCode);
+var tmp=`+serialize(objOut)+`;\nObject.assign(window, tmp);
+function indexAssign(){
+  setItem('CSRFCode',CSRFCode);
+}
 </script>
-<form id=formLogin>
+<form id=formLogin style="display:none">
 <label name=email>Email</label><input type=email name=email>
 <label name=password>Password</label><input type=password name=password>
 <button type=submit name=submit class=highStyle value="Sign in">Sign in</button>
@@ -496,7 +508,7 @@ app.reqLoginBack=function*(){
   
   var Str=[];
   Str.push(`
-<html><head><meta name='robots' content='noindex'>
+<html lang="en"><head><meta name='robots' content='noindex'>
 <link rel='canonical' href='`+uSite+`'/>
 </head>
 <body>
@@ -695,8 +707,6 @@ app.reqMonitor=function*() {
   
   if(!objOthersActivity){  //  && boPageBUNeeded===null && boImageBUNeeded===null
     var Sql=[];
-    Sql.push("SELECT SQL_CALC_FOUND_ROWS siteName, pageName, tMod FROM "+pageLastView+" WHERE boOther=1 LIMIT 1;");
-    Sql.push("SELECT FOUND_ROWS() AS n;");
     Sql.push("SELECT SQL_CALC_FOUND_ROWS imageName, created FROM "+imageTab+" WHERE boOther=1  LIMIT 1;");
     Sql.push("SELECT FOUND_ROWS() AS n;");
     //Sql.push("SELECT key, value FROM "+settingTab+" WHERE key='tPageBU' OR key 'tImageBU';");
@@ -709,7 +719,7 @@ app.reqMonitor=function*() {
 
     var resP=results[0], nEdit=results[1][0].n, pageName=nEdit==1?resP[0].siteName+':'+resP[0].pageName:nEdit;
     var resI=results[2], nImage=results[3][0].n, imageName=nImage==1?resI[0].imageName:nImage;
-    objOthersActivity={nEdit:nEdit, pageName:pageName,  nImage:nImage, imageName:imageName};
+    objOthersActivity={nEdit, pageName,  nImage, imageName};
 
     //var objT={}; for(var i=0;i<results[4].length;i++){      var r=results[4][i];      objT[r.key]=r.value;    }
     //if(results[5].length && 'tPageBU' in objT){  var tMaxP=results[5][0].tMax; boPageBUNeeded=tMaxP>objT.tPageBU;  }
@@ -762,15 +772,13 @@ app.reqStat=function*() {
 
   var Str=[]; 
   Str.push(`<!DOCTYPE html>
-  <html><head>
+  <html lang="en"><head>
   <meta name="robots" content="noindex">
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8" >
   <meta name="viewport" id="viewportMy" content="initial-scale=1" />`);
 
 
   var uSite=req.strSchemeLong+wwwSite;
-  var uJQuery='https://code.jquery.com/jquery-3.3.1.min.js';    if(boDbg) uJQuery=uSite+'/'+flFoundOnTheInternetFolder+"/jquery-3.3.1.min.js";
-  Str.push('<script src="'+uJQuery+'" integrity="sha384-tsQFqpEReu7ZLhBV2VZlAu7zcOV+rXbYlF2cqB8txI/8aZajjp4Bqd+V6D5IgvKT" crossorigin="anonymous"></script>');
 
     // If boDbg then set vTmp=0 so that the url is the same, this way the debugger can reopen the file between changes
 
@@ -779,15 +787,15 @@ app.reqStat=function*() {
 
     // Include site specific JS-files
   //var uSite=req.strSchemeLong+req.wwwSite;
-  //var keyCache=req.strSite+'/'+leafSiteSpecific, vTmp=CacheUri[keyCache].eTag; if(boDbg) vTmp=0;  Str.push('<script src="'+uSite+'/'+leafSiteSpecific+'?v='+vTmp+'"></script>');
+  //var keyCache=req.strSite+'/'+leafSiteSpecific, vTmp=CacheUri[keyCache].eTag; if(boDbg) vTmp=0;  Str.push('<script src="'+uSite+'/'+leafSiteSpecific+'?v='+vTmp+'" async></script>');
 
     // Include JS-files
   var StrTmp=['lib.js', 'libClient.js'];
   for(var i=0;i<StrTmp.length;i++){
-    var pathTmp='/'+StrTmp[i], vTmp=CacheUri[pathTmp].eTag; if(boDbg) vTmp=0;    Str.push('<script src="'+uSite+pathTmp+'?v='+vTmp+'"></script>');
+    var pathTmp='/'+StrTmp[i], vTmp=CacheUri[pathTmp].eTag; if(boDbg) vTmp=0;    Str.push('<script src="'+uSite+pathTmp+'?v='+vTmp+'" async></script>');
   }
 
-  Str.push('<script src="'+uSite+'/lib/foundOnTheInternet/sortable.js"></script>');
+  Str.push('<script src="'+uSite+'/lib/foundOnTheInternet/sortable.js" async></script>');
 
   Str.push("</head>");
   Str.push('<body style="margin:0">');
@@ -1155,7 +1163,7 @@ nName, nImage, nEmail, nTelephone, nCountry, nFederatedState, nCounty, nCity, nZ
 
 
   SqlFunctionDrop.push("DROP PROCEDURE IF EXISTS "+siteName+"loginWExternalIP");
-  SqlFunction.push(`CREATE PROCEDURE `+siteName+`loginWExternalIP(IidIP varchar(128), InameIP varchar(128), Iimage varchar(256), Iemail varchar(128), ItimeZone varchar(16))
+  SqlFunction.push(`CREATE PROCEDURE `+siteName+`loginWExternalIP(IidIP varchar(128), InameIP varchar(128), Iimage varchar(512), Iemail varchar(128), ItimeZone varchar(16))
     proc_label:BEGIN
       DECLARE VidUser, VidUserIP, VidUserE int(4);
       SELECT idUser INTO VidUserIP FROM `+userTab+` WHERE idFB=IidIP;
@@ -1191,7 +1199,7 @@ idFB=IidIP, name=InameIP, image=Iimage, email=Iemail, timeZone=ItimeZone WHERE i
 
 /*
   SqlFunctionDrop.push("DROP PROCEDURE IF EXISTS "+siteName+"setUser");
-  SqlFunction.push(`CREATE PROCEDURE `+siteName+`setUser(IIP `+strIPEnum+`, IidIP varchar(128), InameIP varchar(128), Iimage varchar(256), OUT OboInserted INT, OUT OidUser INT)
+  SqlFunction.push(`CREATE PROCEDURE `+siteName+`setUser(IIP `+strIPEnum+`, IidIP varchar(128), InameIP varchar(128), Iimage varchar(512), OUT OboInserted INT, OUT OidUser INT)
     BEGIN
       DECLARE Vc INT;
       START TRANSACTION;

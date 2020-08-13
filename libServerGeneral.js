@@ -227,7 +227,7 @@ app.CacheUriT=function(){
       var err;
       zlib.gzip(bufI, function(errT, bufT) { err=errT; buf=bufT; flow.next(); });  yield; if(err) return [err];
     }
-    this[key]={buf:buf,type:type,eTag:eTag,boZip:boZip,boUglify:boUglify};
+    this[key]={buf,type,eTag,boZip,boUglify};
     return [null];
   }
 }

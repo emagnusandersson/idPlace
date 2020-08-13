@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
 <meta name='viewport' content='initial-scale=1'/>
@@ -138,9 +138,9 @@ var setUp=function(){
 
       // Get graph (make cross site ajax-request)
     var uGraph=UrlGraph[IP];
-    if(IP=='fb')  var objForm={access_token:access_token, fields:"id,name,picture"};
-    else if(IP=='google')  var objForm={access_token:access_token, fields:"id,name,verified,image"};
-    else if(IP=='idplace' || IP=='idL' || IP=='id192')  var objForm={access_token:access_token};
+    if(IP=='fb')  var objForm={access_token, fields:"id,name,picture"};
+    else if(IP=='google')  var objForm={access_token, fields:"id,name,verified,image"};
+    else if(IP=='idplace' || IP=='idL' || IP=='id192')  var objForm={access_token};
      
     var arrT = Object.keys(objForm).map(function (key) { return key+'='+encodeURIComponent(objForm[key]); }), strQuery=arrT.join('&'); 
     if(strQuery.length) uGraph+='?'+strQuery;

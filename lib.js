@@ -196,7 +196,7 @@ app.t2dosTime=function(t){
   var year=t.getFullYear();
   var dosTime= Math.round(sec/2) |minute<<5 |hour<<11;
   var dosDate=date |month<<5 |(year-1980)<<9;
-  return {dosDate:dosDate,dosTime:dosTime};
+  return {dosDate,dosTime};
 }
 
 //
