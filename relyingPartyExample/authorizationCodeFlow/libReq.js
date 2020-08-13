@@ -12,7 +12,7 @@ app.reqIndex=function*() {
   var uJQuery='https://code.jquery.com/jquery-latest.min.js';
   var Str=[];
   Str.push(`<!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
 <meta name='viewport' id='viewportMy' content='initial-scale=1'/>
@@ -40,7 +40,7 @@ var UrlOAuth=`+JSON.stringify(UrlOAuth)+`;
 app.reqLoginBack=function*() {
   var req=this.req, res=this.res;
   var str=`<!DOCTYPE html>
-<html><head><meta name="robots" content="noindex"></head>
+<html lang="en"><head><meta name="robots" content="noindex"></head>
 <body>
 <script>
 var strQS=location.search;

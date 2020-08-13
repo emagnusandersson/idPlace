@@ -47,7 +47,7 @@ window.onload=function(){
       
 
       // AJAX request
-    var oT={IP:IP, code:param.code}; 
+    var oT={IP, code:param.code}; 
 
     var xhr = new XMLHttpRequest(), boExit=0;
     xhr.open('POST', leafBE);  // I'm using "POST" but with this little data one could have used "GET" 

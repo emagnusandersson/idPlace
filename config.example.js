@@ -8,11 +8,19 @@
 intDDOSMax=200; // intDDOSMax: How many requests before DDOSBlocking occurs. 
 tDDOSBan=5; // tDDOSBan: How long in seconds till the blocking is lifted
 
+
+googleSiteVerification="googleXXXXXXXXXXXXXXXX.html"; // Needed if you use Google Webmaster Tools  (www.google.com/webmasters)
 strSalt='abcdefghij'; // Random letters to prevent that the hashed passwords looks the same as on other sites.
 
 strSaltID='klmnopqrstu'; // Random letters to prevent that the hashed IDs can be predicted.
 
-googleSiteVerification="googleXXXXXXXXXXXXXXXX.html"; // Needed if you use Google Webmaster Tools  (www.google.com/webmasters)
+
+strFBVersion="v7.0"
+UrlOAuth={fb:"https://www.facebook.com/"+strFBVersion+"/dialog/oauth", google:"https://accounts.google.com/o/oauth2/v2/auth"}
+UrlToken={fb:"https://graph.facebook.com/"+strFBVersion+"/oauth/access_token", google:"https://accounts.google.com/o/oauth2/token"}
+UrlGraph={fb:"https://graph.facebook.com/"+strFBVersion+"/me", google:"https://www.googleapis.com/plus/v1/people/me"}; 
+
+strIPPrim='fb';  strIPAlt='google';
 
   // Sendgrid credentials
 apiKeySendGrid="XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX";
@@ -24,7 +32,44 @@ apiKeySendGrid="XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
   //  This way one can use the same config file for all the infrastructures.
   //
 
-if(process.env.strInfrastructure=='heroku'){  
+if(process.env.strInfrastructure=='af'){
+
+    // Setting what port number to use:
+  port = parseInt(process.env.VCAP_APP_PORT, 10);
+ 
+    // Setting uriDB 
+    // If you added the MySql-database on the appfog.com-interface then that one is used.
+  if('VCAP_SERVICES' in process.env) {
+    var tmp=process.env.VCAP_SERVICES, services_json = JSON.parse(tmp);
+    var mysql_config = services_json["mysql-5.1"][0]["credentials"];
+    var sqlUserName = mysql_config["username"];
+    var sqlPassword = mysql_config["password"];
+    var sqlHost = mysql_config["hostname"];
+    var portTmp = mysql_config["port"];
+    var sqlDBName = mysql_config["name"];
+    uriDB="mysql://"+sqlUserName+':'+sqlPassword+'@'+sqlHost+'/'+sqlDBName+"?reconnect=true";
+  }
+    // If you want to use some other urlDB then fill it in here
+  //uriDB='mysql://user:password@localhost/database';
+
+
+
+  RootDomain={
+    exampleDomain:{
+      fb:{id:"XXXXXXXXXXXXXXX", secret:"XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"}
+    }
+  }
+
+ 
+  Site={
+    id:{wwwSite:"id.example.com", strRootDomain:"exampleDomain", googleAnalyticsTrackingID:"", boTLS:1}
+  }
+
+  //levelMaintenance=1;
+  strReCaptchaSiteKey="XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX";   strReCaptchaSecretKey="XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX";
+
+}
+else if(process.env.strInfrastructure=='heroku'){
     // Setting what port number to use:
   port = parseInt(process.env.PORT, 10); 
 
@@ -55,41 +100,9 @@ if(process.env.strInfrastructure=='heroku'){
   //levelMaintenance=1;
 
   
+  strReCaptchaSiteKey="XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX";   strReCaptchaSecretKey="XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX";
 }
-else if(process.env.strInfrastructure=='af'){
-
-    // Setting what port number to use:
-  port = parseInt(process.env.VCAP_APP_PORT, 10);
- 
-    // Setting uriDB 
-    // If you added the MySql-database on the appfog.com-interface then that one is used.
-  if('VCAP_SERVICES' in process.env) {
-    var tmp=process.env.VCAP_SERVICES, services_json = JSON.parse(tmp);
-    var mysql_config = services_json["mysql-5.1"][0]["credentials"];
-    var sqlUserName = mysql_config["username"];
-    var sqlPassword = mysql_config["password"];
-    var sqlHost = mysql_config["hostname"];
-    var portTmp = mysql_config["port"];
-    var sqlDBName = mysql_config["name"];
-    uriDB="mysql://"+sqlUserName+':'+sqlPassword+'@'+sqlHost+'/'+sqlDBName+"?reconnect=true";
-  }
-    // If you want to use some other urlDB then fill it in here
-  //uriDB='mysql://user:password@localhost/database';
-
-  RootDomain={
-    exampleDomain:{
-      fb:{id:"XXXXXXXXXXXXXXX", secret:"XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"}
-    }
-  }
-
- 
-  Site={
-    id:{wwwSite:"id.example.com", strRootDomain:"exampleDomain", googleAnalyticsTrackingID:"", boTLS:1}
-  }
-
-  //levelMaintenance=1;
-
-}else if(process.env.strInfrastructure=='do'){
+else if(process.env.strInfrastructure=='do'){
   uriDB='mysql://user:password@localhost/database';
 
   RootDomain={
@@ -105,10 +118,12 @@ else if(process.env.strInfrastructure=='af'){
   }
 
   //levelMaintenance=1;
+  
+  strReCaptchaSiteKey="XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX";   strReCaptchaSecretKey="XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX";
 }
 else {
-  uriDB='mysql://user:password@localhost/database';
   boDbg=1;
+  uriDB='mysql://user:password@localhost/database';
 
   RootDomain={
     localhost:   {
@@ -121,79 +136,23 @@ else {
     }
   }
 
+
+  boUseSSLViaNodeJS=true;
+  
   //port = process.argv[2] || 8084;
   //port = port || 8084;
-  var wwwLocalhost='localhost:'+port, www192='192.168.0.5:'+port;
+  var www192=ip.address();
+  var wwwLocalhost='localhost:'+port, www192WPort=www192+':'+port;
   Site={
-    "id192":{wwwSite:www192, strRootDomain:"192Loc", googleAnalyticsTrackingID:"", boTLS:0},
-    idLoc:{wwwSite:wwwLocalhost, strRootDomain:"localhost", googleAnalyticsTrackingID:"", boTLS:0}
+    "id192":{wwwSite:www192WPort, strRootDomain:"192Loc", googleAnalyticsTrackingID:"", boTLS:1},
+    idLoc:{wwwSite:wwwLocalhost, strRootDomain:"localhost", googleAnalyticsTrackingID:"", boTLS:1}
   }
 
   //levelMaintenance=1;
-} 
-
-
-
-
-
-//
-// If you are using TLS (SSL) on localhost and possibly on other (untested) sites (heroku and appfog see below):
-// ===============================================================================================================
-//
-// The array "TLSData" (below) is used for storing key/certificate-pairs.
-//
-// TLSData properties:
-//   *domainReg: A "regular expression": when a request comes, its domain is tested to this regular expression to
-//    see if the certificate in question is to be used, if the test fail, then the next entry's domainReg is
-//    tested etc.
-//   *strKey/strCert: Private key and public key certificate (as a pem-string) 
-//     *Also notice that newlines (in strKey/strCert) needs to be escaped (like so: '\n') and the 
-//      "newline-to-get-a-comfortable-syntax" also needs a '\'-character to be "neglected". So write an '\n\' at
-//      the end of each line and you will be fine. (One can't have newlines in the JSON syntax)
-//
-
-
-/*
-TLSData=[
-  {
-    domainReg:"^localhost(:[0-9]{1,5})?$",
-    strKey:"-----BEGIN RSA PRIVATE KEY-----\n\
-XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX\n\
-XXXXX(about 13 rows of text)XXXXX\n\
-XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX\n\
------END RSA PRIVATE KEY-----",
-    strCert:"-----BEGIN CERTIFICATE-----\n\
-XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX\n\
-XXXXX(about 14 rows of text)XXXXX\n\
-XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX\n\
------END CERTIFICATE-----"
-  }
-];
-*/
-
-
-//
-// If you are using TLS (SSL) on Heroku and Appfog :
-// =================================================
-//
-// Heroku and Appfog implements the TLS layer seperatly so the TLSData-variable is not used.
-//
-// On heroku.com:
-// *On YOURAPP.herokuapp.com addresses you don't have to bother with certificates at all. 
-// *For custom domain names you enter your keys/certificates in any of herokus interfaces (I assume, I haven't
-// tried this, because of their fees).
-// When you have the app started you can switch between using TLS or not under the siteTab View
-
-
-
-
-// How to get a certificate:
-// =========================
-// On custom domain names you have get a certificate from a Certificate Authority "CA".
-// On localhost you can create a self signed certificate.  Notice that no browser will trust a self signed
-// certificate, so you'll get warning messages that the site is not trusted.
-//
-
+  
+  strReCaptchaSiteKey="XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX";   strReCaptchaSecretKey="XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX";
+  
+} // End of boLocal
 
 
 

@@ -121,33 +121,58 @@ var toggleButtonExtend=function(el){
 }
 
 
-var spanMessageTextCreate=function(){
-  var el=createElement('span');
+//var spanMessageTextCreate=function(){
+  //var el=createElement('span');
+  //var spanInner=createElement('span');
+  //el.appendChild(spanInner, imgBusy)
+  //el.resetMess=function(time){
+    //clearTimeout(messTimer);
+    //if(typeof time =='number') { messTimer=setTimeout('resetMess()',time*1000); return; }
+    //spanInner.myText(' ');
+    //imgBusy.hide();
+  //}
+  //el.setMess=function(str,time,boRot){
+    //spanInner.myText(str);
+    //clearTimeout(messTimer);
+    //if(typeof time =='number')     messTimer=setTimeout('resetMess()',time*1000);
+    //imgBusy.toggle(Boolean(boRot));
+  //};
+  //el.setHtml=function(str,time,boRot){
+    //spanInner.myHtml(str);
+    //clearTimeout(messTimer);
+    //if(typeof time =='number')     messTimer=setTimeout('resetMess()',time*1000);
+    //imgBusy.toggle(Boolean(boRot));
+  //};
+  //var messTimer;
+  //el.addClass('message');
+  //return el;
+//}
+var divMessageTextCreate=function(){
   var spanInner=createElement('span');
-  el.appendChild(spanInner, imgBusy)
+  var imgBusyLoc=imgBusy.cloneNode().css({zoom:'65%','margin-left':'0.4em'}).hide();
+  var el=createElement('div').myAppend(spanInner, imgBusyLoc);
   el.resetMess=function(time){
     clearTimeout(messTimer);
-    if(typeof time =='number') { messTimer=setTimeout('resetMess()',time*1000); return; }
+    if(time) { messTimer=setTimeout(resetMess, time*1000); return; }
     spanInner.myText(' ');
-    imgBusy.hide();
+    imgBusyLoc.hide();
   }
-  el.setMess=function(str,time,boRot){
+  el.setMess=function(str='',time,boRot){
     spanInner.myText(str);
     clearTimeout(messTimer);
-    if(typeof time =='number')     messTimer=setTimeout('resetMess()',time*1000);
-    imgBusy.toggle(Boolean(boRot));
+    if(time)     messTimer=setTimeout(resetMess, time*1000);
+    imgBusyLoc.toggle(Boolean(boRot));
   };
-  el.setHtml=function(str,time,boRot){
+  el.setHtml=function(str='',time,boRot){
     spanInner.myHtml(str);
     clearTimeout(messTimer);
-    if(typeof time =='number')     messTimer=setTimeout('resetMess()',time*1000);
-    imgBusy.toggle(Boolean(boRot));
+    if(time)     messTimer=setTimeout(resetMess, time*1000);
+    imgBusyLoc.toggle(Boolean(boRot));
   };
   var messTimer;
-  el.addClass('message');//.css({'z-index':8100,position:'fixed'});
+  el.addClass('message');
   return el;
 }
-
 
   //
   // History stuff
@@ -203,20 +228,21 @@ history.fastBack=function(viewGoal, boRefreshHash){
 /*******************************************************************************************************************
  * top-line-div
  *******************************************************************************************************************/
-var loginInfoExtend=function(el){
+var divLoginInfoExtend=function(el){
   el.setStat=function(){
     var boIn=Boolean(Object.keys(userInfoFrDB).length);
     if(boIn){
       spanName.myText(userInfoFrDB.name);
-      el.show();
+      //el.show();
     }else {
-      el.hide(); 
+      //el.hide(); 
     }
+    //el.visible();
+    el.visibilityToggle(boIn);
   }
   el.cb=null;
   var spanName=createElement('span'); 
-  //var logoutButt=createElement('a').prop({href:''}).myText(langHtml.loginInfo.logoutButt).css({'float':'right'});
-  var logoutButt=createElement('button').myText(langHtml.loginInfo.logoutButt).css({'float':'right','font-size':'90%'});
+  var logoutButt=createElement('button').myText(langHtml.divLoginInfo.logoutButt).css({'margin-left':'auto'}); //.css({'float':'right','font-size':'90%'});
   logoutButt.on('click',function(e){
     e.preventDefault();
     //userInfoFrDB={}; 
@@ -225,9 +251,10 @@ var loginInfoExtend=function(el){
     majax(oAJAX,vec);
     return false;
   });
-  el.append(spanName,logoutButt);
+  el.myAppend(spanName,logoutButt).css({display:'flex', 'justify-content':'space-between', 'align-items':'center', 'font-size':'12px'});
   return el;
 }
+
 
 
 
@@ -268,9 +295,9 @@ var mainDivExtend=function(el){
   var createAccountDiv=createElement('div').css(cssCol).css({'border-left':'2px solid grey','vertical-align':'top'}).myAppend(buttonCreateAccount);
 
   var divWhatIsOpen=createElement('div');
-  var imgIdPlaceCompare=createElement('img').css({width:'80%', display:'block', margin:'1em auto'}).prop({src:uIdPlaceCompare});  
+  var imgIdPlaceCompare=createElement('img').css({width:'100%', 'max-width':'calc(var(--maxWidth)*0.8)', display:'block', margin:'1em auto'}).prop({src:uIdPlaceCompare, alt:"IdP comparission"});  
   var aMoreInfo=createElement('a').css({display:'block', margin:'3em auto', 'text-align':'center'}).prop({href:"http://www.emagnusandersson.com/idPlace"}).myText("More info");
-  var headComparing=createElement('h3').myText("Comparing some common ID providers:").css({'text-align':'center'});
+  var headComparing=createElement('h2').myText("Comparing some common ID providers:").css({'text-align':'center'});
 
   var divRowA=createElement('div').myAppend(signInDiv,createAccountDiv).css({display: 'flex', 'justify-content':'space-around'});
   var loggedOutDiv=createElement('div').css({'margin-top':'1em'}).myAppend(divRowA, headComparing, imgIdPlaceCompare, aMoreInfo);
@@ -313,9 +340,9 @@ var mainDivExtend=function(el){
 
 
   var infoLink=createElement('a').prop({href:"http://www.emagnusandersson.com/idPlace"}).myText("More info");
-  var menuA=createElement('div').myAppend(infoLink).css({padding:'0 0.3em 0 0', overflow:'hidden', 'max-width':menuMaxWidth+'px', 'text-align':'center', margin:'.3em auto .4em'}); 
+  var menuA=createElement('div').myAppend(infoLink).css({padding:'0 0.3em 0 0', overflow:'hidden', 'max-width':maxWidth, 'text-align':'center', margin:'.3em auto .4em'}); 
 
-  var divCont=el.divCont=createElement('div').css({padding:'0 0.3em 0 0', overflow:'hidden', 'max-width':menuMaxWidth+'px', 'text-align':'left', margin:'1em auto'});
+  var divCont=el.divCont=createElement('div').css({padding:'0 0.3em 0 0', overflow:'hidden', 'max-width':maxWidth, 'text-align':'left', margin:'1em auto'});
   el.divCont.myAppend(loggedOutDiv, loggedInDiv);
   el.fixedDiv=createElement('div').myAppend(menuA).css(cssFixed);
 
@@ -356,17 +383,17 @@ var getOAuthCode=function*(flow, boReauthenticate=false){
   // Used in loginSelectorDiv and createUserSelectorDiv
 var idPLoginDivExtend=function(el){
   var strButtonSize='2em';
-  var imgFb=createElement('img').prop({src:uFb}).on('click',function(){
+  var imgFb=createElement('img').prop({src:uFb, alt:"fb"}).on('click',function(){
     var flow=(function*(){
       var [err, code]=yield* getOAuthCode(flow); if(err) {setMess(err); return;}
       var timeZone=new Date().toString().match(/([A-Z]+[\+-][0-9]+.*)/)[1];
-      var oT={IP:strIPPrim, fun:'userFun', caller:'index', code:code, timeZone:timeZone};
-      var vec=[['loginGetGraph', oT], ['setupById',{idApp:idApp}, function(){ flow.next(); }]];   majax(oAJAX,vec);   yield;
+      var oT={IP:strIPPrim, fun:'userFun', caller:'index', code, timeZone};
+      var vec=[['loginGetGraph', oT], ['setupById',{idApp}, function(){ flow.next(); }]];   majax(oAJAX,vec);   yield;
       
       if(el.cb) el.cb();
     })(); flow.next();
   });
-  var imgGoogle=createElement('img').prop({src:uGoogle}).on('click',function(){
+  var imgGoogle=createElement('img').prop({src:uGoogle, alt:"google"}).on('click',function(){
     popupWin('google');
   });
   el.cb=null;
@@ -380,7 +407,7 @@ var formLoginExtend=function(el){
     e.preventDefault();
     //var hashPW=SHA1(formLogin.inpPass.value+strSalt);
     var hashPW=formLogin.inpPass.value+strSalt; for(var i=0;i<nHash;i++) hashPW=SHA1(hashPW);
-    var vec=[['loginWEmail',{email:formLogin.inpEmail.value, password:hashPW}], ['setupById',{idApp:idApp}, el.cb]];   majax(oAJAX,vec); 
+    var vec=[['loginWEmail',{email:formLogin.inpEmail.value, password:hashPW}], ['setupById',{idApp}, el.cb]];   majax(oAJAX,vec); 
     formLogin.inpPass.value='';
     return false;
   }
@@ -437,7 +464,7 @@ var devAppSecretDivExtend=function(el){
   var send=function(){
     //var hashPW=SHA1(inpPass.value+strSalt);
     var hashPW=inpPass.value+strSalt; for(var i=0;i<nHash;i++) hashPW=SHA1(hashPW);
-    var vec=[['devAppSecret',{idApp:idApp, password:hashPW},ret]];   majax(oAJAX,vec);
+    var vec=[['devAppSecret',{idApp, password:hashPW},ret]];   majax(oAJAX,vec);
     
   }
   el.setVis=function(){
@@ -452,12 +479,12 @@ var devAppSecretDivExtend=function(el){
 
     // Authenticate with IdP
   var strButtonSize='2em';
-  var imgFb=createElement('img').prop({src:uFb}).on('click',function(){
+  var imgFb=createElement('img').prop({src:uFb, alt:"fb"}).on('click',function(){
     var flow=(function*(){
       var [err, code]=yield* getOAuthCode(flow, true); if(err) {setMess(err); return;}
-      //var oT={IP:strIPPrim, fun:'getSecretFun', caller:'index', code:code, idApp:idApp};
+      //var oT={IP:strIPPrim, fun:'getSecretFun', caller:'index', code, idApp};
       var timeZone=new Date().toString().match(/([A-Z]+[\+-][0-9]+.*)/)[1];
-      var oT={IP:strIPPrim, fun:'getSecretFun', caller:'index', code:code, idApp:idApp, timeZone:timeZone};
+      var oT={IP:strIPPrim, fun:'getSecretFun', caller:'index', code, idApp, timeZone};
       var result;
       var vec=[['loginGetGraph', oT, function(resultT){ result=resultT; flow.next(); }]];   majax(oAJAX,vec);   yield;
       spanSecret.append(result.resultOfFun.secret);
@@ -482,7 +509,6 @@ var devAppSecretDivExtend=function(el){
 
   var blanket=createElement('div').addClass("blanket");
   var centerDiv=createElement('div').addClass("Center").myAppend(head, divRow, p,cancel).css({'min-width':'17em','max-width':'25em', padding:'0.1em'}); // height:'19em', 
-  //if(boIE) centerDiv.css({'width':'20em'}); 
   el.addClass("Center-Container").myAppend(centerDiv,blanket); 
   return el;
 }
@@ -496,7 +522,7 @@ var createUserSelectorDivExtend=function(el){
     doHistPush({view:createUserDiv});
     createUserDiv.setVis();
   });
-  var divCont=el.divCont=createElement('div').css({padding:'0 0.3em 0 0', overflow:'hidden', 'max-width':menuMaxWidth+'px', 'text-align':'left', margin:'1em auto'});
+  var divCont=el.divCont=createElement('div').css({padding:'0 0.3em 0 0', overflow:'hidden', 'max-width':maxWidth, 'text-align':'left', margin:'1em auto'});
   
   var h1=createElement('h1').myText('Create account');
   var headUN=createElement('h2').myText('Using password');
@@ -554,7 +580,7 @@ var createUserDivExtend=function(el){
     var hashPW=inpPass.value.trim()+strSalt; for(var i=0;i<nHash;i++) hashPW=SHA1(hashPW);
     extend(o, {password:hashPW,  'g-recaptcha-response': strTmp});
 
-    var vec=[['createUser',o], ['setupById',{idApp:idApp}, el.cb]];   majax(oAJAX,vec); 
+    var vec=[['createUser',o], ['setupById',{idApp}, el.cb]];   majax(oAJAX,vec); 
     inpPass.value=''; inpPassB.value='';
     setMess('',null,true); 
   }
@@ -562,7 +588,7 @@ var createUserDivExtend=function(el){
   el.createInputs=function(){
     for(var i=0;i<el.StrProp.length;i++){
       var strName=el.StrProp[i];
-      var imgH=''; if(strName in helpBub ) {    var imgH=imgHelp.cloneNode();   popupHover(imgH,helpBub[strName]);         }
+      var imgH=''; if(strName in helpBub ) {    var imgH=imgHelp.cloneNode(1);   popupHover(imgH,helpBub[strName]);         }
 
       var lab=createElement('label').myText(calcLabel(langHtml.label, strName));
       var inp=Prop[strName].crInp().attr('name',strName);
@@ -594,7 +620,7 @@ var createUserDivExtend=function(el){
   var Inp=[];
   el.StrProp=['name', 'email', 'telephone',   'country', 'federatedState', 'county', 'city', 'zip', 'address', 'idNational', 'birthdate', 'motherTongue', 'gender'];
 
-  var divCont=el.divCont=createElement('div').css({padding:'0 0.3em 0 0', overflow:'hidden', 'max-width':menuMaxWidth+'px', 'text-align':'left', margin:'1em auto'});
+  var divCont=el.divCont=createElement('div').css({padding:'0 0.3em 0 0', overflow:'hidden', 'max-width':maxWidth, 'text-align':'left', margin:'1em auto'});
   
   //var divReCaptcha=createElement('div');
   var divReCaptcha=divReCaptchaExtend(createElement('div'));
@@ -612,7 +638,7 @@ var createUserDivExtend=function(el){
 
   var spanLabel=createElement('span').myText(langHtml.CreateAccount).css({'float':'right',margin:'0.2em 0 0 0'}); 
   var buttonSave=createElement('button').addClass('highStyle').myText(langHtml.Create).on('click',save);
-  var menuA=createElement('div').myAppend(buttonSave,spanLabel).css({padding:'0 0.3em 0 0', overflow:'hidden', 'max-width':menuMaxWidth+'px', 'text-align':'left', margin:'.3em auto .4em'}); 
+  var menuA=createElement('div').myAppend(buttonSave,spanLabel).css({padding:'0 0.3em 0 0', overflow:'hidden', 'max-width':maxWidth, 'text-align':'left', margin:'.3em auto .4em'}); 
 
   el.fixedDiv=createElement('div').myAppend(menuA).css(cssFixed);
   el.append(el.divCont, el.fixedDiv);
@@ -652,7 +678,6 @@ var deleteAccountPopExtend=function(el){
   var blanket=createElement('div').addClass("blanket");
   var centerDiv=createElement('div').myAppend(h1,cancel,yes);
   centerDiv.addClass("Center").css({padding:'1.1em'}); // 'width':'20em', height:'9em', 
-  //if(boIE) centerDiv.css({'width':'20em'}); 
   el.addClass("Center-Container").myAppend(centerDiv,blanket); //
 
   return el;
@@ -701,7 +726,6 @@ var changePWPopExtend=function(el){
 
   var centerDiv=createElement('div').myAppend(h1, messDiv,   labPassOld, inpPassOld, labPass, inpPass, labPassB, inpPassB, divBottom);
   centerDiv.addClass("Center").css({padding:'1.1em'}); // 'width':'20em', height:'21em', 
-  //if(boIE) centerDiv.css({'width':'20em'}); 
   el.addClass("Center-Container").myAppend(centerDiv,blanket); //
 
   return el;
@@ -738,7 +762,6 @@ var verifyEmailPopExtend=function(el){
 
   var centerDiv=createElement('div').myAppend(h1, pTxt, pBottom, divBottom);
   centerDiv.addClass("Center").css({padding:'1.1em'});  // 'width':'20em', height:'15em', 
-  //if(boIE) centerDiv.css({'width':'20em'}); 
   el.addClass("Center-Container").myAppend(centerDiv,blanket); //
 
   return el;
@@ -775,7 +798,6 @@ var forgottPWPopExtend=function(el){
 
   var centerDiv=createElement('div').myAppend(h1, labEmail, inpEmail, divBottom);
   centerDiv.addClass("Center").css({padding:'1.1em'}); // 'width':'20em', height:'13em', 
-  //if(boIE) centerDiv.css({'width':'20em'}); 
   el.addClass("Center-Container").myAppend(centerDiv,blanket); //
 
   return el;
@@ -805,9 +827,9 @@ var consentDivExtend=function(el){
     el.cb(false);
   });
   var buttAllow=createElement('button').addClass('highStyle').myText('Allow').on('click',function(){
-    //var vec=[['userAppSet',{scope:scopeAsked, idApp:idApp, maxUnactivityToken:maxUnactivityToken}], ['setupById',{idApp:idApp},el.cb]];   majax(oAJAX,vec);
+    //var vec=[['userAppSet',{scope:scopeAsked, idApp, maxUnactivityToken}], ['setupById',{idApp},el.cb]];   majax(oAJAX,vec);
     var maxUnactivityToken=objQS.response_type=='code'?60*24*3600:2*3600;
-    var vec=[['setConsent',{scope:scopeAsked, idApp:idApp, maxUnactivityToken:maxUnactivityToken}], ['setupById',{idApp:idApp},function(data){el.cb(true);}]];   majax(oAJAX,vec); 
+    var vec=[['setConsent',{scope:scopeAsked, idApp, maxUnactivityToken}], ['setupById',{idApp},function(data){el.cb(true);}]];   majax(oAJAX,vec); 
   });
   el.append(pA, pOldPerm, pB, buttCancel, buttAllow);
 
@@ -837,7 +859,7 @@ var uploadImageDivExtend=function(el){
   }
   var sendFun=function(){
     clearMess();
-    if(boFormDataOK==0) {alert("Your browser doesn't support FormData"); return; };
+    if(boFormDataOK==0) {alert("This browser doesn't support FormData"); return; };
     var formData = new FormData();
     formData.append("type", 'single');
     formData.append("kind", strKind);
@@ -860,7 +882,7 @@ var uploadImageDivExtend=function(el){
       var dataFetched=this.response;
       var data; try{ data=JSON.parse(this.response); }catch(e){ setMess(e);  return; }
       
-      var dataArr=data.dataArr;  // Each argument of dataArr is an array, either [argument] or [altFuncArg,altFunc]
+      var dataArr=data.dataArr||[];  // Each argument of dataArr is an array, either [argument] or [altFuncArg,altFunc]
       delete data.dataArr;
       beRet(data);
       for(var i=0;i<dataArr.length;i++){
@@ -919,7 +941,6 @@ var uploadImageDivExtend=function(el){
   var blanket=createElement('div').addClass("blanket");
   var centerDiv=createElement('div').myAppend(head, formFile, progress, divMess,menuBottom);
   centerDiv.addClass("Center").css({'max-width':'21em', padding: '0.3em 0.5em 1.2em 0.6em'}); // , height:'15em'
-  //if(boIE) centerDiv.css({'width':'20em'}); 
   el.addClass("Center-Container").myAppend(centerDiv,blanket); //
 
   uploadButton.on('click',sendFun);
@@ -945,7 +966,7 @@ var userSettingDivExtend=function(el){
   el.createInputs=function(){
     for(var i=0;i<el.StrProp.length;i++){      
       var strName=el.StrProp[i];
-      var imgH=''; if(strName in helpBub ) {    var imgH=imgHelp.cloneNode();   popupHover(imgH,helpBub[strName]);         }
+      var imgH=''; if(strName in helpBub ) {    var imgH=imgHelp.cloneNode(1);   popupHover(imgH,helpBub[strName]);         }
 
       var lab=createElement('label').myText(calcLabel(langHtml.label, strName));
       var spanLastChange=Prop[strName].crStatisticSpan().attr('name',strName);
@@ -981,12 +1002,12 @@ var userSettingDivExtend=function(el){
   var divCreated=createElement('div').myAppendHtml('Account created <b></b> ago ', buttonDelete).css({'font-size':'90%', 'border-bottom':'2px solid grey', 'margin-bottom':'1em', 'padding-bottom':'0.5em'});
   el.divDisclaimerW=createElement('div').css({'margin':'0em', 'padding':'0em'});
 
-  var divCont=el.divCont=createElement('div').myAppend(divCreated,el.divDisclaimerW).css({padding:'0 0.3em 0 0', overflow:'hidden', 'max-width':menuMaxWidth+'px', 'text-align':'left', margin:'1em auto'}); 
+  var divCont=el.divCont=createElement('div').myAppend(divCreated,el.divDisclaimerW).css({padding:'0 0.3em 0 0', overflow:'hidden', 'max-width':maxWidth, 'text-align':'left', margin:'1em auto'}); 
   el.createInputs();
 
   var spanLabel=createElement('span').myText(langHtml.Settings).css({'float':'right',margin:'0.2em 0 0 0'});
   var buttonSave=createElement('button').myText(langHtml.Save).addClass('highStyle').on('click',save);
-  var menuA=createElement('div').myAppend(buttonSave, spanLabel).css({padding:'0 0.3em 0 0', overflow:'hidden', 'max-width':menuMaxWidth+'px', 'text-align':'left', margin:'.3em auto .4em'}); 
+  var menuA=createElement('div').myAppend(buttonSave, spanLabel).css({padding:'0 0.3em 0 0', overflow:'hidden', 'max-width':maxWidth, 'text-align':'left', margin:'.3em auto .4em'}); 
 
   el.fixedDiv=createElement('div').myAppend(menuA).css(cssFixed);
   el.append(el.divCont, el.fixedDiv);
@@ -1032,7 +1053,7 @@ var headExtend=function(el, tableDiv, StrName, BoAscDefault, Label, strTR='tr', 
   var Th=Array(len), arrImgSort=Array(len);
   for(var i=0;i<len;i++){
     var strName=StrName[i];  
-    var imgSort=createElement('img').attr('data-type', 'sort').prop({src:uUnsorted});
+    var imgSort=createElement('img').attr('data-type', 'sort').prop({src:uUnsorted, alt:"sort"});
     var boAscDefault=(strName in BoAscDefault)?BoAscDefault[strName]:true;
     var label=(strName in Label)?Label[strName]:ucfirst(strName);
     var h=createElement(strTH).myAppend(imgSort).addClass('unselectable').prop({UNSELECTABLE:"on"}).attr('name',strName).prop('boAscDefault',boAscDefault).prop('title',label).on('click',thClick);
@@ -1061,7 +1082,7 @@ var userAppSetDivExtend=function(el){
 var userAppDeleteDivExtend=function(el){
   el.toString=function(){return 'userAppDeleteDiv';}
   var ok=createElement('button').myText('OK').addClass('highStyle').css({'margin-top':'1em'}).on('click',function(){    
-    var idApp=elR.attr('idApp'), vec=[['userAppDelete',{idApp:idApp},okRet]];   majax(oAJAX,vec);    
+    var idApp=elR.attr('idApp'), vec=[['userAppDelete',{idApp},okRet]];   majax(oAJAX,vec);    
   });
   var okRet=function(data){
     if(!data.boOK) return;
@@ -1084,7 +1105,6 @@ var userAppDeleteDivExtend=function(el){
 
   var blanket=createElement('div').addClass("blanket");
   var centerDiv=createElement('div').addClass("Center").myAppend(head,p,ok).css({'min-width':'17em','max-width':'25em', padding:'0.1em'}); //,cancel  height:'10em', 
-  // if(boIE) centerDiv.css({'width':'20em'}); 
   el.addClass("Center-Container").myAppend(centerDiv,blanket); 
   return el;
 }
@@ -1104,7 +1124,7 @@ var userAppListExtend=function(el){
   }
   var TDConstructors={
     tAccess:function(){ var el=createElement('td');  extend(el,TDProt.tAccess);  return el;  },
-    imageHash:function(){ var image=createElement('img').css({'vertical-align':'middle'}), el=createElement('td').css('text-align','center').myAppend(image);  extend(el,TDProt.imageHash);  return el;  }
+    imageHash:function(){ var image=createElement('img').css({'vertical-align':'middle'}).prop({alt:"app"}), el=createElement('td').css('text-align','center').myAppend(image);  extend(el,TDProt.imageHash);  return el;  }
   }
   el.myAdd=function(r){
     var Td=[];
@@ -1169,10 +1189,10 @@ var userAppListExtend=function(el){
   el.table.prepend(tHead);
   el.nRowVisible=0;
 
-  var imgDelete=imgProt.cloneNode().prop({src:uDelete});
+  var imgDelete=imgProt.cloneNode().prop({src:uDelete, alt:"delete"});
       // menuA
   var spanLabel=createElement('span').myText('userAppList').css({'float':'right',margin:'0.2em 0 0 0'});  
-  var menuA=createElement('div').myAppend(spanLabel).css({padding:'0 0.3em 0 0',overflow:'hidden','max-width':menuMaxWidth+'px','text-align':'left',margin:'.3em auto .4em'}); 
+  var menuA=createElement('div').myAppend(spanLabel).css({padding:'0 0.3em 0 0',overflow:'hidden','max-width':maxWidth,'text-align':'left',margin:'.3em auto .4em'}); 
 
   el.addClass('userAppList');
   el.fixedDiv=createElement('div').myAppend(menuA).css(cssFixed);
@@ -1190,7 +1210,7 @@ var devAppSetDivExtend=function(el){
     if(RegExp('^https?:\/\/$').test(uri)) { setMess('empty domain',2);  return;}
     if(!RegExp('^https?:\/\/').test(uri)){  uri="http://"+uri;   }
     r.redir_uri=uri;
-    var objTmp=extend({boUpd:boUpd},r);
+    var objTmp=extend({boUpd},r);
     var vec=[['devAppSet', objTmp, saveRet]];   majax(oAJAX,vec);
   }
   var saveRet=function(data){
@@ -1239,7 +1259,6 @@ var devAppSetDivExtend=function(el){
 
   var blanket=createElement('div').addClass("blanket");
   var centerDiv=createElement('div').addClass("Center").myAppend(...InpNLab,divBottom).css({'min-width':'17em','max-width':'30em', padding: '1.2em 0.5em 1.2em 1.2em'}); // height:'18em', 
-  //if(boIE) centerDiv.css({'width':'20em'}); 
   el.addClass("Center-Container").myAppend(centerDiv,blanket); 
    
   return el;
@@ -1249,7 +1268,7 @@ var devAppSetDivExtend=function(el){
 var devAppDeleteDivExtend=function(el){
   el.toString=function(){return 'devAppDeleteDiv';}
   var ok=createElement('button').myText('OK').addClass('highStyle').css({'margin-top':'1em'}).on('click',function(){    
-    var idApp=elR.attr('idApp'), vec=[['devAppDelete',{idApp:idApp},okRet]];   majax(oAJAX,vec);    
+    var idApp=elR.attr('idApp'), vec=[['devAppDelete',{idApp},okRet]];   majax(oAJAX,vec);    
   });
   var okRet=function(data){
     if(!data.boOK) return;
@@ -1272,7 +1291,6 @@ var devAppDeleteDivExtend=function(el){
 
   var blanket=createElement('div').addClass("blanket");
   var centerDiv=createElement('div').addClass("Center").myAppend(head,p,ok).css({'min-width':'17em','max-width':'25em', padding:'0.1em'}); //,cancel  height:'10em', 
-  //if(boIE) centerDiv.css({'width':'20em'}); 
   el.addClass("Center-Container").myAppend(centerDiv,blanket); 
   return el;
 }
@@ -1295,7 +1313,7 @@ var devAppListExtend=function(el){
   var TDConstructors={
     created:function(){ var el=createElement('td');  extend(el,TDProt.created);  return el;  },
     imageHash:function(){
-      var image=createElement('img').css({'vertical-align':'middle'}).on('click',setImage), el=createElement('td').css('text-align','center').myAppend(image);  extend(el,TDProt.imageHash);  return el;  }
+      var image=createElement('img').prop({alt:"app"}).css({'vertical-align':'middle'}).on('click',setImage), el=createElement('td').css('text-align','center').myAppend(image);  extend(el,TDProt.imageHash);  return el;  }
   }
   var setImage=function(){
     var i=this, elR=this.parentNode.parentNode, r=elR.r;
@@ -1374,13 +1392,13 @@ var devAppListExtend=function(el){
   el.table.prepend(tHead);
   el.nRowVisible=0;
 
-  var imgDelete=imgProt.cloneNode().prop({src:uDelete});
+  var imgDelete=imgProt.cloneNode().prop({src:uDelete, alt:"delete"});
       // menuA
   var buttonAdd=createElement('button').myText('Add').addClass('highStyle', 'fixWidth').css({'margin-left':'0.8em','margin-right':'1em'}).on('click',function(){
     devAppSetDiv.openFunc.call({},0,0);
   });
   var spanLabel=createElement('span').myText('devAppList').css({'float':'right',margin:'0.2em 0 0 0'});  
-  var menuA=createElement('div').myAppend(buttonAdd,spanLabel).css({padding:'0 0.3em 0 0',overflow:'hidden','max-width':menuMaxWidth+'px','text-align':'left',margin:'.3em auto .4em'}); 
+  var menuA=createElement('div').myAppend(buttonAdd,spanLabel).css({padding:'0 0.3em 0 0',overflow:'hidden','max-width':maxWidth,'text-align':'left',margin:'.3em auto .4em'}); 
 
   el.addClass('devAppList');
   el.fixedDiv=createElement('div').myAppend(menuA).css(cssFixed);
@@ -1442,7 +1460,7 @@ app.GRet=function(data){
   tmp=data.userInfoFrDB; if(typeof tmp!="undefined") {  userInfoFrDB=tmp; }
   tmp=data.objApp; if(typeof tmp!="undefined") {  objApp=tmp; }  
   tmp=data.objUApp; if(typeof tmp!="undefined") {  objUApp=tmp; }  
-  loginInfo.setStat();
+  divLoginInfo.setStat();
  
 }
 
@@ -1527,13 +1545,13 @@ var PropExtend=function(){
       var flow=(function*(){
         var [err, code]=yield* getOAuthCode(flow); if(err) {setMess(err); return;}
         var timeZone=new Date().toString().match(/([A-Z]+[\+-][0-9]+.*)/)[1];
-        var oT={IP:strIPPrim, fun:'fetchFun', caller:'index', code:code, timeZone:timeZone};
-        var vec=[['loginGetGraph', oT], ['setupById',{idApp:idApp}, function(){ flow.next(); }]];   majax(oAJAX,vec);   yield;
+        var oT={IP:strIPPrim, fun:'fetchFun', caller:'index', code, timeZone};
+        var vec=[['loginGetGraph', oT], ['setupById',{idApp}, function(){ flow.next(); }]];   majax(oAJAX,vec);   yield;
         
         userSettingDiv.setUp();
       })(); flow.next();
     });
-    c.thumb=createElement('img').css({'vertical-align':'middle'});
+    c.thumb=createElement('img').prop({alt:"user"}).css({'vertical-align':'middle'});
     c.append(c.nr, c.thumb, c.butDelete, c.buttFetch);  //langHtml.YourImage+': ',
     return c;
   };
@@ -1593,7 +1611,7 @@ var PropExtend=function(){
     // image
   var tmpCrInp=function(){
     var c=createElement('span');
-    c.thumb=createElement('img').css({'vertical-align':'middle'});
+    c.thumb=createElement('img').prop({alt:"user"}).css({'vertical-align':'middle'});
     c.butDeleteImg=createElement('button').addClass('highStyle').myText('Clear').on('click',function(){
       var vec=[['deleteImage', {kind:'u'}], ['setupById',{}, userSettingDiv.setUp]];   majax(oAJAX,vec); 
     });
@@ -1648,7 +1666,7 @@ var langHtml={
   cancelMessLogin:'Sign-in canceled',
   emailVerificationOfEmail:"Send verification email",
       //login
-  loginInfo:{'user':'user',
+  divLoginInfo:{'user':'user',
     'admin':'admin',
     'logoutButt':'Sign-out'
   },
@@ -1708,20 +1726,16 @@ app.boTouch = Boolean('ontouchstart' in document.documentElement);
 //boTouch=1;
 
 
-var browser=getBrowser();
-var intBrowserVersion=parseInt(browser.version.slice(0, 2));
 
 
 var ua=navigator.userAgent, uaLC = ua.toLowerCase(); //alert(ua);
 app.boAndroid = uaLC.indexOf("android") > -1;
 app.boFF = uaLC.indexOf("firefox") > -1; 
-//boIE = uaLC.indexOf("msie") > -1; 
-app.versionIE=detectIE();
-app.boIE=versionIE>0; if(boIE) browser.brand='msie';
 
-app.boChrome= /chrome/i.test(uaLC);
-app.boIOS= /iPhone|iPad|iPod/i.test(uaLC);
+app.boChrome= /chrome/.test(uaLC);
+app.boIOS= /iphone|ipad|ipod/.test(uaLC);
 app.boEpiphany=/epiphany/.test(uaLC);    if(boEpiphany && !boAndroid) boTouch=false;  // Ugly workaround
+app.boEdge= /\bedg\b/.test(uaLC);
 
 app.boOpera=RegExp('OPR\\/').test(ua); if(boOpera) boChrome=false; //alert(ua);
 
@@ -1740,14 +1754,14 @@ var boStateInHistory='state' in history;
 if(!boStateInHistory) { alert('This browser does not support history.state'); return;}
 
 
-var boIsGeneratorSupported=isGeneratorSupported();
 var boFormDataOK=1;  if(typeof FormData=='undefined') {  boFormDataOK=0;  }
 
 
-if(!(typeof sessionStorage=='object' && sessionStorage.getItem)) {console.log("Your browser doesn't support sessionStorage"); return;}
+if(!(typeof sessionStorage=='object' && sessionStorage.getItem)) {console.log("This browser doesn't support sessionStorage"); return;}
 
-var menuMaxWidth=500;
 var boImgCreationOK=1;
+
+indexAssign();
 
 PropExtend();
 
@@ -1794,8 +1808,10 @@ var uDelete1=uLibImageFolder+'delete1.png';
 var uIdPlaceCompare=uLibImageFolder+'idPlaceCompare.png';
 
 
-var imgHelp=createElement('img').prop({src:uHelpFile}).css({'vertical-align':'-0.4em'});
-var hovHelp=createElement('span').myText('?').css({'font-size':'88%',color:'#a7a7a7','vertical-align':'-0.4em'});
+var imgHelp=createElement('img').prop({src:uHelpFile, alt:"help"}).css({'vertical-align':'-0.4em'});
+var hovHelpMy=createElement('span').myText('❓').addClass('btn-round', 'helpButtonGradient');
+if(boIOS | boEdge) {hovHelpMy.css({color:'transparent', 'text-shadow':'0 0 0 #5780a8'});}
+imgHelp=hovHelpMy;
 
 var sizeIcon=1.5, strSizeIcon=sizeIcon+'em';
 var imgProt=createElement('img').css({height:strSizeIcon,width:strSizeIcon,'vertical-align':'text-bottom'}); 
@@ -1857,7 +1873,6 @@ if(boFF){
   window.on('beforeunload', function(){   });
 } 
 
-
 app.errorFunc=function(jqXHR, textStatus, errorThrown){
   setMess('responseText: '+jqXHR.responseText+', textStatus: '+' '+textStatus+', errorThrown: '+errorThrown);     throw 'bla';
 }
@@ -1869,18 +1884,26 @@ var oAJAXCacheable={url:uBE, crossDomain:false, error: errorFunc, type: "GET", d
 
 var imgBusy=createElement('img').prop({src:uBusy});
 //messageText=messExtend(createElement('span'));  window.setMess=messageText.setMess;  window.resetMess=messageText.resetMess;   elBody.myText(messageText); 
-var spanMessageText=spanMessageTextCreate();  window.setMess=spanMessageText.setMess;  window.resetMess=spanMessageText.resetMess;  window.appendMess=spanMessageText.appendMess;  elBody.append(spanMessageText)
+//var spanMessageText=spanMessageTextCreate();  window.setMess=spanMessageText.setMess;  window.resetMess=spanMessageText.resetMess;  window.appendMess=spanMessageText.appendMess;  elBody.append(spanMessageText)
+
+var maxWidth='var(--maxWidth)';
+
+var divMessageText=divMessageTextCreate();  copySome(window, divMessageText, ['setMess', 'resetMess', 'appendMess']);
+var divMessageTextWInner=createElement('div').myAppend(divMessageText).css({margin:'0em auto', width:'100%', 'max-width':maxWidth, 'text-align':'center', position:'relative'});
+var divMessageTextW=createElement('div').myAppend(divMessageTextWInner).css({width:'100%', position:'fixed', bottom:'0px', left:'0px', 'z-index':'10'});
+elBody.append(divMessageTextW);
 
 var busyLarge=createElement('img').prop({src:uBusyLarge}).css({position:'fixed',top:'50%',left:'50%','margin-top':'-42px','margin-left':'-42px','z-index':'1000',border:'black solid 1px'}).hide();
 elBody.append(busyLarge);
 
 
 var H1=elBody.querySelector('h1');//.detach()
-H1.css({background:'#fff',border:'solid 1px',color:'black','font-size':'1.6em','font-weight':'bold','text-align':'center',
-    padding:'0.4em 0em 0.4em 0em',margin:'0.3em 0em 0em 0em'}); 
+//H1.css({background:'#fff',border:'solid 1px',color:'black','font-size':'1.6em','font-weight':'bold','text-align':'center', padding:'0.4em 0em 0.4em 0em', margin:'0.3em 0em 0em 0em'});
+elBody.querySelector('noscript').detach();
 
-var loginInfo=loginInfoExtend(createElement('div'));  loginInfo.css({padding:'0em 0em 0em 0em','font-size':'75%', height:'1em'});
-elBody.prepend(loginInfo);
+var divLoginInfo=elBody.querySelector('#divLoginInfo').css({'min-height':'2rem'})
+var divLoginInfo=divLoginInfoExtend(divLoginInfo);  //flex:'0 0 auto', 
+//elBody.prepend(divLoginInfo);
 
 
 var mainDiv=mainDivExtend(createElement('div')); 
@@ -1915,7 +1938,7 @@ var consentDiv=consentDivExtend(createElement('div'));
 
 
 //app.StrMainDiv=['mainDiv', 'loginSelectorDiv', 'createUserSelectorDiv', 'createUserDiv', 'userSettingDiv', 'consentDiv', 'deleteAccountPop', 'verifyEmailPop', 'forgottPWPop', 'changePWPop', 'uploadImageDiv',
-//'devAppList', 'devAppSetDiv', 'devAppDeleteDiv', 'devAppSecretDiv', 'userAppSetDiv', 'userAppDeleteDiv', 'userAppList'];  //'loginInfo', 'H1', 
+//'devAppList', 'devAppSetDiv', 'devAppDeleteDiv', 'devAppSecretDiv', 'userAppSetDiv', 'userAppDeleteDiv', 'userAppList'];  //'divLoginInfo', 'H1', 
 //var MainDiv=[];  for(var i=0;i<StrMainDiv.length;i++){    MainDiv[i]=window[StrMainDiv[i]];  };
 
 var MainDiv=[mainDiv, loginSelectorDiv, createUserSelectorDiv, createUserDiv, userSettingDiv, consentDiv, deleteAccountPop, verifyEmailPop, forgottPWPop, changePWPop, uploadImageDiv, devAppList, devAppSetDiv, devAppDeleteDiv, devAppSecretDiv, userAppSetDiv, userAppDeleteDiv, userAppList]; 
@@ -1972,14 +1995,14 @@ userAppList.setVis=function(){
 
 
 MainDiv.forEach(ele=>ele.hide());
-elBody.append(loginInfo, H1, ...MainDiv);
+elBody.append(divLoginInfo, H1, ...MainDiv);
 
 
 elBody.css({'text-align':'center'});
 //MainDiv.css({'margin-left':'auto','margin-right':'auto'});
 //MainDiv.not(H1).css({'text-align':'left',background:'#fff'});
-[...MainDiv, loginInfo, H1].forEach(ele=>ele.css({'margin-left':'auto','margin-right':'auto'}));
-[...MainDiv, loginInfo].forEach(ele=>ele.css({'text-align':'left',background:'#fff'}));
+[...MainDiv, divLoginInfo, H1].forEach(ele=>ele.css({'margin-left':'auto','margin-right':'auto'}));
+[...MainDiv, divLoginInfo].forEach(ele=>ele.css({'text-align':'left',background:'#fff'}));
 
 
 var mainDivsNonFixWidth=[mainDiv, devAppList, userAppList, userSettingDiv, createUserDiv];
@@ -1988,13 +2011,13 @@ var mainDivsPop=[deleteAccountPop, verifyEmailPop, forgottPWPop, changePWPop, up
 mainDivsNonFixWidth.forEach(ele=>ele.css({display:'block','text-align':'center'}));
 mainDivsPop.forEach(ele=>ele.css({display:'block','text-align':'left'}));
 
-var mainDivsFixWidth=AMinusB([...MainDiv, loginInfo, H1],[...mainDivsNonFixWidth, ...mainDivsPop]);  mainDivsFixWidth.forEach(ele=>ele.css({'max-width':'800px'}));
+var mainDivsFixWidth=AMinusB([...MainDiv, divLoginInfo, H1],[...mainDivsNonFixWidth, ...mainDivsPop]);  mainDivsFixWidth.forEach(ele=>ele.css({'max-width':maxWidth}));
 
 
 elBody.visible();
 H1.show();
 mainDiv.setVis();
-loginInfo.setStat();
+divLoginInfo.setStat();
 
 
 var setBottomMargin=function() { // This is not very beautiful. But how should one else make a fixed div at the bottom without hiding the bottom of the scrollable content behind??
@@ -2058,7 +2081,7 @@ var authFlowF=function*(flow){
 
 
   // In normal case: go back to mainDiv after successfull login/logout/createUser
-idPLoginDiv.cb=formLogin.cb=createUserDiv.cb=loginInfo.cb=function(){
+idPLoginDiv.cb=formLogin.cb=createUserDiv.cb=divLoginInfo.cb=function(){
   if(history.StateMy[history.state.ind].view===mainDiv) {mainDiv.setVis();}
   else history.fastBack(mainDiv);
 };

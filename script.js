@@ -9,7 +9,6 @@ mysql =  require('mysql');
 gm =  require('gm').subClass({ imageMagick: true });
 //im = require('imagemagick');
 //temporary = require('tmp');
-util =  require('util');
 concat = require('concat-stream');
 requestMod = require('request');
 //through = require('through')
@@ -37,7 +36,7 @@ validator = require('validator');
 serialize = require('serialize-javascript');
 var argv = require('minimist')(process.argv.slice(2));
 //UglifyJS = require("uglify-js");
-app=(typeof window==='undefined')?global:window;
+app=global;
 require('./lib.js');
 require('./libServerGeneral.js');
 require('./libServer.js');
@@ -45,7 +44,6 @@ require('./lib/foundOnTheInternet/sha1.js');
 
 
 strAppName='idPlace';
-extend=util._extend;
 
 
 strInfrastructure=process.env.strInfrastructure||'local';
@@ -67,6 +65,10 @@ helpTextExit=function(){
   console.log(arr.join('\n'));
   process.exit(0);
 }
+
+var StrUnknown=AMinusB(Object.keys(argv),['_', 'h', 'help', 'p', 'port', 'sql']);
+var StrUnknown=[].concat(StrUnknown, argv._);
+if(StrUnknown.length){ console.log('Unknown arguments: '+StrUnknown.join(', ')); helpTextExit(); return;}
 
 
     // Set up redisClient
@@ -167,8 +169,12 @@ var flow=( function*(){
   
   var StrCookiePropProt=["HttpOnly", "Path=/","max-age="+3600*24*30];
   if(!boLocal || boUseSSLViaNodeJS) StrCookiePropProt.push("secure");
-  var StrCookiePropStrict=StrCookiePropProt.concat("SameSite=Strict"),   StrCookiePropLax=StrCookiePropProt.concat("SameSite=Lax"),   StrCookiePropNormal=StrCookiePropProt.concat("SameSite=None");
-  app.strCookiePropStrict=";"+StrCookiePropStrict.join(';');  app.strCookiePropLax=";"+StrCookiePropLax.join(';');  app.strCookiePropNormal=";"+StrCookiePropNormal.join(';');
+  //app.strCookiePropEmpty=";"+StrCookiePropProt.join(';');
+  //app.strCookiePropNormal=";"+StrCookiePropProt.concat("SameSite=None").join(';');
+  app.strCookiePropNormal=";"+StrCookiePropProt.join(';');
+  app.strCookiePropLax=";"+StrCookiePropProt.concat("SameSite=Lax").join(';');
+  app.strCookiePropStrict=";"+StrCookiePropProt.concat("SameSite=Strict").join(';');  
+
 
   handler=function(req, res){
     //Fiber( function(){
@@ -199,9 +205,13 @@ var flow=( function*(){
         else { res.writeHead(400);  res.end('You must use https'); return;}
       }
 
+      if(boDbg) console.log(req.method+' '+pathName);
 
       var cookies = parseCookies(req);
       req.cookies=cookies;
+      // var StrCookieKeys=Object.keys(cookies);
+      // if(req.url=='/') console.log('\nReferer: '+req.headers.referer);
+      // console.log(req.headers.host+' '+req.url+' '+ JSON.stringify(cookies));
 
       req.boCookieNormalOK=req.boCookieLaxOK=req.boCookieStrictOK=false;
       
@@ -230,8 +240,12 @@ var flow=( function*(){
       res.setHeader("Set-Cookie", ["sessionIDNormal="+sessionID+strCookiePropNormal, "sessionIDLax="+sessionID+strCookiePropLax, "sessionIDStrict="+sessionID+strCookiePropStrict]);
        
         // Check if to many requests comes in a short time (DDOS)
-      if(intCount>intDDOSMax) {res.outCode(429,"Too Many Requests ("+intCount+"), wait "+tDDOSBan+"s\n"); return; }
-      
+      if(intCount>intDDOSMax) {
+        var strMess="Too Many Requests ("+intCount+"), wait "+tDDOSBan+"s\n";
+        if(pathName=='/'+leafBE){ var reqBE=new ReqBE({req, res}); reqBE.mesEO(strMess,429); }
+        else res.outCode(429,strMess);
+        return;
+      }
       
         // Refresh / create  redisVarSessionCache
       if(req.boCookieNormalOK){
@@ -249,15 +263,10 @@ var flow=( function*(){
       if(strExt in MimeType) res.setHeader('Content-type', MimeType[strExt]);
       var strScheme='http'+(site.boTLS?'s':''),  strSchemeLong=strScheme+'://';
 
-
-      if(boDbg) console.log(req.method+' '+pathName);
  
+      extend(req, {wwwSite, sessionID, objUrl, objQS, strSchemeLong, site, pathName, siteName, rootDomain:RootDomain[site.strRootDomain]});
 
-      req.wwwSite=wwwSite;
-      req.sessionID=sessionID; req.objUrl=objUrl; req.objQS=objQS; req.strSchemeLong=strSchemeLong;   req.site=site;  req.pathName=pathName;     req.siteName=siteName;
-      req.rootDomain=RootDomain[site.strRootDomain];
-
-      var objReqRes={req:req, res:res};
+      var objReqRes={req, res};
       objReqRes.myMySql=new MyMySql(mysqlPool);
       if(levelMaintenance){res.outCode(503, "Down for maintenance, try again in a little while."); return;}
       if(pathName=='/'+leafBE){  var reqBE=new ReqBE(objReqRes);  yield* reqBE.go();    }

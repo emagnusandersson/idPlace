@@ -40,9 +40,9 @@ app.reqBE=function*() {
   
 
     // Get Graph
-  if(strIP=='fb')  var objForm={access_token:access_token, fields:"id,name,verified,picture,email"};
-  else if(strIP=='google')  var objForm={access_token:access_token, fields:"id,name,verified,image,email"};
-  else if(strIP=='idplace' || strIP=='idL' || strIP=='id192')  var objForm={access_token:access_token};
+  if(strIP=='fb')  var objForm={access_token, fields:"id,name,verified,picture,email"};
+  else if(strIP=='google')  var objForm={access_token, fields:"id,name,verified,image,email"};
+  else if(strIP=='idplace' || strIP=='idL' || strIP=='id192')  var objForm={access_token};
   var uGraph=UrlGraph[strIP];
 
   var arrT = Object.keys(objForm).map(function (key) { return key+'='+objForm[key]; }), strQuery=arrT.join('&'); 

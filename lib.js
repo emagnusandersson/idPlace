@@ -1,6 +1,6 @@
 "use strict"
 
-var app=(typeof window==='undefined')?global:window;
+var app;  if(typeof window!=='undefined') app=window; else if(typeof global!=='undefined') app=global; else app=self;  // if browser else if server else serviceworker
 
 //
 // String
@@ -97,6 +97,7 @@ app.StrComp=function(A,B){var lA=A.length; if(lA!==B.length) return false; for(v
 // Object
 //
 
+app.extend=Object.assign;
 app.copySome=function(a,b,Str){for(var i=0;i<Str.length;i++) { var name=Str[i]; a[name]=b[name]; } return a; }
 app.object_values=function(obj){
   var arr=[];      for(var name in obj) arr.push(obj[name]);
@@ -196,7 +197,7 @@ app.t2dosTime=function(t){
   var year=t.getFullYear();
   var dosTime= Math.round(sec/2) |minute<<5 |hour<<11;
   var dosDate=date |month<<5 |(year-1980)<<9;
-  return {dosDate:dosDate,dosTime:dosTime};
+  return {dosDate,dosTime};
 }
 
 //
