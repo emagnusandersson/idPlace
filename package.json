@@ -21,7 +21,7 @@
     "node-zip": "1.1.1",
     "redis": "3.0.2",
     "request": "2.88.2",
-    "serialize-javascript": "4.0.0",
+    "serialize-javascript": "3.1.0",
     "streamify-string": "1.0.1",
     "uglify-js": "3.10.1",
     "validator": "13.1.1"
