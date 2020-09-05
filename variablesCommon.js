@@ -17,6 +17,7 @@ flLibImageFolder=flLibFolder+"/image";
 leafBE='be.json';
 leafVerifyEmailReturn='verifyEmail';
 leafVerifyPWResetReturn='verifyPWReset';
+leafManifest='manifest.json';
 
 
 lenGZ=100;
@@ -68,6 +69,8 @@ siteCalcValExtend=function(site,siteName){ // Adding stuff that can be calculate
 
 }
 
+IntSizeIcon=[16, 114, 192, 200, 512, 1024];
+IntSizeIconFlip=array_flip(IntSizeIcon);
 SiteExtend=function(){
   Site.getSite=function(wwwReq){
     for(var i=0;i<SiteName.length;i++){
@@ -85,6 +88,16 @@ SiteExtend=function(){
     var objTmp=RootDomain[site.strRootDomain];  site.client_id={fb:objTmp.fb.id, google:objTmp.google.id};
     
     siteCalcValExtend(site,siteName);
+    
+    
+    site.SrcIcon=Array(IntSizeIcon.length);
+    site.icons=Array(IntSizeIcon.length);
+    var strType='png', wsIconProt=site.wsIconProt || wsIconDefaultProt;
+  
+    IntSizeIcon.forEach((size, ind)=>{
+      site.SrcIcon[ind]=wsIconProt.replace("<size>", size);
+      site.icons[ind]={ src:site.SrcIcon[ind], type: mime.getType(strType), sizes: size+"x"+size, purpose: "any maskable" };
+    });
   }
 }
 

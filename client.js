@@ -1809,8 +1809,7 @@ var uIdPlaceCompare=uLibImageFolder+'idPlaceCompare.png';
 
 
 var imgHelp=createElement('img').prop({src:uHelpFile, alt:"help"}).css({'vertical-align':'-0.4em'});
-var hovHelpMy=createElement('span').myText('❓').addClass('btn-round', 'helpButtonGradient');
-if(boIOS | boEdge) {hovHelpMy.css({color:'transparent', 'text-shadow':'0 0 0 #5780a8'});}
+var hovHelpMy=createElement('span').myText('❓').addClass('btn-round', 'helpButtonGradient').css({color:'transparent', 'text-shadow':'0 0 0 #5780a8'});
 imgHelp=hovHelpMy;
 
 var sizeIcon=1.5, strSizeIcon=sizeIcon+'em';

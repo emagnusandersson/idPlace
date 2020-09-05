@@ -206,7 +206,15 @@ app.t2dosTime=function(t){
 
 app.randomInt=function(min, max){    return min + Math.floor(Math.random() * (max - min + 1));  }
 app.randomHash=function(){ return Math.random().toString(36).slice(2)+Math.random().toString(36).slice(2);}
-
+app.genRandomString=function(len) {
+  //var characters = 'abcdefghijklmnopqrstuvwxyz';
+  var characters = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+  var str ='';    
+  for(var p=0; p<len; p++) {
+    str+=characters[randomInt(0, characters.length-1)];
+  }
+  return str;
+}
 
 //
 // Math

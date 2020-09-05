@@ -1,6 +1,22 @@
 "use strict"
 
 //
+// Checking browser functionalities
+//
+
+var testBrowserFunctionality=function(){
+  var err=null, m0="This browser does not support ", m1;
+  try { m1="generators"; eval("(function *(){})");
+    m1="default parameters"; eval("(function(a=0){})");
+    m1="destructuring assignment"; eval("var {a}={a:1};");
+    m1="destructuring assignment with arrays"; eval("var [a]=[1];");
+    //m1="this obvious nonsens"; eval("function;");
+  } catch(errT) { err=errT; }
+  return [err, m0+m1]; 
+}
+
+
+//
 // Storage, DOM etc
 //
 

@@ -118,11 +118,14 @@ app.reqIndex=function*() {
 
 
   var uSite=req.strSchemeLong+wwwSite;
-  var uIcon16=uSite+'/'+wIcon16,   uIcon114=uSite+'/'+wIcon114,   uIcon200=uSite+'/'+wIcon200;
-  Str.push('<link rel="icon" type="image/png" href="'+uIcon16+'" />');
-  Str.push('<link rel="apple-touch-icon" href="'+uIcon114+'"/>');
+  
+  var srcIcon16=site.SrcIcon[IntSizeIconFlip[16]];
+  var srcIcon114=site.SrcIcon[IntSizeIconFlip[114]];
+  Str.push('<link rel="icon" type="image/png" href="'+srcIcon16+'" />');
+  Str.push('<link rel="apple-touch-icon" href="'+srcIcon114+'"/>');
 
   Str.push("<meta name='viewport' id='viewportMy' content='initial-scale=1'/>");
+  Str.push('<meta name="theme-color" content="#ff0"/>');
 
   if(boAuthReq){ Str.push('<meta name="robots" content="noindex">\n'); }
 
@@ -141,6 +144,7 @@ app.reqIndex=function*() {
 <link rel="canonical" href="`+uSite+`"/>`);
 
   
+  var uIcon200=uSite+site.SrcIcon[IntSizeIconFlip[200]];
   var tmp=`
 <meta property="og:title" content="`+wwwSite+`"/>
 <meta property="og:type" content="website" />
@@ -181,17 +185,6 @@ app.reqIndex=function*() {
 
 
 
-
-
-  Str.push(`<script> (function(){
-try { eval("(function *(){})");} catch(err) { alert("This browser does not support generators:\\n"+ err); return;}
-try { eval("(function(a=0){})");} catch(err) { alert("This browser does not support default parameters:\\n"+ err); return;}
-try { eval("var {a}={a:1};");} catch(err) { alert("This browser does not support destructuring assignment:\\n"+ err); return;}
-try { eval("[a]=[1];");} catch(err) { alert("This browser does not support destructuring assignment with arrays:\\n"+ err); return;}
-})();</script>`);
-
-
-
 Str.push(`<style>
 :root { --maxWidth:800px; height:100%}
 body {margin:0; height:100%; display:flow-root; font-family:arial, verdana, helvetica; }  /*text-align:center;*/
@@ -201,23 +194,26 @@ h1.mainH1 { box-sizing:border-box; margin:0em auto; width:100%; max-width:var(--
 </style>`);
 
 
-  Str.push('<script src="'+uSite+'/lib/foundOnTheInternet/sha1.js" async></script>');
   //Str.push('<script src="'+uSite+'/lib/foundOnTheInternet/md5.js" async></script>');
 
     // If boDbg then set vTmp=0 so that the url is the same, this way the debugger can reopen the file between changes
 
     // Use normal vTmp on iOS (since I don't have any method of disabling cache on iOS devices (nor any debugging interface))
   var boDbgT=boDbg; if(boIOS) boDbgT=0;
+  
+  var keyTmp=siteName+'/'+leafManifest, vTmp=boDbgT?0:CacheUri[keyTmp].eTag;     Str.push(`<link rel="manifest" href="`+uSite+`/`+leafManifest+`?v=`+vTmp+`"/>`);
+  
     // Include stylesheets
-  var pathTmp='/stylesheets/style.css', vTmp=CacheUri[pathTmp].eTag; if(boDbgT) vTmp=0;    Str.push('<link rel="stylesheet" href="'+uSite+pathTmp+'?v='+vTmp+'" type="text/css">');
+  var pathTmp='/stylesheets/style.css', vTmp=boDbgT?0:CacheUri[pathTmp].eTag;    Str.push('<link rel="stylesheet" href="'+uSite+pathTmp+'?v='+vTmp+'" type="text/css">');
 
     // Include JS-files
   var StrTmp=['lib.js', 'libClient.js', 'client.js'];
   for(var i=0;i<StrTmp.length;i++){
-    var pathTmp='/'+StrTmp[i], vTmp=CacheUri[pathTmp].eTag; if(boDbgT) vTmp=0;    Str.push('<script src="'+uSite+pathTmp+'?v='+vTmp+'" async></script>');
+    var pathTmp='/'+StrTmp[i], vTmp=boDbgT?0:CacheUri[pathTmp].eTag;    Str.push('<script src="'+uSite+pathTmp+'?v='+vTmp+'" async></script>');
   }
 
 
+  Str.push('<script src="'+uSite+'/lib/foundOnTheInternet/sha1.js" async></script>');
 
   var strTracker, tmpID=site.googleAnalyticsTrackingID||null;
   if(boDbg||!tmpID){strTracker="<script> ga=function(){};</script>";}else{ 
@@ -500,7 +496,7 @@ FROM `+user2AppTab+` ua JOIN `+userTab+` u ON ua.idUser=u.idUser JOIN `+appTab+`
  * reqLoginBack
  ******************************************************************************/
 app.reqLoginBack=function*(){
-  var req=this.req, res=this.res;
+  var {req, res}=this;
   var wwwLoginScopeTmp=null; if('wwwLoginScope' in req.site) wwwLoginScopeTmp=req.site.wwwLoginScope;
   var uSite=req.strSchemeLong+req.wwwSite;
 
@@ -658,9 +654,9 @@ app.reqImage=function*() {
  * reqStatic (request for static files)
  ******************************************************************************/
 app.reqStatic=function*() {
-  var req=this.req, res=this.res;
-  //var site=req.site, siteName=site.siteName;
-  var pathName=req.pathName;
+  var {req, res}=this;
+  var {flow, site, pathName}=req, siteName=site.siteName;
+
 
   //var RegAllowedOriginOfStaticFile=[RegExp("^https\:\/\/(closeby\.market|gavott\.com)")];
   //var RegAllowedOriginOfStaticFile=[RegExp("^http\:\/\/(localhost|192\.168\.0)")];
@@ -669,10 +665,10 @@ app.reqStatic=function*() {
   if(req.method=='OPTIONS'){ res.end(); return ;}
   
   var eTagIn=getETag(req.headers);
-  var keyCache=pathName; //if(pathName==='/'+leafSiteSpecific) keyCache=siteName+keyCache;
+  var keyCache=pathName; if(pathName==='/'+leafManifest) keyCache=siteName+keyCache;
   if(!(keyCache in CacheUri)){
     var filename=pathName.substr(1);
-    var [err]=yield* readFileToCache(req.flow, filename);
+    var [err]=yield* readFileToCache(flow, filename);
     if(err) {
       if(err.code=='ENOENT') {res.out404(); return;}
       if('host' in req.headers) console.error('Faulty request from'+req.headers.host);
@@ -1402,7 +1398,7 @@ app.ReqSql.prototype.createZip=function(objSetupSql){
   res.end(outdata,'binary');
 }
 app.ReqSql.prototype.toBrowser=function(objSetupSql){
-  var req=this.req, res=this.res, StrType=this.StrType;
+  var {req, res}=this;
   var Match=RegExp("^(drop)?(.*?)(All)?$").exec(req.pathNameWOPrefix), boDropOnly=Match[1]=='drop', strMeth=Match[2].toLowerCase(), boAll=Match[3]=='All', SiteNameT=boAll?SiteName:[req.siteName];
   var StrValidMeth=['table', 'fun', 'truncate',  'dummy', 'dummies'];
   //var objTmp=Object.getPrototypeOf(objSetupSql);

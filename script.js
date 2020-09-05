@@ -34,6 +34,7 @@ ip = require('ip');
 Streamify= require('streamify-string');
 validator = require('validator');
 serialize = require('serialize-javascript');
+mime = require("mime");
 var argv = require('minimist')(process.argv.slice(2));
 //UglifyJS = require("uglify-js");
 app=global;
@@ -93,11 +94,12 @@ var flow=( function*(){
   boDbg=0; boAllowSql=1; port=5000; levelMaintenance=0; googleSiteVerification='googleXXX.html';
   boRequireTLD=0;
   intDDOSMax=100; tDDOSBan=5; 
-  strSalt='wqriinnabcradfcpose';
   maxUnactivity=3600*24;  // _Cache, _CSRFCodeIndex
   //maxUnactivityToken=120*60;
   leafLoginBack="loginBack.html";
   boUseSSLViaNodeJS=false;
+  //wseIconRootDefault="/lib/image/Icon/blackWhite/";
+  wsIconDefaultProt="/Site/Icon/iconWhite<size>.png"
   
   port=argv.p||argv.port||5000;
   if(argv.h || argv.help) {helpTextExit(); return;}
@@ -115,6 +117,8 @@ var flow=( function*(){
   } 
   var strMd5Config=md5(strConfig);
   eval(strConfig);
+  if(typeof strSalt=='undefined') {console.error("typeof strSalt=='undefined'"); return; }
+  
   var redisVar='str'+ucfirst(strAppName)+'Md5Config';
   var tmp=yield *getRedis(flow, redisVar);
   var boNewConfig=strMd5Config!==tmp; 
@@ -162,13 +166,17 @@ var flow=( function*(){
     var [err]=yield *readFileToCache(flow, filename); if(err) {  console.error(err);  return;}
   }
   
+    // Write manifest to Cache
+  var [err]=yield* createManifestNStoreToCacheMult(flow, SiteName); if(err) {  console.error(err.message);  return;}
+  
+  
   if(boDbg){
     fs.watch('.', makeWatchCB('.', ['client.js','libClient.js']) );
     fs.watch('stylesheets', makeWatchCB('stylesheets', ['style.css']) );
   }
   
-  var StrCookiePropProt=["HttpOnly", "Path=/","max-age="+3600*24*30];
-  if(!boLocal || boUseSSLViaNodeJS) StrCookiePropProt.push("secure");
+  var StrCookiePropProt=["HttpOnly", "Path=/", "Max-Age="+3600*24*30];
+  if(!boLocal || boUseSSLViaNodeJS) StrCookiePropProt.push("Secure");
   //app.strCookiePropEmpty=";"+StrCookiePropProt.join(';');
   //app.strCookiePropNormal=";"+StrCookiePropProt.concat("SameSite=None").join(';');
   app.strCookiePropNormal=";"+StrCookiePropProt.join(';');
@@ -273,7 +281,7 @@ var flow=( function*(){
       else if(pathName=='/' ){  yield* reqIndex.call(objReqRes);    }
       else if(pathName.indexOf('/image/')==0){  yield* reqImage.call(objReqRes);   } //RegExp('^/image/').test(pathName)
       //else if(pathName=='/captcha.png'){  yield* reqCaptcha.call(objReqRes);   }
-      else if(regexpLib.test(pathName) || regexpLooseJS.test(pathName)  || pathName=='/conversion.html'){
+      else if(regexpLib.test(pathName) || regexpLooseJS.test(pathName)  || pathName=='/conversion.html' || pathName=='/'+leafManifest){
         if(pathName=='/conversion.html') res.removeHeader("Content-Security-Policy");
         yield* reqStatic.call(objReqRes);
       }
