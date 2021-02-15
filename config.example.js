@@ -15,7 +15,7 @@ strSalt='abcdefghij'; // Random letters to prevent that the hashed passwords loo
 strSaltID='klmnopqrstu'; // Random letters to prevent that the hashed IDs can be predicted.
 
 
-strFBVersion="v7.0"
+strFBVersion="v9.0"
 UrlOAuth={fb:"https://www.facebook.com/"+strFBVersion+"/dialog/oauth", google:"https://accounts.google.com/o/oauth2/v2/auth"}
 UrlToken={fb:"https://graph.facebook.com/"+strFBVersion+"/oauth/access_token", google:"https://accounts.google.com/o/oauth2/token"}
 UrlGraph={fb:"https://graph.facebook.com/"+strFBVersion+"/me", google:"https://www.googleapis.com/plus/v1/people/me"}; 

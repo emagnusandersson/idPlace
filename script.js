@@ -270,9 +270,10 @@ var flow=( function*(){
       var Match=pathName.match(regexpExt), strExt; if(Match) strExt=Match[1];
       if(strExt in MimeType) res.setHeader('Content-type', MimeType[strExt]);
       var strScheme='http'+(site.boTLS?'s':''),  strSchemeLong=strScheme+'://';
+      var uSite=strSchemeLong+wwwSite;
 
  
-      extend(req, {wwwSite, sessionID, objUrl, objQS, strSchemeLong, site, pathName, siteName, rootDomain:RootDomain[site.strRootDomain]});
+      extend(req, {wwwSite, uSite, sessionID, objUrl, objQS, strSchemeLong, site, pathName, siteName, rootDomain:RootDomain[site.strRootDomain]});
 
       var objReqRes={req, res};
       objReqRes.myMySql=new MyMySql(mysqlPool);
@@ -290,6 +291,9 @@ var flow=( function*(){
       else if(pathName=='/me' ){  yield* reqMe.call(objReqRes);   }
       else if(pathName=='/'+leafVerifyEmailReturn ){  yield* reqVerifyEmailReturn.call(objReqRes);   }
       else if(pathName=='/'+leafVerifyPWResetReturn ){  yield* reqVerifyPWResetReturn.call(objReqRes);   }
+      else if(pathName=='/'+leafDataDelete){  yield* reqDataDelete.call(objReqRes);  }
+      else if(pathName=='/'+leafDataDeleteStatus){  yield* reqDataDeleteStatus.call(objReqRes);  }
+      //else if(pathName=='/'+leafDeAuthorize){  yield* reqDeAuthorize.call(objReqRes);  }
       else if(pathName=='/monitor.html'){  yield* reqMonitor.call(objReqRes);   }
       else if(pathName=='/stat.html'){  yield* reqStat.call(objReqRes);   }
       else if(pathName=='/createDumpCommand'){  var str=createDumpCommand(); res.out200(str);     }

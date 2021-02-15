@@ -319,7 +319,7 @@ ReqBE.prototype.loginGetGraph=function*(inObj){
   //}
   else{ return [new Error('strIP=='+strIP)];}
   
-  
+
  
   
   var arrT = Object.keys(objForm).map(function (key) { return key+'='+objForm[key]; }), strQuery=arrT.join('&'); 
@@ -961,7 +961,14 @@ ReqBE.prototype.verifyEmail=function*(inObj){
 <p><a href=`+uVerification+`>`+uVerification+`</a></p>
 <p>Note! The links stops working `+expirationTime/60+` minutes after the email was sent.</p>`;
   
-  const msg = { to: email, from: 'noreply@idplace.org', subject: 'Email verification', html: strTxt }; sgMail.send(msg);
+
+  const msg = { to:email, from:emailRegisterdUser, subject:'Email verification',  html:strTxt};
+
+  var semY=0, semCB=0, err=null; sgMail.send(msg).then(function(){if(semY)flow.next(); semCB=1;})
+  .catch(function(errT) { err=errT; if(semY)flow.next(); semCB=1; });    if(!semCB){semY=1; yield;}
+  if(err) {console.log(err); return [new ErrorClient(err.body)]; }
+
+  
   this.mes('Email sent');
   Ou.boOK=1;
   return [null, [Ou]];
@@ -999,7 +1006,13 @@ ReqBE.prototype.verifyPWReset=function*(inObj){
 <p><a href=`+uVerification+`>`+uVerification+`</a></p>
 <p>Note! The links stops working `+expirationTime/60+` minutes after the email was sent.</p>`;
   
-  const msg = { to: email, from: 'noreply@idplace.org', subject: 'Password reset request', html: strTxt };  sgMail.send(msg);
+  const msg = { to:email, from:emailRegisterdUser, subject:'Password reset request',  html:strTxt};
+
+  var semY=0, semCB=0, err=null; sgMail.send(msg).then(function(){if(semY)flow.next(); semCB=1;})
+  .catch(function(errT) { err=errT; if(semY)flow.next(); semCB=1; });    if(!semCB){semY=1; yield;}
+  if(err) {console.log(err); return [new ErrorClient(err.body)]; }
+
+
   this.mes('Email sent'); Ou.boOK=1;
   return [null, [Ou]];
 }

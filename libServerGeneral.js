@@ -246,10 +246,6 @@ app.isRedirAppropriate=function(req){
   return false;
 }
 
-app.myJSEscape=function(str){return str.replace(/&/g,"&amp;").replace(/</g,"&lt;");}
-  // myAttrEscape
-  // Only one of " or ' must be escaped depending on how it is wrapped when on the client.
-app.myAttrEscape=function(str){return str.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/\//g,"&#47;");} // This will keep any single quataions.
 
 
 app.setAccessControlAllowOrigin=function(req, res, RegAllowed){

@@ -18,6 +18,9 @@ leafBE='be.json';
 leafVerifyEmailReturn='verifyEmail';
 leafVerifyPWResetReturn='verifyPWReset';
 leafManifest='manifest.json';
+leafDataDelete='dataDelete';
+leafDataDeleteStatus='dataDeleteStatus';
+leafDeAuthorize='deAuthorize';
 
 
 lenGZ=100;

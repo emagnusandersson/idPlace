@@ -439,7 +439,7 @@ var loginSelectorDivExtend=function(el){
   var buttForgot=createElement('a').prop({href:''}).myText('Forgot your password?').on('click',forgotClickF);
   var divForgot=createElement('div').css({'margin-top':'1em'}).myAppend(buttForgot);
  
-  var divLeft=createElement('div').css(cssCol).myAppend(messDiv,    formLogin,     divForgot); 
+  var divLeft=createElement('div').css(cssCol).myAppend(messDiv,    formLogin,     divForgot); formLogin.show();
   var divRight=createElement('div').css(cssCol).css({'text-align':'center', 'border-left':'2px solid grey'});
   var divRow=createElement('div').myAppend(divLeft, divRight).css({display: 'flex', 'justify-content':'space-around'});
   var divCont=createElement('div').myAppend(h1, divRow);
@@ -987,8 +987,8 @@ var userSettingDivExtend=function(el){
     Inp.forEach(function(inp){
       var strName=inp.attr('name'); Prop[strName].setInp(inp);
     });
-    var arrTmp=getSuitableTimeUnit(unixNow()-userInfoFrDB.tCreated); arrTmp[0]=Math.round(arrTmp[0]);
-    divCreated.querySelector('b').myText(arrTmp.join(' '));
+    var strT=getSuitableTimeUnitStr(unixNow()-userInfoFrDB.tCreated);
+    divCreated.querySelector('b').myText(strT);
     return true; 
   }
   var Inp=[], SpanLastChange=[];
@@ -1113,7 +1113,7 @@ var userAppListExtend=function(el){
   //el.setUp=function(){};
   var TDProt={
     tAccess:{
-      mySetVal:function(tT){ var arrT=getSuitableTimeUnit(unixNow()-tT);  this.myText(Math.round(arrT[0])+arrT[1]);  }
+      mySetVal:function(tT){ var strT=getSuitableTimeUnitStr(unixNow()-tT);  this.myText(strT);  }
     },
     imageHash:{
       mySetVal:function(imageHash){
@@ -1301,7 +1301,7 @@ var devAppListExtend=function(el){
   el.toString=function(){return 'devAppList';}
   var TDProt={
     created:{
-      mySetVal:function(tCreated){ var arrT=getSuitableTimeUnit(unixNow()-tCreated);  this.myText(Math.round(arrT[0])+arrT[1]);  }
+      mySetVal:function(tCreated){ var strT=getSuitableTimeUnitStr(unixNow()-tCreated);  this.myText(strT);  }
     },
     imageHash:{
       mySetVal:function(imageHash){
@@ -1489,11 +1489,11 @@ var PropExtend=function(){
   }
   var setStatisticSpanDefault=function(span){
     var strNName='n'+ucfirst(span.attr('name')), nChange=userInfoFrDB[strNName];//, spanNChange=span.querySelector('span[name=nChange]'); spanNChange.myText(nChange);
-    var strTName='t'+ucfirst(span.attr('name')), arrTmp=getSuitableTimeUnit(unixNow()-userInfoFrDB[strTName]); arrTmp[0]=Math.round(arrTmp[0]);
-    //var spanTChange=span.querySelector('span[name=lastChange]'); spanTChange.myText(arrTmp.join(' ')); spanTChange.parentNode.toggle(nChange); 
+    var strTName='t'+ucfirst(span.attr('name')), strT=getSuitableTimeUnitStr(unixNow()-userInfoFrDB[strTName]);
+    //var spanTChange=span.querySelector('span[name=lastChange]'); spanTChange.myText(strT); spanTChange.parentNode.toggle(nChange); 
     if(nChange==0) span.myHtml('Changed <b>0</b> times');
-    else if(nChange==1) span.myHtml('Changed <b>1</b> time, <b>'+arrTmp.join(' ')+'</b> ago');
-    else if(nChange==2) span.myHtml('Changed <b>'+nChange+'</b> times, <b>'+arrTmp.join(' ')+'</b> ago');
+    else if(nChange==1) span.myHtml('Changed <b>1</b> time, <b>'+strT+'</b> ago');
+    else if(nChange==2) span.myHtml('Changed <b>'+nChange+'</b> times, <b>'+strT+'</b> ago');
   }
 
 
@@ -1647,7 +1647,7 @@ var PropExtend=function(){
 var timerALogout=null;
 
 
-var langHtml={
+app.langHtml={
   OK:'OK',
   Yes:'Yes',
   uploadNewImg:'Upload new image',
@@ -1675,7 +1675,7 @@ var langHtml={
     help:"As long as you haven't made any payments, you can delete the account"
   },
   disclaimerHead:'Disclamer etc.',
-  disclaimer:`<p>The site might be taken down at any moment simply because the developer feels like it. The software is still free (to use and change) (<a href="https://github.com/emagnusandersson/idPlace">link</a>) and anyone who feel like it should be able to take over.\n
+  disclaimer:`<p>The site might be taken down at any moment simply because the developer feels like it. The software is still free (to use and change) (<a href="https://github.com/emagnusandersson/idPlace">link</a>)\n
   <h5>Your account might be deleted...</h5>
   <p>... in attempts to keep the register free of fake accounts. (<a href="https://emagnusandersson.com/idPlace">Why is it important to get rid of fake accounts</a>)
   <h5>Best practices to keep your account from being deleted</h5>
@@ -1683,7 +1683,16 @@ var langHtml={
   <p>• Don't change data that is expected to be constant too often (Social security number, birth date ...)
   <p>• Tie your account to Facebook. (This since Facebook also has a policy of maintaining unique accounts. (And they have much better resources to work on the issue.))
   <h5>Also note:</h5>
-  <p>You can always delete your account and create a new one later.`
+  <p>You can always delete your account and create a new one later.`,
+  // time units [[singularShort, pluralShort], [singularLong, pluralLong]]
+  timeUnit:{
+  s:[['s','s'],['second','seconds']],
+  m:[['min','min'],['minute','minutes']],
+  h:[['h','h'],['hour','hours']],
+  d:[['d','d'],['day','days']],
+  M:[['mo','mo'],['month','months']],
+  y:[['y','y'],['year','years']]
+  },
 };
 //<p>• If you entered a correct email address you will most likely be emailed before you are deleted.
 //<p>(Taking someone elses identity may also go against the laws of the local justice system.)
