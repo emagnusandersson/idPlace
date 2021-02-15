@@ -535,7 +535,7 @@ app.reqVerifyEmailReturn=function*() {
   var userTab=site.TableName.userTab;
   var objQS=req.objQS;
   
-  if(!req.boCookieLaxOK) {res.outCode(401, "Lax cookie not set");  return;  }
+  //if(!req.boCookieLaxOK) {res.outCode(401, "Lax cookie not set");  return;  }  // Don't check for lax-cookie since the user may click the link in an other browser
   
   var tmp='code'; if(!(tmp in objQS)) { res.out200('The parameter '+tmp+' is required'); return;}
   var codeIn=objQS.code;
@@ -565,7 +565,7 @@ app.reqVerifyPWResetReturn=function*() {
   var userTab=site.TableName.userTab;
   var objQS=req.objQS;
   
-  if(!req.boCookieLaxOK) {res.outCode(401, "Lax cookie not set");  return;  }
+  //if(!req.boCookieLaxOK) {res.outCode(401, "Lax cookie not set");  return;  } // Don't check for lax-cookie since the user may click the link in an other browser
   
   var tmp='code'; if(!(tmp in objQS)) { res.out200('The parameter '+tmp+' is required'); return;}
   var codeIn=objQS.code;
@@ -590,10 +590,96 @@ app.reqVerifyPWResetReturn=function*() {
   var wwwSite=req.wwwSite;
   var strTxt='<h3>New password on '+wwwSite+'</h3><p>Your new password on '+wwwSite+' is '+password+'</p>';
   
-  const msg = { to: email, from: 'noreply@idplace.org', subject: 'Password reset', html: strTxt }; sgMail.send(msg);
+  const msg = { to:email, from:emailRegisterdUser, subject:'Password reset', html:strTxt };
+
+  var semY=0, semCB=0, err=null; sgMail.send(msg).then(function(){if(semY)flow.next(); semCB=1;})
+  .catch(function(errT) { err=errT; if(semY)flow.next(); semCB=1; });    if(!semCB){semY=1; yield;}
+  if(err) {res.out500(err); return; }
+  
   res.setHeader('Content-Type', MimeType.html);
-  res.end("A new password has been generated and sent to your email address.<br>Close this tab and login with your new passoword in the orignal tab.");
+  res.end("A new password has been generated and sent to your email address.<br>Close this tab and login with your new password in the orignal tab.");
 }
+
+
+
+
+
+
+/******************************************************************************
+ * reqDataDelete   // From IdP
+ ******************************************************************************/
+
+function parseSignedRequest(signedRequest, secret) {
+  var [b64UrlMac, b64UrlPayload] = signedRequest.split('.', 2);
+  //var mac = b64UrlDecode(b64UrlMac);
+  var payload = b64UrlDecode(b64UrlPayload),  data = JSON.parse(payload);
+  var b64ExpectedMac = crypto.createHmac('sha256', secret).update(b64UrlPayload).digest('base64');
+  var b64UrlExpectedMac=b64ExpectedMac.replace(/\+/g, '-').replace(/\//g, '_').replace('=', '');
+  if (b64UrlMac !== b64UrlExpectedMac) {
+    return [Error('Invalid mac: ' + b64UrlMac + '. Expected ' + b64UrlExpectedMac)];
+  }
+  return [null,data];
+}
+
+app.deleteOne=function*(user_id){ // 
+  var {req}=this, {flow, site}=req, {userTab}=site.TableName;
+  var Ou={};
+
+  var Sql=[], Val=[];
+  Sql.push("DELETE FROM "+userTab+" WHERE idFB=?;"); Val.push(user_id);
+  Sql.push("SELECT count(*) AS n FROM "+userTab+";");
+  var sql=Sql.join('\n');
+  var [err, results]=yield* this.myMySql.query(flow, sql, Val); if(err) return [err];
+  var c=results[0].affectedRows;
+  site.nUser=Number(results[1][0].n);
+
+  return [null, c];
+}
+
+app.reqDataDelete=function*(){  //
+  var {req, res}=this;
+  var {flow, objQS, uSite, siteName}=req;
+
+  if(req.method=='GET' && boDbg){ var objUrl=url.parse(req.url), qs=objUrl.query||'', strData=qs; } else 
+  if(req.method=='POST'){
+    var buf, myConcat=concat(function(bufT){ buf=bufT; flow.next();  });    req.pipe(myConcat);    yield;
+    var strData=buf.toString();
+  }
+  else {res.outCode(400, "Post request wanted"); return; }
+  
+  var Match=strData.match(/signed_request=(.*)/); if(!Match) {res.outCode(400, "String didn't start with \"signed_request=\""); return; }
+  var strDataB=Match[1];
+
+  var [err, data]=parseSignedRequest(strDataB, req.rootDomain.fb.secret); if(err) { res.outCode(400, "Error in parseSignedRequest: "+err.message); return; }
+  var {user_id}=data;
+
+  var [err,c]=yield* deleteOne.call(this, user_id);
+  if(c==1) var strPlur='entry'; else var strPlur='entries';
+  var mess='User: '+user_id+': '+c+' '+strPlur+' deleted';
+  
+  console.log('reqDataDelete: '+mess);
+  var confirmation_code=genRandomString(32);
+  yield *setRedis(flow, confirmation_code+'_DeleteRequest', mess, timeOutDeleteStatusInfo); //3600*24*30
+
+  res.setHeader('Content-Type', MimeType.json); 
+  res.end(JSON.stringify({ url: uSite+'/'+leafDataDeleteStatus+'?confirmation_code='+confirmation_code, confirmation_code }));
+}
+
+app.reqDataDeleteStatus=function*(){
+  var {req, res}=this;
+  var {flow, site, objQS, uSite}=req;
+  var objUrl=url.parse(req.url), qs=objUrl.query||'', objQS=querystring.parse(qs);
+  var confirmation_code=objQS.confirmation_code||'';
+  var [err,mess]=yield* cmdRedis(flow, 'GET', [confirmation_code+'_DeleteRequest']); 
+  if(err) {var mess=err.message;}
+  else if(mess==null) {
+    var [t,u]=getSuitableTimeUnit(timeOutDeleteStatusInfo);
+    //var mess="The delete status info is only available for "+t+u+".\nAll delete requests are handled immediately. So if you pressed delete, you are deleted.";
+    var mess="No info of deletion status found, (any info is deleted "+t+u+" after the deletion request).";
+  }
+  res.end(mess);
+}
+
 
 
 

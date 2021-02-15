@@ -113,6 +113,8 @@ app.myFlip=function(A){ var B={}; for(var k in A){B[A[k]]=k;} return B;} // Flip
         return [err, undefined];
     }
 }*/
+
+
 //
 // Dates and time
 //
@@ -153,18 +155,22 @@ app.UTC2Readable=function(utcTime){ var tmp=new Date(Number(utcTime)*1000);   re
 app.unixNow=function(){return (new Date()).toUnix();}
 
 app.getSuitableTimeUnit=function(t){ // t in seconds
-  var tabs=Math.abs(t), tsign=t>=0?+1:-1;
-  if(tabs<=90) return [tsign*tabs,'s'];
-  tabs/=60; // t in minutes
-  if(tabs<=90) return [tsign*tabs,'min']; 
-  tabs/=60; // t in hours
-  if(tabs<=36) return [tsign*tabs,'h'];
-  tabs/=24; // t in days
-  if(tabs<=2*365) return [tsign*tabs,'d'];
-  tabs/=365; // t in years
-  return [tsign*tabs,'y'];
+  var tAbs=Math.abs(t), tSign=t>=0?+1:-1;
+  if(tAbs<=90) return [tSign*tAbs,'s'];
+  tAbs/=60; // t in minutes
+  if(tAbs<=90) return [tSign*tAbs,'m']; 
+  tAbs/=60; // t in hours
+  if(tAbs<=36) return [tSign*tAbs,'h'];
+  tAbs/=24; // t in days
+  if(tAbs<=2*365) return [tSign*tAbs,'d'];
+  tAbs/=365; // t in years
+  return [tSign*tAbs,'y'];
 }
-
+app.getSuitableTimeUnitStr=function(tdiff,objLang=langHtml.timeUnit,boLong=0,boArr=0){
+  var [ttmp,u]=getSuitableTimeUnit(tdiff), n=Math.round(ttmp);
+  var strU=objLang[u][boLong][Number(n!=1)];
+  if(boArr){  return [n,strU];  } else{  return n+' '+strU;   }
+}
 app.dosTime2Arr=function(dosDate,dosTime){
   var sec=(dosTime & 0x1f)*2;
   var minute=dosTime>>>5 & 0x3f;
@@ -267,6 +273,31 @@ app.tabNStrCol2ArrObj=function(tabNStrCol){  //Ex: {tab:[[0,1],[2,3]],StrCol:['a
 app.deserialize=function(serializedJavascript){
   return eval('(' + serializedJavascript + ')');
 }
+
+
+app.b64UrlDecode=function(b64UrlString, boUint8Array=false){  // boUint8Array==true => output is in Uint8Array
+  const padding='='.repeat((4-b64UrlString.length%4) % 4);
+  const base64=(b64UrlString+padding).replace(/\-/g, '+').replace(/_/g, '/');
+
+  //const rawData=window.atob(base64);
+  const rawData=Buffer.from(base64, 'base64').toString();
+  if(!boUint8Array) return rawData;
+  const outputArray=new Uint8Array(rawData.length);
+
+  for(let i=0; i<rawData.length; ++i){ outputArray[i]=rawData.charCodeAt(i); }
+  return outputArray;
+}
+
+
+//
+// Escaping data
+//
+
+app.myJSEscape=function(str){return str.replace(/&/g,"&amp;").replace(/</g,"&lt;");}
+  // myAttrEscape
+  // Only one of " or ' must be escaped depending on how it is wrapped when on the client.
+app.myAttrEscape=function(str){return str.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/\//g,"&#47;");} // This will keep any single quataions.
+app.myLinkEscape=function(str){ str=myAttrEscape(str); if(str.startsWith('javascript:')) str='javascript&#58;'+str.substr(11); return str; }
 
 
 //

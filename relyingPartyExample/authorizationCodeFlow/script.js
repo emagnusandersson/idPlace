@@ -54,7 +54,7 @@ uRedir='http://'+wwwRedir;  // <-- This url should be quite often be entered on 
 AppId={};   for(var k in AppCred){   AppId[k]=AppCred[k].id;    } // Create a variable without secrets that can be sent to the client
 
 
-strFBVersion="v7.0"
+strFBVersion="v9.0"
 UrlOAuth={fb:"https://www.facebook.com/"+strFBVersion+"/dialog/oauth", google: "https://accounts.google.com/o/oauth2/v2/auth", idplace:'https://idplace.org', idL:'http://localhost:5000', id192:'http://192.168.0.4:5000'};
 UrlGraph={fb:"https://graph.facebook.com/"+strFBVersion+"/me", google: "https://www.googleapis.com/plus/v1/people/me", idplace:'https://idplace.org/me', idL:'http://localhost:5000/me', id192:'http://192.168.0.4:5000/me'};
 
