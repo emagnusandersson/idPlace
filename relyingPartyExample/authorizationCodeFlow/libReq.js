@@ -7,7 +7,7 @@
 /******************************************************************************
  * reqIndex
  ******************************************************************************/
-app.reqIndex=function*() {
+app.reqIndex=async function() {
   var req=this.req, res=this.res;
   var uJQuery='https://code.jquery.com/jquery-latest.min.js';
   var Str=[];
@@ -37,7 +37,7 @@ var UrlOAuth=`+JSON.stringify(UrlOAuth)+`;
 /******************************************************************************
  * reqLoginBack
  ******************************************************************************/
-app.reqLoginBack=function*() {
+app.reqLoginBack=async function() {
   var req=this.req, res=this.res;
   var str=`<!DOCTYPE html>
 <html lang="en"><head><meta name="robots" content="noindex"></head>

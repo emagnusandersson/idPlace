@@ -83,14 +83,14 @@ var uRedir=dirname(window.location.href)+'loginBack.html'; // <--- I'm not sure 
 
   // Endpoints
 var UrlOAuth={
-  fb:"https://www.facebook.com/v9.0/dialog/oauth",
+  fb:"https://www.facebook.com/v11.0/dialog/oauth",
   google: "https://accounts.google.com/o/oauth2/v2/auth",
   idplace:"https://idplace.org",
   idL:"http://localhost:5000",  // <-- The following lines could/should be commented out (or removed)  (only for the developer of idplace)
   id192:"http://192.168.0.4:5000",  // <-- The following lines could/should be commented out (or removed) (only for the developer of idplace)
 };
 var UrlGraph={
-  fb:"https://graph.facebook.com/v9.0/me",
+  fb:"https://graph.facebook.com/v11.0/me",
   google: "https://www.googleapis.com/plus/v1/people/me",
   idplace:"https://idplace.org/me",
   idL:"http://localhost:5000/me",  // <-- The following lines could/should be commented out (or removed)  (only for the developer of idplace)
@@ -106,10 +106,7 @@ var setUp=function(){
   var elBody=document.body
 
 
-  var popupWin=function(IP) {
-    flowLogin=flowLoginF.call(this, IP);  flowLogin.next();
-  }  
-  var flowLoginF=function*(IP){
+  var popupWin=async function(IP) {
     divMess.myText('');
     preParamMeReq.myText('');
     preParamAccessTokenReq.myText('');
@@ -122,8 +119,7 @@ var setUp=function(){
     var uPop=UrlOAuth[IP]+'?'+arrQ.join('&');
     window.open(uPop, '_blank', 'width=580,height=400');
 
-    var strQS, strHash;
-    window.loginReturn=function(strQST, strHashT){ strQS=strQST; strHash=strHashT; flowLogin.next(); };  yield;
+    var [strQS, strHash]=await new Promise(resolve=>{   window.loginReturn=(...arg)=>resolve(arg);    });
     var param=parseQS(strHash.substring(1));
     var tmp=JSON.stringify(param, null,2);   preParamAccessTokenReq.myText(tmp);
 
@@ -145,29 +141,31 @@ var setUp=function(){
     var arrT = Object.keys(objForm).map(function (key) { return key+'='+encodeURIComponent(objForm[key]); }), strQuery=arrT.join('&'); 
     if(strQuery.length) uGraph+='?'+strQuery;
 
-    var xhr = new XMLHttpRequest(), boExit=0;
+    var xhr = new XMLHttpRequest();
     xhr.open('GET', uGraph);
-    xhr.onload = function() {
-      if(xhr.status !== 200) {   boExit=1;  divMess.myText('"Me"-Request failed.  Returned status of ' + xhr.status);  }
-      flowLogin.next();
-    };
-    xhr.send();
-    yield; if(boExit==1) {return; }
+    var [err]=await new Promise(resolve=>{
+      xhr.onload = function() {
+        if(xhr.status !== 200) {    return [new Error('"Me"-Request failed.  Returned status of ' + xhr.status)];  }
+        resolve([null]);
+      };
+      xhr.send();
+
+    });
+    if(err) {console.log(err); divMess.myText(err.message); return;}
 
     var data=xhr.responseText;
-    try{ var objGraph=JSON.parse(data); }catch(e){ console.log(e);  debugger; return; }
+    try{ var objGraph=JSON.parse(data); }catch(e){ console.log(e); divMess.myText(e.message); debugger; return; }
 
     var tmp=JSON.stringify(objGraph, null,2);   preParamMeReq.myHtml(tmp);
 
-  }
-  var flowLogin;  
+  }  
 
 
-  var buttonFB=createElement('button').on('click',function(){popupWin('fb');}).myText('Facebook');
-  var buttonGoogle=createElement('button').on('click',function(){popupWin('google');}).myText('Google');
-  var buttonIdPlace=createElement('button').on('click',function(){popupWin('idplace');}).myText('idPlace');
-  var buttonIdL=createElement('button').on('click',function(){popupWin('idL');}).myText('idL');   // <-- The following lines could/should be commented out (or removed)  (only for the developer of idplace)
-  var buttonId192=createElement('button').on('click',function(){popupWin('id192');}).myText('id192');   // <-- The following lines could/should be commented out (or removed)  (only for the developer of idplace)
+  var buttonFB=createElement('button').on('click',()=>popupWin('fb')).myText('Facebook');
+  var buttonGoogle=createElement('button').on('click',()=>popupWin('google')).myText('Google');
+  var buttonIdPlace=createElement('button').on('click',()=>popupWin('idplace')).myText('idPlace');
+  var buttonIdL=createElement('button').on('click',()=>popupWin('idL')).myText('idL');   // <-- The following lines could/should be commented out (or removed)  (only for the developer of idplace)
+  var buttonId192=createElement('button').on('click',()=>popupWin('id192')).myText('id192');   // <-- The following lines could/should be commented out (or removed)  (only for the developer of idplace)
 
   var hParamAccessTokenReq=createElement('h3').myText('Result of access_token request:');
   var preParamAccessTokenReq=createElement('pre').myText('').css({'background':'lightgrey'});

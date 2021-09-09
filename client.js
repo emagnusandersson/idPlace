@@ -1,80 +1,4 @@
-/*
-\$\('<([^>]+)>'
-createElement('\1'
 
-\$\("<([^>]+)>"
-createElement('\1'
-
-\.val\('([^\)]*)'\)
-.value='\1'
-
-\.val\(\)
-.value
-
-\.val\(([^\)]*)\)
-.prop('value',\1)
-.value=\1
-
-\$\(([a-zA-Z0-9]+)\)
-\$([a-zA-Z0-9]+)\[0\]
-\1
-
-$r
-elR
-
-$
-(this)
-parent()
-clone
-body
-.index
-.each
-add
-click
-keypress
-change
-append
-html
-text
-[]
-
-.eq
-\.eq\(([^\)]*)\)
-[\1]
-mouseover mouseout
-.add(
-.push(
-nth-of-type
-bind
-data
-\(([a-zA-Z0-9]+)\)\.
-eq
-append ->myAppend
-
-index
-not()
-before
-after
-setVis
-width()
-height()
-majax
-pop
-next()
-.hasClass
-.is(':empty')
-originalEvent
-
-myText\([^\)\,]+,[^\)]+\)
-filter
-.find
-
-.children
-.children.forEach
-
-oAJAX
-* extend
-*/
 
 
 "use strict"
@@ -121,32 +45,7 @@ var toggleButtonExtend=function(el){
 }
 
 
-//var spanMessageTextCreate=function(){
-  //var el=createElement('span');
-  //var spanInner=createElement('span');
-  //el.appendChild(spanInner, imgBusy)
-  //el.resetMess=function(time){
-    //clearTimeout(messTimer);
-    //if(typeof time =='number') { messTimer=setTimeout('resetMess()',time*1000); return; }
-    //spanInner.myText(' ');
-    //imgBusy.hide();
-  //}
-  //el.setMess=function(str,time,boRot){
-    //spanInner.myText(str);
-    //clearTimeout(messTimer);
-    //if(typeof time =='number')     messTimer=setTimeout('resetMess()',time*1000);
-    //imgBusy.toggle(Boolean(boRot));
-  //};
-  //el.setHtml=function(str,time,boRot){
-    //spanInner.myHtml(str);
-    //clearTimeout(messTimer);
-    //if(typeof time =='number')     messTimer=setTimeout('resetMess()',time*1000);
-    //imgBusy.toggle(Boolean(boRot));
-  //};
-  //var messTimer;
-  //el.addClass('message');
-  //return el;
-//}
+
 var divMessageTextCreate=function(){
   var spanInner=createElement('span');
   var imgBusyLoc=imgBusy.cloneNode().css({zoom:'65%','margin-left':'0.4em'}).hide();
@@ -248,7 +147,7 @@ var divLoginInfoExtend=function(el){
     //userInfoFrDB={}; 
     userAppList.boStale=1;  devAppList.boStale=1;
     var vec=[['logout',{}, el.cb]];
-    majax(oAJAX,vec);
+    majax(vec);
     return false;
   });
   el.myAppend(spanName,logoutButt).css({display:'flex', 'justify-content':'space-between', 'align-items':'center', 'font-size':'12px'});
@@ -365,12 +264,13 @@ var createUPop=function(IP, uRedir, nonce, boReauthenticate){
   if(boReauthenticate) arrQ.push("auth_type=reauthenticate");
   return UrlOAuth[IP]+'?'+arrQ.join('&');
 }
-var getOAuthCode=function*(flow, boReauthenticate=false){
+var getOAuthCode=async function(boReauthenticate=false){
   var strQS, nonce=randomHash(), uPop=createUPop(strIPPrim, uSite+'/'+leafLoginBack, nonce, boReauthenticate);
-  window.loginReturn=function(strQST){ strQS=strQST; flow.next();}
   if('wwwLoginScope' in site) document.domain = site.wwwLoginScope;
   window.open(uPop, '_blank', 'width=580,height=400'); //, '_blank', 'popup', 'width=580,height=400'
-  yield;
+  var strQS=await new Promise(resolve=>{
+    window.loginReturn=function(strQST){ resolve(strQST); }
+  });
   
   var params=parseQS(strQS.substring(1));
   if(!('state' in params) || params.state !== nonce) {   return ['Invalid state parameter: '+params.state]; } 
@@ -383,15 +283,13 @@ var getOAuthCode=function*(flow, boReauthenticate=false){
   // Used in loginSelectorDiv and createUserSelectorDiv
 var idPLoginDivExtend=function(el){
   var strButtonSize='2em';
-  var imgFb=createElement('img').prop({src:uFb, alt:"fb"}).on('click',function(){
-    var flow=(function*(){
-      var [err, code]=yield* getOAuthCode(flow); if(err) {setMess(err); return;}
+  var imgFb=createElement('img').prop({src:uFb, alt:"fb"}).on('click',async function(){
+      var [err, code]=await getOAuthCode(); if(err) {setMess(err); return;}
       var timeZone=new Date().toString().match(/([A-Z]+[\+-][0-9]+.*)/)[1];
       var oT={IP:strIPPrim, fun:'userFun', caller:'index', code, timeZone};
-      var vec=[['loginGetGraph', oT], ['setupById',{idApp}, function(){ flow.next(); }]];   majax(oAJAX,vec);   yield;
+      await new Promise(resolve=>{var vec=[['loginGetGraph', oT], ['setupById',{idApp}, function(){ resolve(); }]];   majax(vec);  });
       
       if(el.cb) el.cb();
-    })(); flow.next();
   });
   var imgGoogle=createElement('img').prop({src:uGoogle, alt:"google"}).on('click',function(){
     popupWin('google');
@@ -407,7 +305,7 @@ var formLoginExtend=function(el){
     e.preventDefault();
     //var hashPW=SHA1(formLogin.inpPass.value+strSalt);
     var hashPW=formLogin.inpPass.value+strSalt; for(var i=0;i<nHash;i++) hashPW=SHA1(hashPW);
-    var vec=[['loginWEmail',{email:formLogin.inpEmail.value, password:hashPW}], ['setupById',{idApp}, el.cb]];   majax(oAJAX,vec); 
+    var vec=[['loginWEmail',{email:formLogin.inpEmail.value, password:hashPW}], ['setupById',{idApp}, el.cb]];   majax(vec); 
     formLogin.inpPass.value='';
     return false;
   }
@@ -464,7 +362,7 @@ var devAppSecretDivExtend=function(el){
   var send=function(){
     //var hashPW=SHA1(inpPass.value+strSalt);
     var hashPW=inpPass.value+strSalt; for(var i=0;i<nHash;i++) hashPW=SHA1(hashPW);
-    var vec=[['devAppSecret',{idApp, password:hashPW},ret]];   majax(oAJAX,vec);
+    var vec=[['devAppSecret',{idApp, password:hashPW},ret]];   majax(vec);
     
   }
   el.setVis=function(){
@@ -479,16 +377,14 @@ var devAppSecretDivExtend=function(el){
 
     // Authenticate with IdP
   var strButtonSize='2em';
-  var imgFb=createElement('img').prop({src:uFb, alt:"fb"}).on('click',function(){
-    var flow=(function*(){
-      var [err, code]=yield* getOAuthCode(flow, true); if(err) {setMess(err); return;}
+  var imgFb=createElement('img').prop({src:uFb, alt:"fb"}).on('click',async function(){
+      var [err, code]=await getOAuthCode(true); if(err) {setMess(err); return;}
       //var oT={IP:strIPPrim, fun:'getSecretFun', caller:'index', code, idApp};
       var timeZone=new Date().toString().match(/([A-Z]+[\+-][0-9]+.*)/)[1];
       var oT={IP:strIPPrim, fun:'getSecretFun', caller:'index', code, idApp, timeZone};
       var result;
-      var vec=[['loginGetGraph', oT, function(resultT){ result=resultT; flow.next(); }]];   majax(oAJAX,vec);   yield;
+      await new Promise(resolve=>{var vec=[['loginGetGraph', oT, function(resultT){ result=resultT; resolve(); }]];   majax(vec);   });
       spanSecret.append(result.resultOfFun.secret);
-    })(); flow.next();
   });
   var Im=[imgFb]; Im.forEach(ele=>ele.css({align:'center', display:'block', 'margin-top': '0.7em'})); 
 
@@ -580,7 +476,7 @@ var createUserDivExtend=function(el){
     var hashPW=inpPass.value.trim()+strSalt; for(var i=0;i<nHash;i++) hashPW=SHA1(hashPW);
     extend(o, {password:hashPW,  'g-recaptcha-response': strTmp});
 
-    var vec=[['createUser',o], ['setupById',{idApp}, el.cb]];   majax(oAJAX,vec); 
+    var vec=[['createUser',o], ['setupById',{idApp}, el.cb]];   majax(vec); 
     inpPass.value=''; inpPassB.value='';
     setMess('',null,true); 
   }
@@ -660,11 +556,11 @@ var deleteAccountPopExtend=function(el){
   el.toString=function(){return 'deleteAccountPop';}
   //var el=popUpExtend(el);
   var yes=createElement('button').addClass('highStyle').myText(langHtml.Yes).on('click',function(){
-    //var vec=[['VDelete',{},function(data){historyBack();historyBack();}]];   majax(oAJAX,vec);
+    //var vec=[['VDelete',{},function(data){historyBack();historyBack();}]];   majax(vec);
     userInfoFrDB={};
     var vec=[['UDelete',{}, function(data){
       history.fastBack(mainDiv,true);
-    }]];   majax(oAJAX,vec);
+    }]];   majax(vec);
   });
   var cancel=createElement('button').addClass('highStyle').myText(langHtml.Cancel).on('click',historyBack);
   //el.myAppendHtml(langHtml.deleteBox.regret,'<br>',yes,cancel);
@@ -695,7 +591,7 @@ var changePWPopExtend=function(el){
     var hashPWN=inpPass.value.trim()+strSalt; for(var i=0;i<nHash;i++) hashPWN=SHA1(hashPWN);
     var o={passwordOld:hashPWO, passwordNew:hashPWN};
 
-    var vec=[['changePW',o,changePWRet]];   majax(oAJAX,vec); 
+    var vec=[['changePW',o,changePWRet]];   majax(vec); 
     setMess('',null,true); 
   }
 
@@ -733,8 +629,8 @@ var changePWPopExtend=function(el){
 var verifyEmailPopExtend=function(el){
   el.toString=function(){return 'verifyEmailPop';}
   var okF=function(){
-    var vec=[['verifyEmail',{}, okRet]];   majax(oAJAX,vec); 
-    //var vec=[['verifyEmail',{email:userInfoFrDB.email}, okRet]];   majax(oAJAX,vec);
+    var vec=[['verifyEmail',{}, okRet]];   majax(vec); 
+    //var vec=[['verifyEmail',{email:userInfoFrDB.email}, okRet]];   majax(vec);
     
   };
   el.openFunc=function(){
@@ -770,7 +666,7 @@ var verifyEmailPopExtend=function(el){
 var forgottPWPopExtend=function(el){
   el.toString=function(){return 'forgottPWPop';}
   var okF=function(){
-    var vec=[['verifyPWReset',{email:inpEmail.value.trim()}, okRet]];   majax(oAJAX,vec);
+    var vec=[['verifyPWReset',{email:inpEmail.value.trim()}, okRet]];   majax(vec);
     
   };
   el.openFunc=function(){
@@ -827,9 +723,9 @@ var consentDivExtend=function(el){
     el.cb(false);
   });
   var buttAllow=createElement('button').addClass('highStyle').myText('Allow').on('click',function(){
-    //var vec=[['userAppSet',{scope:scopeAsked, idApp, maxUnactivityToken}], ['setupById',{idApp},el.cb]];   majax(oAJAX,vec);
+    //var vec=[['userAppSet',{scope:scopeAsked, idApp, maxUnactivityToken}], ['setupById',{idApp},el.cb]];   majax(vec);
     var maxUnactivityToken=objQS.response_type=='code'?60*24*3600:2*3600;
-    var vec=[['setConsent',{scope:scopeAsked, idApp, maxUnactivityToken}], ['setupById',{idApp},function(data){el.cb(true);}]];   majax(oAJAX,vec); 
+    var vec=[['setConsent',{scope:scopeAsked, idApp, maxUnactivityToken}], ['setupById',{idApp},function(data){el.cb(true);}]];   majax(vec); 
   });
   el.append(pA, pOldPerm, pB, buttCancel, buttAllow);
 
@@ -899,7 +795,6 @@ var uploadImageDivExtend=function(el){
     
     
      
-    //majax(oAJAXL,[['uploadImage',formData,sendFunRet]]);
     setMess('Uploading ...');
     uploadButton.prop("disabled",true);
   }
@@ -959,7 +854,7 @@ var userSettingDivExtend=function(el){
       var tmp=Prop[strName].saveInp(inp); if(tmp[0]) {setMess(tmp[0]); return; } else o[strName]=tmp[1];
     }); 
     if(boErr) return;
-    var vec=[['UUpdate',o], ['setupById',{},el.setUp]];   majax(oAJAX,vec);
+    var vec=[['UUpdate',o], ['setupById',{},el.setUp]];   majax(vec);
     setMess('',null,true); 
   }
 
@@ -1082,7 +977,7 @@ var userAppSetDivExtend=function(el){
 var userAppDeleteDivExtend=function(el){
   el.toString=function(){return 'userAppDeleteDiv';}
   var ok=createElement('button').myText('OK').addClass('highStyle').css({'margin-top':'1em'}).on('click',function(){    
-    var idApp=elR.attr('idApp'), vec=[['userAppDelete',{idApp},okRet]];   majax(oAJAX,vec);    
+    var idApp=elR.attr('idApp'), vec=[['userAppDelete',{idApp},okRet]];   majax(vec);    
   });
   var okRet=function(data){
     if(!data.boOK) return;
@@ -1161,7 +1056,7 @@ var userAppListExtend=function(el){
   }
   el.setUp=function(){
     if(el.boStale) {
-      var vec=[['userAppListGet',{},setUpRet]];   majax(oAJAX,vec);
+      var vec=[['userAppListGet',{},setUpRet]];   majax(vec);
       el.boStale=0;
     }
   }
@@ -1211,7 +1106,7 @@ var devAppSetDivExtend=function(el){
     if(!RegExp('^https?:\/\/').test(uri)){  uri="http://"+uri;   }
     r.redir_uri=uri;
     var objTmp=extend({boUpd},r);
-    var vec=[['devAppSet', objTmp, saveRet]];   majax(oAJAX,vec);
+    var vec=[['devAppSet', objTmp, saveRet]];   majax(vec);
   }
   var saveRet=function(data){
     if(!data.boOK) return;
@@ -1268,7 +1163,7 @@ var devAppSetDivExtend=function(el){
 var devAppDeleteDivExtend=function(el){
   el.toString=function(){return 'devAppDeleteDiv';}
   var ok=createElement('button').myText('OK').addClass('highStyle').css({'margin-top':'1em'}).on('click',function(){    
-    var idApp=elR.attr('idApp'), vec=[['devAppDelete',{idApp},okRet]];   majax(oAJAX,vec);    
+    var idApp=elR.attr('idApp'), vec=[['devAppDelete',{idApp},okRet]];   majax(vec);    
   });
   var okRet=function(data){
     if(!data.boOK) return;
@@ -1364,7 +1259,7 @@ var devAppListExtend=function(el){
   }
   el.setUp=function(){
     if(el.boStale) {
-      var vec=[['devAppListGet',{},setUpRet]];   majax(oAJAX,vec);
+      var vec=[['devAppListGet',{},setUpRet]];   majax(vec);
       el.boStale=0;
     }
   }
@@ -1409,7 +1304,7 @@ var devAppListExtend=function(el){
 
 
 
-var majax=function(trash, vecIn){  // Each argument of vecIn is an array: [serverSideFunc, serverSideFuncArg, returnFunc]
+var majax=function(vecIn){  // Each argument of vecIn is an array: [serverSideFunc, serverSideFuncArg, returnFunc]
   var xhr = new XMLHttpRequest();
   xhr.open('POST', uBE, true);
   var arrRet=[]; vecIn.forEach(function(el,i){var f=null; if(el.length==3) f=el.pop(); arrRet[i]=f;}); // Put return functions in a separate array
@@ -1539,17 +1434,15 @@ var PropExtend=function(){
     var c=createElement('span');
     c.nr=createElement('span');
     c.butDelete=createElement('button').addClass('highStyle').myText('Clear').on('click',function(){
-      var vec=[['deleteExtId', {kind:'fb'}], ['setupById',{}, userSettingDiv.setUp]];   majax(oAJAX,vec); 
+      var vec=[['deleteExtId', {kind:'fb'}], ['setupById',{}, userSettingDiv.setUp]];   majax(vec); 
     });
-    c.buttFetch=createElement('button').addClass('highStyle').myText('Fetch').on('click',function(){
-      var flow=(function*(){
-        var [err, code]=yield* getOAuthCode(flow); if(err) {setMess(err); return;}
+    c.buttFetch=createElement('button').addClass('highStyle').myText('Fetch').on('click',async function(){
+        var [err, code]=await getOAuthCode(); if(err) {setMess(err); return;}
         var timeZone=new Date().toString().match(/([A-Z]+[\+-][0-9]+.*)/)[1];
         var oT={IP:strIPPrim, fun:'fetchFun', caller:'index', code, timeZone};
-        var vec=[['loginGetGraph', oT], ['setupById',{idApp}, function(){ flow.next(); }]];   majax(oAJAX,vec);   yield;
+        await new Promise(resolve=>{var vec=[['loginGetGraph', oT], ['setupById',{idApp}, function(){ resolve(); }]];   majax(vec);   });
         
         userSettingDiv.setUp();
-      })(); flow.next();
     });
     c.thumb=createElement('img').prop({alt:"user"}).css({'vertical-align':'middle'});
     c.append(c.nr, c.thumb, c.butDelete, c.buttFetch);  //langHtml.YourImage+': ',
@@ -1575,7 +1468,7 @@ var PropExtend=function(){
     c.spanYes=createElement('span').css({'color':'green', 'margin-right':'1em'}).myText('Yes');
     c.spanNo=createElement('span').css({'color':'red', 'margin-right':'1em'}).myText('No');
     c.butVerify=createElement('button').addClass('highStyle').myText(langHtml.emailVerificationOfEmail).on('click',function(){
-      //var vec=[['verifyEmail',{}]];   majax(oAJAX,vec); 
+      //var vec=[['verifyEmail',{}]];   majax(vec); 
       verifyEmailPop.openFunc();
     });
     c.append(c.spanYes, c.spanNo, c.butVerify);  //langHtml.YourImage+': ',
@@ -1613,13 +1506,13 @@ var PropExtend=function(){
     var c=createElement('span');
     c.thumb=createElement('img').prop({alt:"user"}).css({'vertical-align':'middle'});
     c.butDeleteImg=createElement('button').addClass('highStyle').myText('Clear').on('click',function(){
-      var vec=[['deleteImage', {kind:'u'}], ['setupById',{}, userSettingDiv.setUp]];   majax(oAJAX,vec); 
+      var vec=[['deleteImage', {kind:'u'}], ['setupById',{}, userSettingDiv.setUp]];   majax(vec); 
     });
     var uploadCallback=function(){
       var tmpF=function(){
         var tmp=calcImageUrlUser(); c.thumb.prop({src:tmp}); historyBack();
       };
-      var vec=[ ['setupById',{},tmpF]];   majax(oAJAX,vec);
+      var vec=[ ['setupById',{},tmpF]];   majax(vec);
     }
     var buttUploadImage=createElement('button').addClass('highStyle').myText(langHtml.uploadNewImg).on('click',function(){uploadImageDiv.openFunc('u',uploadCallback);});
     c.append(c.thumb, c.butDeleteImg, buttUploadImage);  //langHtml.YourImage+': ',
@@ -1884,9 +1777,6 @@ if(boFF){
 app.errorFunc=function(jqXHR, textStatus, errorThrown){
   setMess('responseText: '+jqXHR.responseText+', textStatus: '+' '+textStatus+', errorThrown: '+errorThrown);     throw 'bla';
 }
-//oAJAX={url:uBE, crossDomain:false, contentType:'application/json', error: errorFunc, type: "POST",dataType:'json', processData:false,success: beRet};
-var oAJAX={url:uBE, crossDomain:false, contentType:false, error: errorFunc, type: "POST", processData:false,success: beRet};  
-var oAJAXCacheable={url:uBE, crossDomain:false, error: errorFunc, type: "GET", dataType:'json', processData:false, success: beRet};
 
 
 
@@ -2045,48 +1935,6 @@ elBody.on('click',setBottomMargin);
 //  createUserSelectorDiv  (idPLoginDiv)
 //    createUserDiv
 
-var authFlowF=function*(flow){
-  if(Object.keys(userInfoFrDB).length==0){
-    idPLoginDiv.cb=function(){
-      flow.next();
-    };
-    formLogin.cb=function(){
-      flow.next();
-    };
-    createUserDiv.cb=function(){
-      flow.next();
-    };
-    yield;
-    idPLoginDiv.cb=null;formLogin.cb=null; createUserDiv.cb=null;
-  }
-  var tmpScopeGranted=objUApp?objUApp.scope:'';
-  var boScopeOK=isScopeOK(tmpScopeGranted, scopeAsked);
-  var boRerequest=objQS.auth_type=='rerequest';
-  var boShowForm=boRerequest||!boScopeOK;
-
-  
-  var boAllow=true;
-  if(boShowForm){
-    boAllow=false;
-    consentDiv.setVis();
-    consentDiv.cb=function(boAllowT){
-      boAllow=boAllowT;
-      flow.next();
-    };
-    yield;
-  }
-  var urlT=decodeURIComponent(objQS.redirect_uri);
-  var regUrlCompare=RegExp("^[^#]+"), Match=regUrlCompare.exec(urlT), urlIn=Match[0];
-  if(objQS.response_type=='token') {
-    if(boAllow) var uRedir=createUriRedir(urlIn, objQS.state, objUApp.access_token, objUApp.maxUnactivityToken);
-    else var uRedir=createUriRedirDeny(urlIn, objQS.state);
-  }else if(objQS.response_type=='code'){
-    if(boAllow) var uRedir=createUriRedirCode(urlIn, objQS.state, objUApp.code);
-    else var uRedir=createUriRedirCodeDeny(urlIn, objQS.state);
-  }
-  window.location.replace(uRedir);
-}
-
 
   // In normal case: go back to mainDiv after successfull login/logout/createUser
 idPLoginDiv.cb=formLogin.cb=createUserDiv.cb=divLoginInfo.cb=function(){
@@ -2094,8 +1942,50 @@ idPLoginDiv.cb=formLogin.cb=createUserDiv.cb=divLoginInfo.cb=function(){
   else history.fastBack(mainDiv);
 };
 if(boAuthReq){
-  var flow=(function*(){ yield *authFlowF(flow); })(); flow.next();
-  //var authFlowObj=new authFlowT();  authFlowObj.continueStart();
+  (async function (){ 
+    if(Object.keys(userInfoFrDB).length==0){
+      await new Promise(resolve=>{
+        idPLoginDiv.cb=function(){
+          resolve();
+        };
+        formLogin.cb=function(){
+          resolve();
+        };
+        createUserDiv.cb=function(){
+          resolve();
+        };
+      });
+      idPLoginDiv.cb=null;formLogin.cb=null; createUserDiv.cb=null;
+    }
+    var tmpScopeGranted=objUApp?objUApp.scope:'';
+    var boScopeOK=isScopeOK(tmpScopeGranted, scopeAsked);
+    var boRerequest=objQS.auth_type=='rerequest';
+    var boShowForm=boRerequest||!boScopeOK;
+  
+    
+    var boAllow=true;
+    if(boShowForm){
+      boAllow=false;
+      consentDiv.setVis();
+      await new Promise(resolve=>{
+        consentDiv.cb=function(boAllowT){
+          boAllow=boAllowT;
+          resolve();
+        };
+      });
+    }
+    var urlT=decodeURIComponent(objQS.redirect_uri);
+    var regUrlCompare=RegExp("^[^#]+"), Match=regUrlCompare.exec(urlT), urlIn=Match[0];
+    if(objQS.response_type=='token') {
+      if(boAllow) var uRedir=createUriRedir(urlIn, objQS.state, objUApp.access_token, objUApp.maxUnactivityToken);
+      else var uRedir=createUriRedirDeny(urlIn, objQS.state);
+    }else if(objQS.response_type=='code'){
+      if(boAllow) var uRedir=createUriRedirCode(urlIn, objQS.state, objUApp.code);
+      else var uRedir=createUriRedirCodeDeny(urlIn, objQS.state);
+    }
+    window.location.replace(uRedir);
+
+  })();
 }
 
 

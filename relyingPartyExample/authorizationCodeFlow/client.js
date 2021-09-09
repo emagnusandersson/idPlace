@@ -19,8 +19,8 @@ window.onload=function(){
 
   var popupWin=function(IP) {
     flowLogin=flowLoginF.call(this, IP);  flowLogin.next();
-  }  
-  var flowLoginF=function*(IP){
+  }
+  var flowLoginF=async function(IP){
       // Get authorization code
     var nonce=randomHash();
     var arrQ=["client_id="+AppId[IP], "redirect_uri="+encodeURIComponent(uRedir), "state="+nonce, "response_type=code"];
@@ -30,12 +30,9 @@ window.onload=function(){
     var uPop=UrlOAuth[IP]+'?'+arrQ.join('&');
     window.open(uPop, '_blank', 'width=580,height=400');
 
-    var strQS, strHash;
-    window.loginReturn=function(strQST, strHashT){
-      strQS=strQST; strHash=strHashT;
-      flowLogin.next();
-    };
-    yield;
+    var [strQS, strHash]=await new Promise(resolve=>{
+      window.loginReturn=function(strQST, strHashT){ resolve([strQST, strHashT]); }
+    });
     var param=parseQS(strQS.substring(1));
     var tmp='<b>Result of "authentication code" request</b>:<pre>'+JSON.stringify(param, null,2)+"</pre>";   $divParamAccessTokenReq.html(tmp);
 
@@ -49,18 +46,26 @@ window.onload=function(){
       // AJAX request
     var oT={IP, code:param.code}; 
 
-    var xhr = new XMLHttpRequest(), boExit=0;
+    var xhr = new XMLHttpRequest();
     xhr.open('POST', leafBE);  // I'm using "POST" but with this little data one could have used "GET" 
     xhr.setRequestHeader('Content-Type', 'application/json');
-    xhr.onload = function() {
-      if(xhr.status !== 200) {   boExit=1;  setMess('Request failed.  Returned status of ' + xhr.status);  }
-      flowLogin.next();
-    };
-    xhr.send(JSON.stringify(oT));
-    yield; if(boExit==1) {return; }
+    var [err]=await new Promise(resolve=>{
+      xhr.onload = function() {
+        if(xhr.status !== 200) {   resolve([new Error('Request failed.  Returned status of ' + xhr.status)]); return;   }
+        resolve([null]);
+      };
+      xhr.send(JSON.stringify(oT));
+    });
+    if(err) return [err];
 
     var data=xhr.responseText;
-    try{ var objAJAX=JSON.parse(data); }catch(e){ console.log(e);  debugger; return; }
+    try{ var objAJAX=JSON.parse(data); }catch(e){  return [e]; }
+
+
+    //var headers={'X-Requested-With':'XMLHttpRequest'};
+    //var argFetch={method:'POST', headers}
+    // var [err, response]= await fetch(leafBE, argFetch).toNBP();  if(err) return [err];
+    // var [err, objAJAX]=await response.json().toNBP();  if(err) return [err];
 
     var tmp='<b>Result of "AJAX"-request to your server (intermediate requests are logged to the server console)</b>:<pre>'+JSON.stringify(objAJAX, null,2)+"</pre>";   $divParamMeReq.html(tmp);
 

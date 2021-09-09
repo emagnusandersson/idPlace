@@ -11,7 +11,8 @@
   "license": "BSD-2-Clause",
   "dependencies": {
     "request": "2.72.x",
-    "concat-stream": "1.5.x"
+    "concat-stream": "1.5.x",
+    "node-fetch": "^2.6.1"
   },
   "devDependencies": {},
   "private": true,

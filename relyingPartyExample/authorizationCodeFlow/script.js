@@ -2,13 +2,21 @@
 http = require("http");
 url = require("url");
 fs = require("fs");
+fsPromises = require("fs/promises");
 concat = require('concat-stream');
-requestMod = require('request');
+//requestMod = require('request');
+fetch = require('node-fetch');
 querystring = require('querystring');
 
-http.ServerResponse.prototype.setCodeNEnd=function(iCode,str){  str=str||''; this.statusCode=iCode; if(str) this.setHeader("Content-Type", "text/plain");   this.end(str);}
+var tmp=http.ServerResponse.prototype;
+tmp.outCode=function(iCode,str){  str=str||''; this.statusCode=iCode; if(str) this.setHeader("Content-Type", MimeType.txt);   this.end(str);}
+tmp.out500=function(e){
+  if(e instanceof Error) {var mess=e.name + ': ' + e.message; console.error(e);} else {var mess=e; console.error(mess);} 
+  this.writeHead(500, {"Content-Type": MimeType.txt});  this.end(mess+ "\n");
+}
 
-app=(typeof window==='undefined')?global:window;
+//app=(typeof window==='undefined')?global:window;
+app=globalThis;
 
 port=8000;
 
@@ -61,23 +69,23 @@ UrlGraph={fb:"https://graph.facebook.com/"+strFBVersion+"/me", google: "https://
 UrlCode2Token={fb:"https://graph.facebook.com/"+strFBVersion+"/oauth/access_token", google: "https://accounts.google.com/o/oauth2/token", idplace:'https://idplace.org/access_token', idL:'http://localhost:5000/access_token', id192:'http://192.168.0.4:5000/access_token'};
 
 
-var handler=function(req, res){
+var handler=async function(req, res){
 
   var objUrl=url.parse(req.url), qs=objUrl.query||'', objQS=querystring.parse(qs),  pathName=objUrl.pathname;
   if(req.headers.host!=wwwApp){ res.writeHead(404);  res.end("404 Nothing at that url\n"); return; }
-  req.flow=(function*(){
+  (async function(){
     var objReqRes={req, res};
-    if(pathName=='/'){  yield* reqIndex.call(objReqRes);      }
-    else if(pathName=='/'+leafBE){      yield* reqBE.call(objReqRes);       }
+    if(pathName=='/'){  await reqIndex.call(objReqRes);      }
+    else if(pathName=='/'+leafBE){      await reqBE.call(objReqRes);       }
     else if(pathName=='/'+leafClient){
       var fileStream = fs.createReadStream(leafClient);
       fileStream.pipe(res);
     }
-    else if(pathName=='/'+leafLoginBack){   yield* reqLoginBack.call(objReqRes);    }
+    else if(pathName=='/'+leafLoginBack){   await reqLoginBack.call(objReqRes);    }
     else if(pathName=='/debug'){    debugger  }
     else {res.writeHead(404); res.end("404 Not Found\n"); return; }
     
-  }).call(); req.flow.next();
+  })();
 }
 
 

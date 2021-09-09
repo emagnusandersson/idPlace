@@ -7,17 +7,17 @@
 /******************************************************************************
  * reqIndex
  ******************************************************************************/
-app.reqIndex=function*() {
-  var req=this.req, flow=req.flow, res=this.res, sessionID=req.sessionID;
+app.reqIndex=async function() {
+  var req=this.req, res=this.res, sessionID=req.sessionID;
   var objQS=req.objQS;
   var site=req.site, siteName=site.siteName, wwwSite=req.wwwSite;
 
   //var redisVar=req.sessionID+'_Cache';
-  //this.sessionCache=yield *getRedis(flow, redisVar, true);
+  //this.sessionCache=await getRedis(redisVar, true);
   //if(!this.sessionCache || typeof this.sessionCache!='object') { 
-      //this.sessionCache={};   yield* delRedis(flow, redisVar);
+      //this.sessionCache={};   await delRedis(redisVar);
   //}  
-  //var tmp=yield* expireRedis(flow, redisVar, maxUnactivity);
+  //var tmp=await expireRedis(redisVar, maxUnactivity);
    
 
   var boAuthReq=Boolean(Object.keys(objQS).length);
@@ -44,7 +44,7 @@ app.reqIndex=function*() {
   Sql.push("CALL "+siteName+"getUserAppInfo(?,?);"); Val.push(idUser, idApp);
 
   var sql=Sql.join('\n');
-  var [err, results]=yield* this.myMySql.query(flow, sql, Val); if(err) {  res.out500(err); return; }
+  var [err, results]=await this.myMySql.query(sql, Val); if(err) {  res.out500(err); return; }
   
   var userInfoFrDB={};
   if(results[0].length)  {  
@@ -53,8 +53,8 @@ app.reqIndex=function*() {
     //if(results[1].length) userInfoFrDB.imageHash=results[1][0].imageHash;
   } else{
     if(idUser) { 
-      req.sessionCache={}; //yield* delRedis(flow, req.sessionID+'_Cache');
-      yield* setRedis(flow, req.sessionID+'_Cache', req.sessionCache, maxUnactivity);
+      req.sessionCache={}; //await delRedis(req.sessionID+'_Cache');
+      await setRedis(req.sessionID+'_Cache', req.sessionCache, maxUnactivity);
       idUser=null;
     }
     //res.out500("User not found (try reload)");  return;
@@ -106,7 +106,7 @@ app.reqIndex=function*() {
   res.statusCode=200;
 
   var CSRFCode=randomHash(); 
-  yield* setRedis(flow, sessionID+'_CSRFCodeIndex', CSRFCode, maxUnactivity);
+  await setRedis(sessionID+'_CSRFCodeIndex', CSRFCode, maxUnactivity);
 //debugger
   
   var Str=[];
@@ -279,8 +279,8 @@ function indexAssign(){
 /******************************************************************************
  * reqMe
  ******************************************************************************/
-app.reqMe=function*() {
-  var req=this.req, flow=req.flow, res=this.res, sessionID=req.sessionID, site=req.site, TableName=site.TableName, {userTab, user2AppTab}=TableName;
+app.reqMe=async function() {
+  var req=this.req, res=this.res, sessionID=req.sessionID, site=req.site, TableName=site.TableName, {userTab, user2AppTab}=TableName;
   var objQS=req.objQS;
   var site=req.site, siteName=site.siteName;
   var wwwSite=req.wwwSite;
@@ -332,7 +332,7 @@ FROM `+user2AppTab+` ua JOIN `+userTab+` u ON ua.idUser=u.idUser WHERE access_to
 
   
   var sql=Sql.join('\n');
-  var [err, results]=yield* this.myMySql.query(flow, sql, Val); if(err) {  res.out500(err); return; }
+  var [err, results]=await this.myMySql.query(sql, Val); if(err) {  res.out500(err); return; }
    
   if(results.length==0) {  res.outCode(400, serialize({error:{type:'access_denied', message:'Nothing found for that access_token'}}));  return;  }
 
@@ -403,8 +403,8 @@ app.PropAsScope.all=Object.keys(objAllTmp);
 /******************************************************************************
  * reqToken
  ******************************************************************************/
-app.reqToken=function*() {
-  var req=this.req, flow=req.flow, res=this.res, sessionID=req.sessionID, site=req.site, TableName=site.TableName, {userTab, appTab, user2AppTab}=TableName;
+app.reqToken=async function() {
+  var req=this.req, res=this.res, sessionID=req.sessionID, site=req.site, TableName=site.TableName, {userTab, appTab, user2AppTab}=TableName;
   var objQS=req.objQS;
   var site=req.site, siteName=site.siteName, wwwSite=req.wwwSite;
   var wwwSite=req.wwwSite;
@@ -415,15 +415,16 @@ app.reqToken=function*() {
   res.setHeader('Content-Type', MimeType.json);
 
   if (req.method == 'POST') {
-    var body = '', boDoExit=0;
-    req.on('data', function (data) {
-      body+=data;  if(body.length > 1000)  { req.connection.destroy(); console.log('Aborting when '+body.length+' bytes data was received!!'); boDoExit=1; flow.next(); }
+
+    var [err,body]=await new Promise(resolve=>{
+      var body = '';
+      req.on('data', function(data){
+        body+=data;  if(body.length > 1000)  { req.connection.destroy();  var err=new Error('Aborting when '+body.length+' bytes data was received!!'); resolve([err]); }
+      });
+      req.on('end', function(){ resolve([null,body]);  });
     });
-    req.on('end', function () {
-      objQS=querystring.parse(body); 
-      flow.next(); 
-    });
-    yield;  if(boDoExit==1)  return;
+    if(err){res.out400(err); return;}
+    objQS=querystring.parse(body); 
   }
 
 
@@ -461,7 +462,7 @@ FROM `+user2AppTab+` ua JOIN `+userTab+` u ON ua.idUser=u.idUser JOIN `+appTab+`
 
   
   var sql=Sql.join('\n');
-  var [err, results]=yield* this.myMySql.query(flow, sql, Val); if(err) {  res.out500(err); return; }
+  var [err, results]=await this.myMySql.query(sql, Val); if(err) {  res.out500(err); return; }
    
   if(results.length==0) {  res.outCode(400, serialize({error:{type:'access_denied', message:'Nothing found for that authentication code'}}));  return;  }
 
@@ -495,7 +496,7 @@ FROM `+user2AppTab+` ua JOIN `+userTab+` u ON ua.idUser=u.idUser JOIN `+appTab+`
 /******************************************************************************
  * reqLoginBack
  ******************************************************************************/
-app.reqLoginBack=function*(){
+app.reqLoginBack=async function(){
   var {req, res}=this;
   var wwwLoginScopeTmp=null; if('wwwLoginScope' in req.site) wwwLoginScopeTmp=req.site.wwwLoginScope;
   var uSite=req.strSchemeLong+req.wwwSite;
@@ -530,8 +531,8 @@ window.close();
 /******************************************************************************
  * reqVerifyEmailReturn
  ******************************************************************************/
-app.reqVerifyEmailReturn=function*() {
-  var req=this.req, flow=req.flow, res=this.res, site=req.site, sessionID=req.sessionID;
+app.reqVerifyEmailReturn=async function() {
+  var req=this.req, res=this.res, site=req.site, sessionID=req.sessionID;
   var userTab=site.TableName.userTab;
   var objQS=req.objQS;
   
@@ -539,7 +540,7 @@ app.reqVerifyEmailReturn=function*() {
   
   var tmp='code'; if(!(tmp in objQS)) { res.out200('The parameter '+tmp+' is required'); return;}
   var codeIn=objQS.code;
-  var idUser=yield* getRedis(flow, codeIn+'_verifyEmail');
+  var [err, idUser]=await getRedis(codeIn+'_verifyEmail'); if(err) {  res.out500(err); return; }
   
   if(idUser===null) { res.out200('No such code'); return;}
 
@@ -548,7 +549,7 @@ app.reqVerifyEmailReturn=function*() {
   Val.push(idUser);
 
   var sql=Sql.join('\n');
-  var [err, results]=yield* this.myMySql.query(flow, sql, Val); if(err) {  res.out500(err); return; }
+  var [err, results]=await this.myMySql.query(sql, Val); if(err) {  res.out500(err); return; }
 
   var c=results.affectedRows, mestmp; 
   if(c==1) { mestmp="Email verified. <br>Close this tab and reload the original tab to see the changes."; } else {mestmp="Error (Nothing done)"; }
@@ -560,8 +561,8 @@ app.reqVerifyEmailReturn=function*() {
 /******************************************************************************
  * reqVerifyPWResetReturn
  ******************************************************************************/
-app.reqVerifyPWResetReturn=function*() {
-  var req=this.req, flow=req.flow, res=this.res, site=req.site, sessionID=req.sessionID;
+app.reqVerifyPWResetReturn=async function() {
+  var req=this.req, res=this.res, site=req.site, sessionID=req.sessionID;
   var userTab=site.TableName.userTab;
   var objQS=req.objQS;
   
@@ -569,7 +570,7 @@ app.reqVerifyPWResetReturn=function*() {
   
   var tmp='code'; if(!(tmp in objQS)) { res.out200('The parameter '+tmp+' is required'); return;}
   var codeIn=objQS.code;
-  var email=yield* getRedis(flow, codeIn+'_verifyPWReset');
+  var [err, email]=await getRedis(codeIn+'_verifyPWReset'); if(err) {  res.out500(err); return; }
   
   if(email===null) { res.out200('No such code'); return;}
 
@@ -581,7 +582,7 @@ app.reqVerifyPWResetReturn=function*() {
   Val.push(hashPW, email);
 
   var sql=Sql.join('\n');
-  var [err, results]=yield* this.myMySql.query(flow, sql, Val); if(err) {  res.out500(err); return; }
+  var [err, results]=await this.myMySql.query(sql, Val); if(err) {  res.out500(err); return; }
 
   var c=results.affectedRows, mestmp; 
   if(c!=1) { res.out500("Error ("+c+" affectedRows)"); return; }
@@ -592,8 +593,7 @@ app.reqVerifyPWResetReturn=function*() {
   
   const msg = { to:email, from:emailRegisterdUser, subject:'Password reset', html:strTxt };
 
-  var semY=0, semCB=0, err=null; sgMail.send(msg).then(function(){if(semY)flow.next(); semCB=1;})
-  .catch(function(errT) { err=errT; if(semY)flow.next(); semCB=1; });    if(!semCB){semY=1; yield;}
+  var [err]=await sgMail.send(msg).toNBP();
   if(err) {res.out500(err); return; }
   
   res.setHeader('Content-Type', MimeType.html);
@@ -621,28 +621,31 @@ function parseSignedRequest(signedRequest, secret) {
   return [null,data];
 }
 
-app.deleteOne=function*(user_id){ // 
-  var {req}=this, {flow, site}=req, {userTab}=site.TableName;
+app.deleteOne=async function(user_id){ // 
+  var {req}=this, {site}=req, {userTab}=site.TableName;
   var Ou={};
 
   var Sql=[], Val=[];
   Sql.push("DELETE FROM "+userTab+" WHERE idFB=?;"); Val.push(user_id);
   Sql.push("SELECT count(*) AS n FROM "+userTab+";");
   var sql=Sql.join('\n');
-  var [err, results]=yield* this.myMySql.query(flow, sql, Val); if(err) return [err];
+  var [err, results]=await this.myMySql.query(sql, Val); if(err) return [err];
   var c=results[0].affectedRows;
   site.nUser=Number(results[1][0].n);
 
   return [null, c];
 }
 
-app.reqDataDelete=function*(){  //
+app.reqDataDelete=async function(){  //
   var {req, res}=this;
-  var {flow, objQS, uSite, siteName}=req;
+  var {objQS, uSite, siteName}=req;
 
   if(req.method=='GET' && boDbg){ var objUrl=url.parse(req.url), qs=objUrl.query||'', strData=qs; } else 
   if(req.method=='POST'){
-    var buf, myConcat=concat(function(bufT){ buf=bufT; flow.next();  });    req.pipe(myConcat);    yield;
+    var [err,buf]=await new Promise(resolve=>{  var myConcat=concat(bT=>resolve([null,bT]));    req.pipe(myConcat);  });
+    if(err){ res.out500(err); return; }
+    jsonInput=buf.toString();
+
     var strData=buf.toString();
   }
   else {res.outCode(400, "Post request wanted"); return; }
@@ -653,24 +656,24 @@ app.reqDataDelete=function*(){  //
   var [err, data]=parseSignedRequest(strDataB, req.rootDomain.fb.secret); if(err) { res.outCode(400, "Error in parseSignedRequest: "+err.message); return; }
   var {user_id}=data;
 
-  var [err,c]=yield* deleteOne.call(this, user_id);
+  var [err,c]=await deleteOne.call(this, user_id);
   if(c==1) var strPlur='entry'; else var strPlur='entries';
   var mess='User: '+user_id+': '+c+' '+strPlur+' deleted';
   
   console.log('reqDataDelete: '+mess);
   var confirmation_code=genRandomString(32);
-  yield *setRedis(flow, confirmation_code+'_DeleteRequest', mess, timeOutDeleteStatusInfo); //3600*24*30
+  await setRedis(confirmation_code+'_DeleteRequest', mess, timeOutDeleteStatusInfo); //3600*24*30
 
   res.setHeader('Content-Type', MimeType.json); 
   res.end(JSON.stringify({ url: uSite+'/'+leafDataDeleteStatus+'?confirmation_code='+confirmation_code, confirmation_code }));
 }
 
-app.reqDataDeleteStatus=function*(){
+app.reqDataDeleteStatus=async function(){
   var {req, res}=this;
-  var {flow, site, objQS, uSite}=req;
+  var {site, objQS, uSite}=req;
   var objUrl=url.parse(req.url), qs=objUrl.query||'', objQS=querystring.parse(qs);
   var confirmation_code=objQS.confirmation_code||'';
-  var [err,mess]=yield* cmdRedis(flow, 'GET', [confirmation_code+'_DeleteRequest']); 
+  var [err,mess]=await cmdRedis('GET', [confirmation_code+'_DeleteRequest']); 
   if(err) {var mess=err.message;}
   else if(mess==null) {
     var [t,u]=getSuitableTimeUnit(timeOutDeleteStatusInfo);
@@ -686,8 +689,8 @@ app.reqDataDeleteStatus=function*(){
 /******************************************************************************
  * reqImage
  ******************************************************************************/
-app.reqImage=function*() {
-  var req=this.req, flow=req.flow, res=this.res;
+app.reqImage=async function() {
+  var req=this.req, res=this.res;
   var site=req.site, objQS=req.objQS, wwwSite=req.wwwSite, siteName=req.siteName, pathName=req.pathName;
   var TableName=site.TableName;
   
@@ -718,7 +721,7 @@ app.reqImage=function*() {
   else {
     var sql = "SELECT data FROM "+TableName.imageAppTab+" i JOIN "+TableName.appTab+" a ON i.idApp=a.idApp WHERE imageHash=?", Val=[imageHash];
   }
-  var [err, results]=yield* this.myMySql.query(flow, sql, Val); if(err) {  res.out500(err); return; }
+  var [err, results]=await this.myMySql.query(sql, Val); if(err) {  res.out500(err); return; }
   
   if(results.length>0){
     var strData=results[0].data;
@@ -739,9 +742,9 @@ app.reqImage=function*() {
 /******************************************************************************
  * reqStatic (request for static files)
  ******************************************************************************/
-app.reqStatic=function*() {
+app.reqStatic=async function() {
   var {req, res}=this;
-  var {flow, site, pathName}=req, siteName=site.siteName;
+  var {site, pathName}=req, siteName=site.siteName;
 
 
   //var RegAllowedOriginOfStaticFile=[RegExp("^https\:\/\/(closeby\.market|gavott\.com)")];
@@ -754,10 +757,10 @@ app.reqStatic=function*() {
   var keyCache=pathName; if(pathName==='/'+leafManifest) keyCache=siteName+keyCache;
   if(!(keyCache in CacheUri)){
     var filename=pathName.substr(1);
-    var [err]=yield* readFileToCache(flow, filename);
+    var [err]=await readFileToCache(filename);
     if(err) {
       if(err.code=='ENOENT') {res.out404(); return;}
-      if('host' in req.headers) console.error('Faulty request from'+req.headers.host);
+      if('host' in req.headers) console.error('Faulty request to '+req.headers.host+" ("+pathName+")");
       if('Referer' in req.headers) console.error('Referer:'+req.headers.Referer);
       res.out500(err); return;
     }
@@ -780,8 +783,8 @@ app.reqStatic=function*() {
 /******************************************************************************
  * reqMonitor
  ******************************************************************************/
-app.reqMonitor=function*() {
-  var req=this.req, flow=req.flow, res=this.res;
+app.reqMonitor=async function() {
+  var req=this.req, res=this.res;
 
   if(!req.boCookieLaxOK) {res.outCode(401, "Lax cookie not set");  return;  }
   
@@ -797,7 +800,7 @@ app.reqMonitor=function*() {
 
 
     var sql=Sql.join('\n'), Val=[];
-    var [err, results]=yield* this.myMySql.query(flow, sql, Val); if(err) {  res.out500(err); return; }
+    var [err, results]=await this.myMySql.query(sql, Val); if(err) {  res.out500(err); return; }
 
     var resP=results[0], nEdit=results[1][0].n, pageName=nEdit==1?resP[0].siteName+':'+resP[0].pageName:nEdit;
     var resI=results[2], nImage=results[3][0].n, imageName=nImage==1?resI[0].imageName:nImage;
@@ -827,8 +830,8 @@ app.reqMonitor=function*() {
 /******************************************************************************
  * reqStat (request for status of the tables)
  ******************************************************************************/
-app.reqStat=function*() {
-  var req=this.req, flow=req.flow, res=this.res;
+app.reqStat=async function() {
+  var req=this.req, res=this.res;
   
   if(!req.boCookieLaxOK) {res.outCode(401, "Lax cookie not set");  return;  }
 
@@ -846,7 +849,7 @@ app.reqStat=function*() {
    LEFT JOIN `+videoTab+` vid ON f.idFile=vid.idFile`);
 
   var sql=Sql.join('\n'), Val=[];
-  var [err, results]=yield* this.myMySql.query(flow, sql, Val); if(err) {  res.out500(err); return; }
+  var [err, results]=await this.myMySql.query(sql, Val); if(err) {  res.out500(err); return; }
     
 
   var nVersion=results[0][0].n, nImage=results[1][0].n, nThumb=results[2][0].n, nVideo=results[3][0].n, nFile=results[4][0].n, resT=results[5];
@@ -932,7 +935,7 @@ app.reqStat=function*() {
 app.SetupSql=function(){
   this.strSETScope="SET('name', 'image', 'email', 'telephone', 'country', 'federatedState', 'county', 'zip', 'city', 'address', 'timeZone', 'boFB', 'boGoogle', 'idNational', 'birthdate', 'motherTongue', 'gender', 'all')";
 }
-app.SetupSql.prototype.createTable=function*(flow, siteName,boDropOnly){
+app.SetupSql.prototype.createTable=async function(siteName,boDropOnly){
   var site=Site[siteName]; 
   
   var SqlTabDrop=[], SqlTab=[];
@@ -1100,14 +1103,14 @@ app.SetupSql.prototype.createTable=function*(flow, siteName,boDropOnly){
   else var Sql=array_merge(SqlTabDrop, SqlTab);
   
   var strDelim=';', sql=Sql.join(strDelim+'\n')+strDelim, Val=[];
-  var [err, results]=yield* this.myMySql.query(flow, sql, Val);  if(err) {  return [err]; }
+  var [err, results]=await this.myMySql.query(sql, Val);  if(err) {  return [err]; }
   return [null];
   
 }
 
 
 
-app.SetupSql.prototype.createFunction=function*(flow, siteName,boDropOnly){
+app.SetupSql.prototype.createFunction=async function(siteName,boDropOnly){
   var site=Site[siteName]; 
   
   var SqlFunctionDrop=[], SqlFunction=[];
@@ -1355,11 +1358,11 @@ RENAME TABLE `+userTab+` TO `+userTab+`_dup,
   else var Sql=array_merge(SqlFunctionDrop, SqlFunction);
   
   var strDelim=';', sql=Sql.join(strDelim+'\n')+strDelim, Val=[];
-  var [err, results]=yield* this.myMySql.query(flow, sql, Val);  if(err) {  return [err]; }
+  var [err, results]=await this.myMySql.query(sql, Val);  if(err) {  return [err]; }
   return [null];
 }
 
-app.SetupSql.prototype.funcGen=function*(flow, boDropOnly){
+app.SetupSql.prototype.funcGen=async function(boDropOnly){
   var SqlFunction=[], SqlFunctionDrop=[];
   SqlFunctionDrop.push("DROP PROCEDURE IF EXISTS copyTable");
   SqlFunction.push(`CREATE PROCEDURE copyTable(INameN varchar(128),IName varchar(128))
@@ -1373,23 +1376,23 @@ app.SetupSql.prototype.funcGen=function*(flow, boDropOnly){
   else var Sql=array_merge(SqlFunctionDrop, SqlFunction);
   
   var strDelim=';', sql=Sql.join(strDelim+'\n')+strDelim, Val=[];
-  var [err, results]=yield* this.myMySql.query(flow, sql, Val);  if(err) {  return [err]; }
+  var [err, results]=await this.myMySql.query(sql, Val);  if(err) {  return [err]; }
   return [null];
 }
 
-app.SetupSql.prototype.createDummies=function*(flow, siteName){
+app.SetupSql.prototype.createDummies=async function(siteName){
   var site=Site[siteName]; 
   var SqlDummies=[];
   return [null];
 }
 
-app.SetupSql.prototype.createDummy=function*(flow, siteName){
+app.SetupSql.prototype.createDummy=async function(siteName){
   var site=Site[siteName]; 
   var SqlDummy=[];
   return [null];
 }
 
-app.SetupSql.prototype.truncate=function*(flow, siteName){
+app.SetupSql.prototype.truncate=async function(siteName){
   var site=Site[siteName]; 
   
   var Sql=[];
@@ -1411,14 +1414,14 @@ app.SetupSql.prototype.truncate=function*(flow, siteName){
   Sql.push('SET FOREIGN_KEY_CHECKS=1');
   
   var strDelim=';', sql=Sql.join(strDelim+'\n')+strDelim, Val=[];
-  var [err, results]=yield* this.myMySql.query(flow, sql, Val);  if(err) {  return [err]; }
+  var [err, results]=await this.myMySql.query(sql, Val);  if(err) {  return [err]; }
   return [null];
 }
 
 
 
   // Called when --sql command line option is used
-app.SetupSql.prototype.doQuery=function*(flow, strCreateSql){
+app.SetupSql.prototype.doQuery=async function(strCreateSql){
   if(StrValidSqlCalls.indexOf(strCreateSql)==-1){var tmp=strCreateSql+' is not valid input, try any of these: '+StrValidSqlCalls.join(', '); return [new Error(tmp)]; }
   var Match=RegExp("^(drop|create)?(.*?)$").exec(strCreateSql);
   if(!Match) { debugger;  return [new Error("!Match")]; }
@@ -1428,12 +1431,12 @@ app.SetupSql.prototype.doQuery=function*(flow, strCreateSql){
   else if(Match[1]=='create')  { strMeth='create'+strMeth; }
   
   if(strMeth=='createFunction'){ 
-    var [err]=yield* this.funcGen(flow, boDropOnly); if(err){  return [err]; }  // Create common functions
+    var [err]=await this.funcGen(boDropOnly); if(err){  return [err]; }  // Create common functions
   }
   for(var iSite=0;iSite<SiteName.length;iSite++){
     var siteName=SiteName[iSite];
     console.log(siteName);
-    var [err]=yield* this[strMeth](flow, siteName, boDropOnly);  if(err){  return [err]; }
+    var [err]=await this[strMeth](siteName, boDropOnly);  if(err){  return [err]; }
   }
   return [null];
 }

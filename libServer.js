@@ -21,15 +21,15 @@ app.createManifest=function(siteName){
   return str;
 }
 
-app.createManifestNStoreToCache=function*(flow, siteName){
+app.createManifestNStoreToCache=async function(siteName){
   var strT=createManifest(siteName);
   var buf=Buffer.from(strT, 'utf8');
-  var [err]=yield* CacheUri.set(flow, siteName+'/'+leafManifest, buf, 'json', true, false);   if(err) return [err];
+  var [err]=await CacheUri.set(siteName+'/'+leafManifest, buf, 'json', true, false);   if(err) return [err];
   return [null];
 }
-app.createManifestNStoreToCacheMult=function*(flow, SiteName){
+app.createManifestNStoreToCacheMult=async function(SiteName){
   for(var i=0;i<SiteName.length;i++){
-    var [err]=yield* createManifestNStoreToCache(flow, SiteName[i]);   if(err) return [err];
+    var [err]=await createManifestNStoreToCache(SiteName[i]);   if(err) return [err];
   }
   return [null];
 }

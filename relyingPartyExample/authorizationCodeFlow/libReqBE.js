@@ -3,19 +3,17 @@
 /******************************************************************************
  * reqBE
  ******************************************************************************/
-app.reqBE=function*() {
-  var req=this.req, res=this.res, flow=req.flow;
+app.reqBE=async function() {
+  var req=this.req, res=this.res;
    
  
-  if(req.method!='POST'){  res.setCodeNEnd(405, 'Method Not Allowed');    return;  }
-  var jsonInput;
-  var myConcat=concat(function(buf){
-    jsonInput=buf.toString();
-    req.flow.next();
-  });
-  req.pipe(myConcat);
-  yield;
-  try{ var inObj=JSON.parse(jsonInput); }catch(e){ console.log(e);  res.setCodeNEnd(500, 'Error in JSON.parse, '+e); return; }
+  if(req.method!='POST'){  res.outCode(405, 'Method Not Allowed');    return;  }
+
+  var [err,buf]=await new Promise(resolve=>{  var myConcat=concat(bT=>resolve([null,bT]));    req.pipe(myConcat);  });  if(err){ res.out500(err); return; }
+  var jsonInput=buf.toString();
+
+  try{ var inObj=JSON.parse(jsonInput); }catch(e){ console.log(e);  res.out500(e); return; }
+
   res.setHeader("Content-type", "application/json");
   
   var strIP=inObj.IP;
@@ -25,17 +23,12 @@ app.reqBE=function*() {
   var objForm={grant_type:'authorization_code', client_id:appCredIP.id, redirect_uri:uRedir, client_secret:appCredIP.secret, code:inObj.code};
   var uToGetToken=UrlCode2Token[strIP];
   
-  var arrT = Object.keys(objForm).map(function (key) { return key+'='+objForm[key]; }), strQuery=arrT.join('&'); 
-  var semY=0, semCB=0, err, response, body;
-  var reqStream=requestMod.post({url:uToGetToken, form: objForm},  function(errT, responseT, bodyT) { err=errT; response=responseT; body=bodyT; if(semY)flow.next(); semCB=1;  }); if(!semCB){semY=1; yield;}
-  
-  if(err) {console.log(err);  res.setCodeNEnd(500, 'Error in requestMod.post, '+err); return; }
-  //else if(response.statusCode != 200) { var tmp='response.statusCode != 200'; console.log(tmp);  res.setCodeNEnd(500, tmp); return; }
-  var buf=body;
-  
-  try{ var objT=JSON.parse(buf.toString()); }catch(e){ console.log(e); res.setCodeNEnd(500, 'Error in JSON.parse, '+e);   debugger; return; }
+  const params = new URLSearchParams(objForm);
+  var [err,response]=await fetch(uToGetToken, {method:'POST', body:params}).toNBP(); if(err) {res.out500(err); return; }
+  var [err, objT]=await response.json().toNBP(); if(err) { res.out500(err);   debugger; return; }
+
   console.log("Result from code2Token request:",objT);
-  if('error' in objT) { var m=objT.error.message; res.setCodeNEnd(500, '"error" in objT, '+m);   debugger; return;  }
+  if('error' in objT) { var m=objT.error.message; res.out500(m);   debugger; return;  }
   var access_token=objT.access_token;
   
 
@@ -48,16 +41,11 @@ app.reqBE=function*() {
   var arrT = Object.keys(objForm).map(function (key) { return key+'='+objForm[key]; }), strQuery=arrT.join('&'); 
   if(strQuery.length) uGraph+='?'+strQuery;
 
-  var semY=0, semCB=0, err, response, body;
-  var reqStream=requestMod.get(uGraph,  function(errT, responseT, bodyT) { err=errT; response=responseT; body=bodyT; if(semY)flow.next(); semCB=1;  }); if(!semCB){semY=1; yield;}
-  if(err) {console.log(err);  res.setCodeNEnd(500, 'Error in requestMod, '+err); debugger; return; }
-  else if(response.statusCode != 200) { var tmp='response.statusCode != 200'; console.log(tmp);  res.setCodeNEnd(500, tmp); debugger; return; }
-  var strBody=buf.toString()
-
-
-  try{ var objGraph=JSON.parse(strBody); }catch(e){ console.log(e); res.setCodeNEnd(500, 'Error in JSON.parse, '+e);   debugger; return; }
+  const params = new URLSearchParams(objForm);
+  var [err,response]=await fetch(uGraph, {method:'POST', body:params}).toNBP(); if(err) {res.out500(err); return; }
+  var [err, objGraph]=await response.json().toNBP(); if(err) { res.out500(err);   debugger; return; }
   
-  if('error' in objGraph) {var tmp='Error accessing data from ID provider: '+objGraph.error.type+' '+objGraph.error.message+'<br>';  console.log(tmp);  res.setCodeNEnd(500, tmp); debugger; return; }
+  if('error' in objGraph) {var tmp='Error accessing data from ID provider: '+objGraph.error.type+' '+objGraph.error.message+'<br>';  console.log(tmp);  res.out500(tmp); debugger; return; }
   
   
   console.log("Result from data-extraction request:",objGraph);
