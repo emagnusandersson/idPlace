@@ -1,12 +1,10 @@
+global.app=global;
+import http from "http";
+import url from "url";
+import fs, {fsPromises} from "fs";
+import concat from 'concat-stream';
+import fetch from 'node-fetch';
 
-http = require("http");
-url = require("url");
-fs = require("fs");
-fsPromises = require("fs/promises");
-concat = require('concat-stream');
-//requestMod = require('request');
-fetch = require('node-fetch');
-querystring = require('querystring');
 
 var tmp=http.ServerResponse.prototype;
 tmp.outCode=function(iCode,str){  str=str||''; this.statusCode=iCode; if(str) this.setHeader("Content-Type", MimeType.txt);   this.end(str);}
@@ -15,19 +13,22 @@ tmp.out500=function(e){
   this.writeHead(500, {"Content-Type": MimeType.txt});  this.end(mess+ "\n");
 }
 
-//app=(typeof window==='undefined')?global:window;
-app=globalThis;
+app.parseQS2=function(qs){
+  var objQS={}, objTmp=new URLSearchParams(qs);
+  for(const [name, value] of objTmp) {  objQS[name]=value;  }
+  return objQS;
+}
 
-port=8000;
+app.port=8000;
 
 
-require('./libReqBE.js');
-require('./libReq.js'); 
+await import('./libReqBE.js');
+await import('./libReq.js'); 
 
 
 var leafClient='client.js';
-leafBE='be.json';
-leafLoginBack="loginBack.html"; 
+app.leafBE='be.json';
+app.leafLoginBack="loginBack.html"; 
 
 
 /********************************************************************
@@ -39,7 +40,7 @@ leafLoginBack="loginBack.html";
  ********************************************************************/
 
 
-AppCred={   // <-- Fill in the credentials of whatever IdP you want to test !!!!
+app.AppCred={   // <-- Fill in the credentials of whatever IdP you want to test !!!!
   fb:{id:"your-fb-app-id", secret:"your-fb-app-secret"},
   google:{id: "your-google-app-id", secret:"your-google-app-secret"},
   idplace:{id: "your-idplace-app-id", secret:"your-idplace-app-secret"},
@@ -52,26 +53,26 @@ AppCred={   // <-- Fill in the credentials of whatever IdP you want to test !!!!
 var wwwApp='localhost:'+port;
 //var wwwApp='192.168.0.4:'+port;
 var wwwRedir=wwwApp+"/"+leafLoginBack;
-uRedir='http://'+wwwRedir;  // <-- This url should be quite often be entered on the IdP site
+app.uRedir='http://'+wwwRedir;  // <-- This url should be quite often be entered on the IdP site
 
 
 /********************************************************************/
 
 
 
-AppId={};   for(var k in AppCred){   AppId[k]=AppCred[k].id;    } // Create a variable without secrets that can be sent to the client
+app.AppId={};   for(var k in AppCred){   AppId[k]=AppCred[k].id;    } // Create a variable without secrets that can be sent to the client
 
 
-strFBVersion="v9.0"
-UrlOAuth={fb:"https://www.facebook.com/"+strFBVersion+"/dialog/oauth", google: "https://accounts.google.com/o/oauth2/v2/auth", idplace:'https://idplace.org', idL:'http://localhost:5000', id192:'http://192.168.0.4:5000'};
-UrlGraph={fb:"https://graph.facebook.com/"+strFBVersion+"/me", google: "https://www.googleapis.com/plus/v1/people/me", idplace:'https://idplace.org/me', idL:'http://localhost:5000/me', id192:'http://192.168.0.4:5000/me'};
+var strFBVersion="13.0"
+app.UrlOAuth={fb:"https://www.facebook.com/"+strFBVersion+"/dialog/oauth", google: "https://accounts.google.com/o/oauth2/v2/auth", idplace:'https://idplace.org', idL:'http://localhost:5000', id192:'http://192.168.0.4:5000'};
+app.UrlGraph={fb:"https://graph.facebook.com/"+strFBVersion+"/me", google: "https://www.googleapis.com/plus/v1/people/me", idplace:'https://idplace.org/me', idL:'http://localhost:5000/me', id192:'http://192.168.0.4:5000/me'};
 
 UrlCode2Token={fb:"https://graph.facebook.com/"+strFBVersion+"/oauth/access_token", google: "https://accounts.google.com/o/oauth2/token", idplace:'https://idplace.org/access_token', idL:'http://localhost:5000/access_token', id192:'http://192.168.0.4:5000/access_token'};
 
 
 var handler=async function(req, res){
 
-  var objUrl=url.parse(req.url), qs=objUrl.query||'', objQS=querystring.parse(qs),  pathName=objUrl.pathname;
+  var objUrl=url.parse(req.url), qs=objUrl.query||'', objQS=parseQS2(qs),  pathName=objUrl.pathname;
   if(req.headers.host!=wwwApp){ res.writeHead(404);  res.end("404 Nothing at that url\n"); return; }
   (async function(){
     var objReqRes={req, res};

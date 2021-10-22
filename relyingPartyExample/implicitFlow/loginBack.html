@@ -3,8 +3,7 @@
 <body>
 <script>
 "use strict"
-var strQS=location.search;
-var strHash=location.hash;
+var {search:strQS, hash:strHash}=location;
 debugger
 window.opener.loginReturn(strQS,strHash);
 window.close();

@@ -4,13 +4,17 @@
 "use strict"
 
 
+
+// After deleting account, userAppList and devAppList are still populated (when you login again)
+// One is able to delete / edit app without supplying password
+// Clearing image, cause a JSON object returned with a property with undefined, (which causes JSON.parse to fail)
+// node-zip is obsolete.
+
 /******************************************************************************
  * reqIndex
  ******************************************************************************/
 app.reqIndex=async function() {
-  var req=this.req, res=this.res, sessionID=req.sessionID;
-  var objQS=req.objQS;
-  var site=req.site, siteName=site.siteName, wwwSite=req.wwwSite;
+  var {req, res}=this, {sessionID, objQS, site, siteName, wwwSite}=req;
 
   //var redisVar=req.sessionID+'_Cache';
   //this.sessionCache=await getRedis(redisVar, true);
@@ -159,7 +163,7 @@ app.reqIndex=async function() {
   if(!boDbg) Str.push(tmp);
 
   
-  Str.push(`<script>var app=window;</script>`);
+  Str.push(`<script>window.app=window;</script>`);
 
   var tmp=`
 <script>
@@ -194,7 +198,7 @@ h1.mainH1 { box-sizing:border-box; margin:0em auto; width:100%; max-width:var(--
 </style>`);
 
 
-  //Str.push('<script src="'+uSite+'/lib/foundOnTheInternet/md5.js" async></script>');
+  //Str.push('<script type="module" src="'+uSite+'/lib/foundOnTheInternet/md5.js" async></script>');
 
     // If boDbg then set vTmp=0 so that the url is the same, this way the debugger can reopen the file between changes
 
@@ -209,13 +213,14 @@ h1.mainH1 { box-sizing:border-box; margin:0em auto; width:100%; max-width:var(--
     // Include JS-files
   var StrTmp=['lib.js', 'libClient.js', 'client.js'];
   for(var i=0;i<StrTmp.length;i++){
-    var pathTmp='/'+StrTmp[i], vTmp=boDbgT?0:CacheUri[pathTmp].eTag;    Str.push('<script src="'+uSite+pathTmp+'?v='+vTmp+'" async></script>');
+    var pathTmp='/'+StrTmp[i], vTmp=boDbgT?0:CacheUri[pathTmp].eTag;    Str.push('<script type="module" src="'+uSite+pathTmp+'?v='+vTmp+'" async></script>');
   }
 
 
-  Str.push('<script src="'+uSite+'/lib/foundOnTheInternet/sha1.js" async></script>');
+  Str.push('<script type="module" src="'+uSite+'/lib/foundOnTheInternet/sha1.js" async></script>');
 
   var strTracker, tmpID=site.googleAnalyticsTrackingID||null;
+  tmpID=null;  // Disabling ga
   if(boDbg||!tmpID){strTracker="<script> ga=function(){};</script>";}else{ 
   strTracker=`
 <script type="text/javascript">
@@ -223,11 +228,12 @@ h1.mainH1 { box-sizing:border-box; margin:0em auto; width:100%; max-width:var(--
   (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
   m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
   })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
-  ga('create', '`+tmpID+`', 'auto');
+  ga('create', '`+tmpID+`', { 'storage': 'none' });
   ga('send', 'pageview');
 </script>`;
   }
   Str.push(strTracker);
+  //ga('create', '`+tmpID+`', 'auto');
 
   //Str.push("<script src='https://www.google.com/recaptcha/api.js?render=explicit'></script>");
   Str.push("<script src='https://www.google.com/recaptcha/api.js?render=explicit' defer></script>");
@@ -253,8 +259,9 @@ h1.mainH1 { box-sizing:border-box; margin:0em auto; width:100%; max-width:var(--
   copySome(objOut,site,['boTLS']);
 
   Str.push(`<script>
-var app=window;
-var tmp=`+serialize(objOut)+`;\nObject.assign(window, tmp);
+window.app=window;
+var tmp=`+serialize(objOut)+`;
+Object.assign(window, tmp);
 function indexAssign(){
   setItem('CSRFCode',CSRFCode);
 }
@@ -280,10 +287,9 @@ function indexAssign(){
  * reqMe
  ******************************************************************************/
 app.reqMe=async function() {
-  var req=this.req, res=this.res, sessionID=req.sessionID, site=req.site, TableName=site.TableName, {userTab, user2AppTab}=TableName;
-  var objQS=req.objQS;
-  var site=req.site, siteName=site.siteName;
-  var wwwSite=req.wwwSite;
+  var {req, res}=this, {sessionID, site, objQS, site, siteName, wwwSite}=req; 
+  var TableName=site.TableName, {userTab, user2AppTab}=TableName;
+
   
   
   //if(!req.boCookieLaxOK) {res.outCode(401, "Lax cookie not set");  return;  }
@@ -404,10 +410,8 @@ app.PropAsScope.all=Object.keys(objAllTmp);
  * reqToken
  ******************************************************************************/
 app.reqToken=async function() {
-  var req=this.req, res=this.res, sessionID=req.sessionID, site=req.site, TableName=site.TableName, {userTab, appTab, user2AppTab}=TableName;
-  var objQS=req.objQS;
-  var site=req.site, siteName=site.siteName, wwwSite=req.wwwSite;
-  var wwwSite=req.wwwSite;
+  var {req, res}=this, {sessionID, site, objQS, siteName, wwwSite}=req;
+  var TableName=site.TableName, {userTab, appTab, user2AppTab}=TableName;
   
   //if(!req.boCookieLaxOK) {res.outCode(401, "Lax cookie not set");  return;  }
 
@@ -424,7 +428,7 @@ app.reqToken=async function() {
       req.on('end', function(){ resolve([null,body]);  });
     });
     if(err){res.out400(err); return;}
-    objQS=querystring.parse(body); 
+    objQS=parseQS2(body); 
   }
 
 
@@ -512,8 +516,7 @@ app.reqLoginBack=async function(){
 <script>
 var wwwLoginScope=`+serialize(wwwLoginScopeTmp)+`;
 if(wwwLoginScope) document.domain = wwwLoginScope;
-var strQS=location.search;
-var strHash=location.hash;
+var {search:strQS, hash:strHash}=location;
 debugger
 //alert('strHash: '+strHash);
 window.opener.loginReturn(strQS,strHash);
@@ -532,9 +535,8 @@ window.close();
  * reqVerifyEmailReturn
  ******************************************************************************/
 app.reqVerifyEmailReturn=async function() {
-  var req=this.req, res=this.res, site=req.site, sessionID=req.sessionID;
+  var {req, res}=this, {site, objQS}=req;
   var userTab=site.TableName.userTab;
-  var objQS=req.objQS;
   
   //if(!req.boCookieLaxOK) {res.outCode(401, "Lax cookie not set");  return;  }  // Don't check for lax-cookie since the user may click the link in an other browser
   
@@ -562,9 +564,8 @@ app.reqVerifyEmailReturn=async function() {
  * reqVerifyPWResetReturn
  ******************************************************************************/
 app.reqVerifyPWResetReturn=async function() {
-  var req=this.req, res=this.res, site=req.site, sessionID=req.sessionID;
+  var {req, res}=this, {site, objQS}=req;
   var userTab=site.TableName.userTab;
-  var objQS=req.objQS;
   
   //if(!req.boCookieLaxOK) {res.outCode(401, "Lax cookie not set");  return;  } // Don't check for lax-cookie since the user may click the link in an other browser
   
@@ -637,8 +638,7 @@ app.deleteOne=async function(user_id){ //
 }
 
 app.reqDataDelete=async function(){  //
-  var {req, res}=this;
-  var {objQS, uSite, siteName}=req;
+  var {req, res}=this, {objQS, uSite, siteName}=req;
 
   if(req.method=='GET' && boDbg){ var objUrl=url.parse(req.url), qs=objUrl.query||'', strData=qs; } else 
   if(req.method=='POST'){
@@ -669,9 +669,8 @@ app.reqDataDelete=async function(){  //
 }
 
 app.reqDataDeleteStatus=async function(){
-  var {req, res}=this;
-  var {site, objQS, uSite}=req;
-  var objUrl=url.parse(req.url), qs=objUrl.query||'', objQS=querystring.parse(qs);
+  var {req, res}=this, {site, objQS, uSite}=req;
+  var objUrl=url.parse(req.url), qs=objUrl.query||'', objQS=parseQS2(qs);
   var confirmation_code=objQS.confirmation_code||'';
   var [err,mess]=await cmdRedis('GET', [confirmation_code+'_DeleteRequest']); 
   if(err) {var mess=err.message;}
@@ -690,8 +689,7 @@ app.reqDataDeleteStatus=async function(){
  * reqImage
  ******************************************************************************/
 app.reqImage=async function() {
-  var req=this.req, res=this.res;
-  var site=req.site, objQS=req.objQS, wwwSite=req.wwwSite, siteName=req.siteName, pathName=req.pathName;
+  var {req, res}=this, {site, objQS, wwwSite, siteName, pathName}=req;
   var TableName=site.TableName;
   
   res.removeHeader("Content-Security-Policy"); // Allow to be shown in frame, iframe, embed, object
@@ -743,8 +741,7 @@ app.reqImage=async function() {
  * reqStatic (request for static files)
  ******************************************************************************/
 app.reqStatic=async function() {
-  var {req, res}=this;
-  var {site, pathName}=req, siteName=site.siteName;
+  var {req, res}=this, {site, pathName}=req, {siteName}=site;
 
 
   //var RegAllowedOriginOfStaticFile=[RegExp("^https\:\/\/(closeby\.market|gavott\.com)")];
@@ -784,7 +781,7 @@ app.reqStatic=async function() {
  * reqMonitor
  ******************************************************************************/
 app.reqMonitor=async function() {
-  var req=this.req, res=this.res;
+  var {req, res}=this;
 
   if(!req.boCookieLaxOK) {res.outCode(401, "Lax cookie not set");  return;  }
   
@@ -831,7 +828,7 @@ app.reqMonitor=async function() {
  * reqStat (request for status of the tables)
  ******************************************************************************/
 app.reqStat=async function() {
-  var req=this.req, res=this.res;
+  var {req, res}=this;
   
   if(!req.boCookieLaxOK) {res.outCode(401, "Lax cookie not set");  return;  }
 
@@ -872,15 +869,15 @@ app.reqStat=async function() {
 
     // Include site specific JS-files
   //var uSite=req.strSchemeLong+req.wwwSite;
-  //var keyCache=req.strSite+'/'+leafSiteSpecific, vTmp=CacheUri[keyCache].eTag; if(boDbg) vTmp=0;  Str.push('<script src="'+uSite+'/'+leafSiteSpecific+'?v='+vTmp+'" async></script>');
+  //var keyCache=req.strSite+'/'+leafSiteSpecific, vTmp=CacheUri[keyCache].eTag; if(boDbg) vTmp=0;  Str.push('<script type="module" src="'+uSite+'/'+leafSiteSpecific+'?v='+vTmp+'" async></script>');
 
     // Include JS-files
   var StrTmp=['lib.js', 'libClient.js'];
   for(var i=0;i<StrTmp.length;i++){
-    var pathTmp='/'+StrTmp[i], vTmp=CacheUri[pathTmp].eTag; if(boDbg) vTmp=0;    Str.push('<script src="'+uSite+pathTmp+'?v='+vTmp+'" async></script>');
+    var pathTmp='/'+StrTmp[i], vTmp=CacheUri[pathTmp].eTag; if(boDbg) vTmp=0;    Str.push('<script type="module" src="'+uSite+pathTmp+'?v='+vTmp+'" async></script>');
   }
 
-  Str.push('<script src="'+uSite+'/lib/foundOnTheInternet/sortable.js" async></script>');
+  Str.push('<script type="module" src="'+uSite+'/lib/foundOnTheInternet/sortable.js" async></script>');
 
   Str.push("</head>");
   Str.push('<body style="margin:0">');
@@ -1463,28 +1460,6 @@ var writeMessTextOfMultQuery=function(Sql, err, results){
 app.ReqSql=function(req, res){
   this.req=req; this.res=res;
   this.StrType=['table', 'fun', 'dropTable', 'dropFun', 'truncate', 'dummy', 'dummies']; 
-}
-app.ReqSql.prototype.createZip=function(objSetupSql){
-  var res=this.res, StrType=this.StrType;
-
-  var zipfile = new NodeZip();
-  for(var i=0;i<StrType.length;i++) {
-    var strType=StrType[i], SqlA;
-    var Match=RegExp("^(drop)?(.*)$").exec(strType), boDropOnly=Match[1]=='drop';
-    var SqlA=objSetupSql[Match[2].toLowerCase()](SiteName, boDropOnly);
-    var strDelim=';;', sql='-- DELIMITER '+strDelim+'\n'      +SqlA.join(strDelim+'\n')+strDelim      +'\n-- DELIMITER ;\n';
-    zipfile.file(strType+".sql", sql, {date:new Date(), compression:'DEFLATE'});
-  }
-
-  //var objArg={base64:false}; if(boCompress) objArg.compression='DEFLATE';
-  var objArg={type:'string'}; //if(boCompress) objArg.compression='DEFLATE';
-  var outdata = zipfile.generate(objArg);
-
-
-  var outFileName=strAppName+'Setup.zip';
-  var objHead={"Content-Type": MimeType.zip, "Content-Length":outdata.length, 'Content-Disposition':'attachment; filename='+outFileName};
-  res.writeHead(200,objHead);
-  res.end(outdata,'binary');
 }
 app.ReqSql.prototype.toBrowser=function(objSetupSql){
   var {req, res}=this;

@@ -4,7 +4,7 @@
  * reqBE
  ******************************************************************************/
 app.reqBE=async function() {
-  var req=this.req, res=this.res;
+  var {req, res}=this;
    
  
   if(req.method!='POST'){  res.outCode(405, 'Method Not Allowed');    return;  }

@@ -1,60 +1,53 @@
 
 
 
-two31=Math.pow(2,31);  intMax=two31-1;  intMin=-two31;
-two32=2*two31; uint32Max=two32-1;
-sPerDay=24*3600;  sPerMonth=sPerDay*30;
+app.two31=Math.pow(2,31);  app.intMax=two31-1;  app.intMin=-two31;
+app.two32=2*two31; app.uint32Max=two32-1;
+app.sPerDay=24*3600;  app.sPerMonth=sPerDay*30;
 
 
 
-fsWebRootFolder=process.cwd();
-flLibFolder='lib';
+var fsWebRootFolder=process.cwd();
+var flLibFolder='lib';
 
-flFoundOnTheInternetFolder=flLibFolder+"/foundOnTheInternet";
-flLibImageFolder=flLibFolder+"/image";  
+var flFoundOnTheInternetFolder=flLibFolder+"/foundOnTheInternet";
+app.flLibImageFolder=flLibFolder+"/image";  
 
   // Files: 
-leafBE='be.json';
-leafVerifyEmailReturn='verifyEmail';
-leafVerifyPWResetReturn='verifyPWReset';
-leafManifest='manifest.json';
-leafDataDelete='dataDelete';
-leafDataDeleteStatus='dataDeleteStatus';
-leafDeAuthorize='deAuthorize';
+app.leafBE='be.json';
+app.leafVerifyEmailReturn='verifyEmail';
+app.leafVerifyPWResetReturn='verifyPWReset';
+app.leafManifest='manifest.json';
+app.leafDataDelete='dataDelete';
+app.leafDataDeleteStatus='dataDeleteStatus';
+app.leafDeAuthorize='deAuthorize';
 
 
-lenGZ=100;
-nHash=1000;
+//lenGZ=100;
+app.nHash=1000;
 
 
-StrImageExt=['jpg','jpeg','png','gif','svg'];
+//StrImageExt=['jpg','jpeg','png','gif','svg'];
 
 
-version='100';
-maxGroupsInFeat=20;
-preDefault="u.";
+//version='100';
+//maxGroupsInFeat=20;
+//preDefault="u.";
 
 
 
 //strDBPrefix='mID';
-StrTableKey=["user2App", "imageApp", "app", "setting", "admin", "image", "user"]; //,"cache" , "siteDefault"
-StrViewsKey=[]; 
-//TableName={};for(var i=0;i<StrTableKey.length;i++) {var name=StrTableKey[i]; TableName[StrTableKey[i]+"Tab"]=strDBPrefix+'_'+name;}
-//ViewName={};for(var i=0;i<StrViewsKey.length;i++) {var name=StrViewsKey[i]; ViewName[StrViewsKey[i]+"View"]=strDBPrefix+'_'+name;}
+var StrTableKey=["user2App", "imageApp", "app", "setting", "admin", "image", "user"]; //,"cache" , "siteDefault"
+var StrViewsKey=[]; 
 
-TableNameProt={};for(var i=0;i<StrTableKey.length;i++) TableNameProt[StrTableKey[i]]='';
-ViewNameProt={};for(var i=0;i<StrViewsKey.length;i++) ViewNameProt[StrViewsKey[i]]='';
-//extract(TableName);
-//extract(ViewName);
+var TableNameProt={};for(var i=0;i<StrTableKey.length;i++) TableNameProt[StrTableKey[i]]='';
+var ViewNameProt={};for(var i=0;i<StrViewsKey.length;i++) ViewNameProt[StrViewsKey[i]]='';
 
 
-
-
-specialistDefault={user:0,developer:0,admin:0};
-
+//specialistDefault={user:0,developer:0,admin:0};
 
 var StrProp=['name', 'password', 'image', 'email', 'boEmailVerified', 'telephone',   'country', 'federatedState', 'county', 'city', 'zip', 'address', 'timeZone', 'idFB', 'idGoogle', 'idNational', 'birthdate', 'motherTongue', 'gender'];
-Prop={};
+app.Prop={};
 for(var i=0;i<StrProp.length;i++){  var strName=StrProp[i];  Prop[strName]={};  }
 
 
@@ -64,7 +57,7 @@ for(var i=0;i<StrProp.length;i++){  var strName=StrProp[i];  Prop[strName]={};  
  * SiteExtend
  ***************************************************************************/
 
-siteCalcValExtend=function(site,siteName){ // Adding stuff that can be calculated from the other properties
+var siteCalcValExtend=function(site,siteName){ // Adding stuff that can be calculated from the other properties
 
   site.TableName={};   for(var name in TableNameProt){  site.TableName[name+"Tab"]=siteName+'_'+name; }
   site.ViewName={}; for(var name in ViewNameProt){  site.ViewName[name+"View"]=siteName+'_'+name; }
@@ -72,9 +65,9 @@ siteCalcValExtend=function(site,siteName){ // Adding stuff that can be calculate
 
 }
 
-IntSizeIcon=[16, 114, 192, 200, 512, 1024];
-IntSizeIconFlip=array_flip(IntSizeIcon);
-SiteExtend=function(){
+var IntSizeIcon=[16, 114, 192, 200, 512, 1024];
+app.IntSizeIconFlip=array_flip(IntSizeIcon);
+app.SiteExtend=function(){
   Site.getSite=function(wwwReq){
     for(var i=0;i<SiteName.length;i++){
       var siteName=SiteName[i];   var tmp; if(tmp=Site[siteName].testWWW(wwwReq)) {return {siteName:siteName, wwwSite:tmp};  }
@@ -105,10 +98,9 @@ SiteExtend=function(){
 }
 
 
-nDBConnectionLimit=10; nDBQueueLimit=100;
-nDBRetry=14;
+var nDBConnectionLimit=10, nDBQueueLimit=100, nDBRetry=14;
 
-setUpMysqlPool=function(){
+app.setUpMysqlPool=function(){
   var uriObj=url.parse(uriDB);
   var StrMatch=RegExp('^(.*):(.*)$').exec(uriObj.auth);
   var nameDB=uriObj.pathname.substr(1);

@@ -1,5 +1,6 @@
 {
-  "name": "id",
+  "type": "module",
+  "name": "idplace",
   "version": "0.0.0",
   "description": "Opensource idProvider software!",
   "main": "script.js",
@@ -10,23 +11,22 @@
   "author": "Magnus Andersson",
   "license": "BSD-2-Clause",
   "dependencies": {
-    "@sendgrid/mail": "^7.4.6",
+    "@sendgrid/mail": "^7.7.0",
     "concat-stream": "2.0.0",
-    "formidable": "1.2.2",
+    "formidable": "2.0.1",
     "gm": "1.23.1",
-    "image-size": "1.0.0",
-    "ip": "1.1.5",
-    "mime": "^2.5.2",
-    "minimist": "1.2.5",
+    "image-size": "1.0.2",
+    "ip": "1.1.8",
+    "mime": "^3.0.0",
+    "minimist": "1.2.6",
     "mysql": "2.18.1",
-    "node-zip": "1.1.1",
     "redis": "3.1.2",
     "request": "2.88.2",
     "serialize-javascript": "6.0.0",
     "streamify-string": "1.0.1",
-    "uglify-js": "3.14.2",
-    "validator": "13.6.0",
-    "node-fetch": "^2.6.1"
+    "uglify-js": "3.16.3",
+    "validator": "13.7.0",
+    "node-fetch": "^3.2.10"
   },
   "devDependencies": {},
   "private": true,
@@ -35,7 +35,7 @@
     "url": "http://github.com/"
   },
   "engines": {
-    "node": ">=12",
+    "node": ">=14.8",
     "npm": ""
   }
 }

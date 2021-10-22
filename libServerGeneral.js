@@ -1,5 +1,9 @@
 
 "use strict"
+
+
+import http from "http";
+
 app.parseCookies=function(req) {
   var list={}, rc=req.headers.cookie;
   if(typeof rc=='string'){
@@ -211,7 +215,7 @@ return c`;
 
 app.CacheUriT=function(){
   this.set=async function(key, buf, type, boZip, boUglify){
-    var eTag=crypto.createHash('md5').update(buf).digest('hex');
+    var eTag=md5(buf);
     //if(boUglify) { // UglifyJS does not handle ecma6 (when I tested it 2019-05-05).
       //var objU=UglifyJS.minify(buf.toString());
       //buf=new Buffer(objU.code,'utf8');

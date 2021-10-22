@@ -8,16 +8,14 @@
  * reqIndex
  ******************************************************************************/
 app.reqIndex=async function() {
-  var req=this.req, res=this.res;
-  var uJQuery='https://code.jquery.com/jquery-latest.min.js';
+  var {req, res}=this;
   var Str=[];
   Str.push(`<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
 <meta name='viewport' id='viewportMy' content='initial-scale=1'/>
-<script src='`+uJQuery+`'></script>
-<script src="client.js"></script>
+<script type="module" src="client.js"></script>
 <script>
 var leafLoginBack=`+JSON.stringify(leafLoginBack)+`;
 var leafBE=`+JSON.stringify(leafBE)+`;
@@ -38,13 +36,12 @@ var UrlOAuth=`+JSON.stringify(UrlOAuth)+`;
  * reqLoginBack
  ******************************************************************************/
 app.reqLoginBack=async function() {
-  var req=this.req, res=this.res;
+  var {req, res}=this;
   var str=`<!DOCTYPE html>
 <html lang="en"><head><meta name="robots" content="noindex"></head>
 <body>
 <script>
-var strQS=location.search;
-var strHash=location.hash;
+var {search:strQS, hash:strHash}=location;
 window.opener.loginReturn(strQS,strHash);
 window.close();
 </script>
