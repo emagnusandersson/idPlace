@@ -1,4 +1,5 @@
 {
+  "type": "module",
   "name": "id",
   "version": "0.0.0",
   "description": "Opensource idProvider software!",
@@ -10,7 +11,7 @@
   "author": "Magnus Andersson",
   "license": "BSD-2-Clause",
   "dependencies": {
-    "@sendgrid/mail": "^7.4.6",
+    "@sendgrid/mail": "^7.5.0",
     "concat-stream": "2.0.0",
     "formidable": "1.2.2",
     "gm": "1.23.1",
@@ -26,7 +27,7 @@
     "streamify-string": "1.0.1",
     "uglify-js": "3.14.2",
     "validator": "13.6.0",
-    "node-fetch": "^2.6.1"
+    "node-fetch": "^3.0.0"
   },
   "devDependencies": {},
   "private": true,

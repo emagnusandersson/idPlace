@@ -199,7 +199,7 @@ var mainDivExtend=function(el){
   var headComparing=createElement('h2').myText("Comparing some common ID providers:").css({'text-align':'center'});
 
   var divRowA=createElement('div').myAppend(signInDiv,createAccountDiv).css({display: 'flex', 'justify-content':'space-around'});
-  var loggedOutDiv=createElement('div').css({'margin-top':'1em'}).myAppend(divRowA, headComparing, imgIdPlaceCompare, aMoreInfo);
+  var loggedOutDiv=createElement('div').css({'margin-top':'1em'}).myAppend(divRowA, headComparing, imgIdPlaceCompare); //, aMoreInfo
 
     //
     // loggedInDiv
@@ -241,8 +241,9 @@ var mainDivExtend=function(el){
   var infoLink=createElement('a').prop({href:"http://www.emagnusandersson.com/idPlace"}).myText("More info");
   var menuA=createElement('div').myAppend(infoLink).css({padding:'0 0.3em 0 0', overflow:'hidden', 'max-width':maxWidth, 'text-align':'center', margin:'.3em auto .4em'}); 
 
-  var divCont=el.divCont=createElement('div').css({padding:'0 0.3em 0 0', overflow:'hidden', 'max-width':maxWidth, 'text-align':'left', margin:'1em auto'});
-  el.divCont.myAppend(loggedOutDiv, loggedInDiv);
+  //el.divCont.myAppend(loggedOutDiv, loggedInDiv);
+
+  el.divCont=createElement('div').css({padding:'0 0.3em 0 0', overflow:'hidden', 'max-width':maxWidth, 'text-align':'left', margin:'1em auto 0'}).myAppend(loggedOutDiv, loggedInDiv);
   el.fixedDiv=createElement('div').myAppend(menuA).css(cssFixed);
 
   el.append(el.divCont, el.fixedDiv);
@@ -418,7 +419,6 @@ var createUserSelectorDivExtend=function(el){
     doHistPush({view:createUserDiv});
     createUserDiv.setVis();
   });
-  var divCont=el.divCont=createElement('div').css({padding:'0 0.3em 0 0', overflow:'hidden', 'max-width':maxWidth, 'text-align':'left', margin:'1em auto'});
   
   var h1=createElement('h1').myText('Create account');
   var headUN=createElement('h2').myText('Using password');
@@ -428,8 +428,8 @@ var createUserSelectorDivExtend=function(el){
   var divRight=createElement('div').myAppend(headFB);
   divLeft.css(cssCol); divRight.css(cssCol).css({'border-left':'2px solid grey'}); //'text-align':'center', 
   var divRow=createElement('div').myAppend(divLeft, divRight).css({display: 'flex', 'justify-content':'space-around'});
-  var divCont=createElement('div').myAppend(h1, divRow);
-  el.append(divCont);
+  el.divCont=createElement('div').css({padding:'0 0.3em 0 0', overflow:'hidden', 'max-width':maxWidth, 'text-align':'left', margin:'1em auto 0'}).myAppend(h1, divRow);
+  el.append(el.divCont);
 
   return el;
 }
@@ -516,7 +516,7 @@ var createUserDivExtend=function(el){
   var Inp=[];
   el.StrProp=['name', 'email', 'telephone',   'country', 'federatedState', 'county', 'city', 'zip', 'address', 'idNational', 'birthdate', 'motherTongue', 'gender'];
 
-  var divCont=el.divCont=createElement('div').css({padding:'0 0.3em 0 0', overflow:'hidden', 'max-width':maxWidth, 'text-align':'left', margin:'1em auto'});
+  var divCont=el.divCont=createElement('div').css({padding:'0 0.3em 0 0', overflow:'hidden', 'max-width':maxWidth, 'text-align':'left', margin:'1em auto 0'});
   
   //var divReCaptcha=createElement('div');
   var divReCaptcha=divReCaptchaExtend(createElement('div'));
@@ -897,7 +897,7 @@ var userSettingDivExtend=function(el){
   var divCreated=createElement('div').myAppendHtml('Account created <b></b> ago ', buttonDelete).css({'font-size':'90%', 'border-bottom':'2px solid grey', 'margin-bottom':'1em', 'padding-bottom':'0.5em'});
   el.divDisclaimerW=createElement('div').css({'margin':'0em', 'padding':'0em'});
 
-  var divCont=el.divCont=createElement('div').myAppend(divCreated,el.divDisclaimerW).css({padding:'0 0.3em 0 0', overflow:'hidden', 'max-width':maxWidth, 'text-align':'left', margin:'1em auto'}); 
+  var divCont=el.divCont=createElement('div').myAppend(divCreated,el.divDisclaimerW).css({padding:'0 0.3em 0 0', overflow:'hidden', 'max-width':maxWidth, 'text-align':'left', margin:'1em auto 0'}); 
   el.createInputs();
 
   var spanLabel=createElement('span').myText(langHtml.Settings).css({'float':'right',margin:'0.2em 0 0 0'});
@@ -1075,7 +1075,7 @@ var userAppListExtend=function(el){
 
   var tBody=el.tBody=createElement('tbody');
   el.table=createElement('table').myAppend(tBody); //.css({width:'100%',position:'relative'});
-  el.divCont=createElement('div').myAppend(el.table).css({'margin':'1em auto','text-align':'left',display:'inline-block'});
+  el.divCont=createElement('div').myAppend(el.table).css({'margin':'1em auto 0','text-align':'left', display:'inline-block', overflow:'hidden'});
 
   var StrCol=['idApp', 'appName','scope', 'imageHash', 'tAccess'], BoAscDefault={tAccess:0};
   var Label={tAccess:'Accessed',imageHash:'Image'};
@@ -1278,7 +1278,7 @@ var devAppListExtend=function(el){
 
   var tBody=el.tBody=createElement('tbody');
   el.table=createElement('table').myAppend(tBody); //.css({width:'100%',position:'relative'});
-  el.divCont=createElement('div').myAppend(el.table).css({'margin':'1em auto','text-align':'left',display:'inline-block'});
+  el.divCont=createElement('div').myAppend(el.table).css({'margin':'1em auto 0','text-align':'left',display:'inline-block', overflow:'hidden'});
 
   var StrCol=['idApp','appName','redir_uri', 'imageHash', 'created'], BoAscDefault={created:0};
   var Label={imageHash:'Image', created:'Age'};
@@ -1919,10 +1919,11 @@ divLoginInfo.setStat();
 
 
 var setBottomMargin=function() { // This is not very beautiful. But how should one else make a fixed div at the bottom without hiding the bottom of the scrollable content behind??
-  if(devAppList.style.display!='none'){devAppList.divCont.css({'margin-bottom':devAppList.fixedDiv.offsetHeight+'px'});}
-  //else if(userAppList.style.display!='none'){userAppList.divCont.css({'margin-bottom':userAppList.fixedDiv.offsetHeight+'px'});}
-  else if(userSettingDiv.style.display!='none'){userSettingDiv.divCont.css({'margin-bottom':userSettingDiv.fixedDiv.offsetHeight+'px'});}
-  else if(createUserDiv.style.display!='none'){createUserDiv.divCont.css({'margin-bottom':createUserDiv.fixedDiv.offsetHeight+'px'});}
+  if(mainDiv.style.display!='none'){mainDiv.divCont.css({'padding-bottom':mainDiv.fixedDiv.offsetHeight+'px'});}
+  else if(createUserDiv.style.display!='none'){createUserDiv.divCont.css({'padding-bottom':createUserDiv.fixedDiv.offsetHeight+'px'});}
+  else if(userSettingDiv.style.display!='none'){userSettingDiv.divCont.css({'padding-bottom':userSettingDiv.fixedDiv.offsetHeight+'px'});}
+  else if(userAppList.style.display!='none'){userAppList.divCont.css({'padding-bottom':userAppList.fixedDiv.offsetHeight+'px'});}
+  else if(devAppList.style.display!='none'){devAppList.divCont.css({'padding-bottom':devAppList.fixedDiv.offsetHeight+'px'});}
 }
 if(boFF) window.on("DOMMouseScroll", setBottomMargin, false); else   window.on('mousewheel', setBottomMargin);
 window.scroll(setBottomMargin);

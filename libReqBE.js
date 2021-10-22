@@ -157,7 +157,7 @@ ReqBE.prototype.mesEO=function(e, statusCode=500){
 
 
 ReqBE.prototype.go=async function(){
-  var req=this.req, res=this.res, sessionID=req.sessionID;
+  var {req, res}=this, sessionID=req.sessionID;
   
   
     // Extract input data either 'POST' or 'GET'
@@ -276,13 +276,13 @@ ReqBE.prototype.go=async function(){
  * loginGetGraph
  ******************************************************************************/
 ReqBE.prototype.loginGetGraph=async function(inObj){
-  var req=this.req, res=this.res, site=req.site, sessionID=req.sessionID, objQS=req.objQS;
+  var {req, res}=this, {site, rootDomain}=req;
   var strFun=inObj.fun;
   var Ou={};
   
 
   var strIP=inObj.IP;
-  var rootDomain=req.rootDomain, objIPCred=rootDomain[strIP];
+  var objIPCred=rootDomain[strIP];
   var uRedir=req.strSchemeLong+site.wwwSite+'/'+leafLoginBack;
     // getToken
   var objForm={grant_type:'authorization_code', client_id:objIPCred.id, redirect_uri:uRedir, client_secret:objIPCred.secret, code:inObj.code};
@@ -354,7 +354,7 @@ ReqBE.prototype.loginGetGraph=async function(inObj){
 
 
 ReqBE.prototype.userFun=async function(inObj){
-  var req=this.req, res=this.res, site=req.site,  siteName=site.siteName, userTab=site.TableName.userTab;
+  var {req, res}=this, {site}=req,  {siteName}=site;
   var Ou={}; 
    
   var password=randomHash();
@@ -374,7 +374,7 @@ ReqBE.prototype.userFun=async function(inObj){
 }
 
 ReqBE.prototype.fetchFun=async function(inObj){
-  var req=this.req, res=this.res, site=req.site,  siteName=site.siteName, userTab=site.TableName.userTab;
+  var {req, res}=this, {site}=req,  {siteName}=site, {userTab}=site.TableName;
   var Ou={}; 
    
   //if(typeof this.sessionCache!='object' || !('idUser' in this.sessionCache)) { return [new ErrorClient('No session')];}
@@ -408,7 +408,7 @@ Val.push(this.idIP, this.nameIP, this.image, this.email, this.timeZone, idUser);
   return [null, Ou];
 }
 ReqBE.prototype.getSecretFun=async function(inObj){
-  var req=this.req, res=this.res, site=req.site,  siteName=site.siteName, {userTab, appTab}=site.TableName;;
+  var {req, res}=this, {site}=req,  {siteName}=site, {userTab, appTab}=site.TableName;;
   var Ou={};
    
   //if(typeof this.sessionCache!='object' || !('idUser' in this.sessionCache)) { return [new ErrorClient('No session')];}
@@ -432,7 +432,7 @@ ReqBE.prototype.getSecretFun=async function(inObj){
 
 
 ReqBE.prototype.deleteExtId=async function(inObj){ // Remove link to the external IP
-  var req=this.req, res=this.res, site=req.site,  siteName=site.siteName, userTab=site.TableName.userTab;
+  var {req, res}=this, {site}=req,  {siteName}=site, {userTab}=site.TableName;
    
   var Ou={}; 
   //if(typeof this.sessionCache!='object' || !('idUser' in this.sessionCache)) {return [new ErrorClient('No session')]; }
@@ -454,8 +454,7 @@ ReqBE.prototype.deleteExtId=async function(inObj){ // Remove link to the externa
 
 
 ReqBE.prototype.setupById=async function(inObj){
-  var req=this.req, site=req.site,  siteName=site.siteName, Ou={};
-  var userTab=site.TableName.userTab;
+  var {req}=this, {site}=req,  {siteName}=site, Ou={};
   //if(typeof this.sessionCache!='object' || !('idUser' in this.sessionCache)) { return [new ErrorClient('No session')];}
   var idUser=this.sessionCache.idUser; if(!idUser){ return [new ErrorClient('No session')];}
 
@@ -492,7 +491,7 @@ ReqBE.prototype.setupById=async function(inObj){
 }
 
 ReqBE.prototype.logout=async function(inObj){
-  var req=this.req, Ou={};
+  var {req}=this, Ou={};
   this.sessionCache={};  this.GRet.userInfoFrDB={};
   //await delRedis(req.sessionID+'_Cache');
   await setRedis(req.sessionID+'_Cache', this.sessionCache, maxUnactivity);
@@ -500,7 +499,7 @@ ReqBE.prototype.logout=async function(inObj){
 }
 
 ReqBE.prototype.loginWEmail=async function(inObj){
-  var req=this.req, site=req.site, Ou={};
+  var {req}=this, {site}=req, Ou={};
   var userTab=site.TableName.userTab;
   var Sql=[], Val=[];
   var StrRequired=['email', 'password'];
@@ -530,8 +529,8 @@ ReqBE.prototype.loginWEmail=async function(inObj){
  *********************************************************************************************/
 
 ReqBE.prototype.UUpdate=async function(inObj){ // writing needSession
-  var req=this.req, site=req.site, siteName=site.siteName;
-  var userTab=site.TableName.userTab;
+  var {req}=this, {site}=req, {siteName}=site;
+  var {userTab}=site.TableName;
   var Ou={}; 
   //if(typeof this.sessionCache!='object' || !('idUser' in this.sessionCache)) { return [new ErrorClient('No session')];}
   var idUser=this.sessionCache.idUser; if(!idUser){ return [new ErrorClient('No session')];}
@@ -614,7 +613,7 @@ WHERE idUser=?;`);
 
 
 ReqBE.prototype.createUser=async function(inObj){ // writing needSession
-  var req=this.req, site=req.site;
+  var {req}=this, {site}=req;
   var userTab=site.TableName.userTab;
   var Ou={}; //debugger
 
@@ -670,7 +669,7 @@ ReqBE.prototype.createUser=async function(inObj){ // writing needSession
 
 
 ReqBE.prototype.setConsent=async function(inObj){
-  var req=this.req, site=req.site, siteName=site.siteName, {appTab, user2AppTab}=site.TableName;
+  var {req}=this, {site}=req, {siteName}=site, {appTab, user2AppTab}=site.TableName;
   var Ou={};
   //if(typeof this.sessionCache!='object' || !('idUser' in this.sessionCache)) { return [new ErrorClient('No session')];}
   var idUser=this.sessionCache.idUser; if(!idUser){ return [new ErrorClient('No session')];}
@@ -706,7 +705,7 @@ ReqBE.prototype.setConsent=async function(inObj){
 }
 
 ReqBE.prototype.UDelete=async function(inObj){  // writing needSession
-  var req=this.req, res=this.res, site=req.site;
+  var {req, res}=this, {site}=req;
   var userTab=site.TableName.userTab;
   var Ou={};
   //if(typeof this.sessionCache!='object' || !('idUser' in this.sessionCache)) { return [new ErrorClient('No session')];}
@@ -734,7 +733,7 @@ ReqBE.prototype.UDelete=async function(inObj){  // writing needSession
  * userAppList
  ********************************************************************************/
 ReqBE.prototype.userAppListGet=async function(inObj){ 
-  var req=this.req, site=req.site, {appTab, user2AppTab}=site.TableName;
+  var {req}=this, {site}=req, {appTab, user2AppTab}=site.TableName;
   //if(typeof this.sessionCache!='object' || !('idUser' in this.sessionCache)) { return [new ErrorClient('No session')];}
   var idUser=this.sessionCache.idUser; if(!idUser){ return [new ErrorClient('No session')];}
 
@@ -750,7 +749,7 @@ ReqBE.prototype.userAppListGet=async function(inObj){
 }
   //idUser, idApp, scope, tAccess, access_token, maxUnactivityToken
 ReqBE.prototype.userAppSet=async function(inObj){
-  var req=this.req, site=req.site, {appTab, user2AppTab}=site.TableName;
+  var {req}=this, {site}=req, {appTab, user2AppTab}=site.TableName;
   //if(typeof this.sessionCache!='object' || !('idUser' in this.sessionCache)) { return [new ErrorClient('No session')];}
   var idUser=this.sessionCache.idUser; if(!idUser){ return [new ErrorClient('No session')];}
   var Ou={};
@@ -779,7 +778,7 @@ ReqBE.prototype.userAppSet=async function(inObj){
     
 }
 ReqBE.prototype.userAppDelete=async function(inObj){ 
-  var req=this.req, site=req.site, {appTab, user2AppTab}=site.TableName;
+  var {req}=this, {site}=req, {appTab, user2AppTab}=site.TableName;
   //if(typeof this.sessionCache!='object' || !('idUser' in this.sessionCache)) { return [new ErrorClient('No session')];}
   var idUser=this.sessionCache.idUser; if(!idUser){ return [new ErrorClient('No session')];}
   var Ou={};
@@ -800,7 +799,7 @@ ReqBE.prototype.userAppDelete=async function(inObj){
 
 
 ReqBE.prototype.devAppListGet=async function(inObj){ 
-  var req=this.req, site=req.site;
+  var {req}=this, {site}=req;
   var appTab=site.TableName.appTab;
   //if(typeof this.sessionCache!='object' || !('idUser' in this.sessionCache)) { return [new ErrorClient('No session')];}
   var idUser=this.sessionCache.idUser; if(!idUser){ return [new ErrorClient('No session')];}
@@ -816,7 +815,7 @@ ReqBE.prototype.devAppListGet=async function(inObj){
   return [null, [Ou]];
 }
 ReqBE.prototype.devAppSecret=async function(inObj){ 
-  var req=this.req, site=req.site, {userTab, appTab}=site.TableName;
+  var {req}=this, {site}=req, {userTab, appTab}=site.TableName;
   //if(typeof this.sessionCache!='object' || !('idUser' in this.sessionCache)) { return [new ErrorClient('No session')];}
   var idUser=this.sessionCache.idUser; if(!idUser){ return [new ErrorClient('No session')];}
 
@@ -831,7 +830,7 @@ ReqBE.prototype.devAppSecret=async function(inObj){
   return [null, [Ou]];
 }
 ReqBE.prototype.devAppSet=async function(inObj){
-  var req=this.req, site=req.site;
+  var {req}=this, {site}=req;
   var appTab=site.TableName.appTab;
   //if(typeof this.sessionCache!='object' || !('idUser' in this.sessionCache)) { return [new ErrorClient('No session')];}
   var idUser=this.sessionCache.idUser; if(!idUser){ return [new ErrorClient('No session')];}
@@ -881,7 +880,7 @@ ReqBE.prototype.devAppSet=async function(inObj){
   
 }
 ReqBE.prototype.devAppDelete=async function(inObj){ 
-  var req=this.req, site=req.site;
+  var {req}=this, {site}=req;
   var appTab=site.TableName.appTab;
   //if(typeof this.sessionCache!='object' || !('idUser' in this.sessionCache)) { return [new ErrorClient('No session')];}
   var idUser=this.sessionCache.idUser; if(!idUser){ return [new ErrorClient('No session')];}
@@ -901,8 +900,7 @@ ReqBE.prototype.devAppDelete=async function(inObj){
 
 
 ReqBE.prototype.changePW=async function(inObj){ 
-  var req=this.req, site=req.site, siteName=site.siteName;
-  var userTab=site.TableName.userTab;
+  var {req}=this, {site}=req, {siteName}=site;
   var Ou={boOK:0};
   //if(typeof this.sessionCache!='object' || !('idUser' in this.sessionCache)) { return [new ErrorClient('No session')];}
   var idUser=this.sessionCache.idUser; if(!idUser){ return [new ErrorClient('No session')];}
@@ -925,7 +923,7 @@ ReqBE.prototype.changePW=async function(inObj){
 }
 
 ReqBE.prototype.verifyEmail=async function(inObj){ 
-  var req=this.req, site=req.site;
+  var {req}=this, {site}=req;
   var userTab=site.TableName.userTab;
   //if(typeof this.sessionCache!='object' || !('idUser' in this.sessionCache)) { return [new ErrorClient('No session')];}
   var idUser=this.sessionCache.idUser; if(!idUser){ return [new ErrorClient('No session')];}
@@ -967,7 +965,7 @@ ReqBE.prototype.verifyEmail=async function(inObj){
 
 
 ReqBE.prototype.verifyPWReset=async function(inObj){ 
-  var req=this.req, site=req.site;
+  var {req}=this, {site}=req;
   var userTab=site.TableName.userTab;
   var Ou={boOK:0};
 
@@ -1009,7 +1007,7 @@ ReqBE.prototype.verifyPWReset=async function(inObj){
 
 
 ReqBE.prototype.deleteImage=async function(inObj){
-  var req=this.req, res=this.res, site=req.site, siteName=site.siteName;
+  var {req, res}=this, {site}=req, {siteName}=site;
   var Ou={};   
   //if(typeof this.sessionCache!='object' || !('idUser' in this.sessionCache)) { return [new ErrorClient('No session')];}
   var idUser=this.sessionCache.idUser; if(!idUser){ return [new ErrorClient('No session')];}
@@ -1042,7 +1040,7 @@ ReqBE.prototype.deleteImage=async function(inObj){
 }
 
 ReqBE.prototype.uploadImage=async function(inObj){
-  var self=this, req=this.req, res=this.res, site=req.site, siteName=site.siteName,  {userTab, appTab}=site.TableName;
+  var self=this, {req, res}=this, {site}=req, {siteName}=site,  {userTab, appTab}=site.TableName;
   var Ou={};
   //if(typeof this.sessionCache!='object' || !('idUser' in this.sessionCache)) { return [new ErrorClient('No session')];}
   var idUser=this.sessionCache.idUser; if(!idUser){ return [new ErrorClient('No session')];}
