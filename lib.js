@@ -292,6 +292,14 @@ app.b64UrlDecode=function(b64UrlString, boUint8Array=false){  // boUint8Array==t
   return outputArray;
 }
 
+app.blobToBase64=function(blob) {
+  return new Promise((resolve, _) => {
+    const reader = new FileReader();
+    reader.onloadend = () => resolve(reader.result);
+    reader.readAsDataURL(blob);
+  });
+}
+
 app.parseQS2=function(qs){
   var objQS={}, objTmp=new URLSearchParams(qs);
   for(const [name, value] of objTmp) {  objQS[name]=value;  }

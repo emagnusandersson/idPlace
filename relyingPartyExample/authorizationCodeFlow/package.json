@@ -10,9 +10,8 @@
   "author": "Magnus Andersson",
   "license": "BSD-2-Clause",
   "dependencies": {
-    "request": "2.72.x",
-    "concat-stream": "1.5.x",
-    "node-fetch": "^2.6.1"
+    "concat-stream": "2.0.0",
+    "node-fetch": "^3.3.0"
   },
   "devDependencies": {},
   "private": true,

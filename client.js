@@ -2,7 +2,7 @@
 
 
 "use strict"
-window.onload=function(){
+app.funLoad=function(){
 
 var popUpExtend=function(el){
   el.openPop=function() {
@@ -737,12 +737,12 @@ var consentDivExtend=function(el){
 
 var uploadImageDivExtend=function(el){
   el.toString=function(){return 'uploadImageDiv';}
-  var progressHandlingFunction=function(e){      if(e.lengthComputable){   progress.attr({value:e.loaded,max:e.total});      }      }
+  //var progressHandlingFunction=function(e){      if(e.lengthComputable){   progress.attr({value:e.loaded,max:e.total});      }      }
 
   var setMess=function(str) {divMess.myText(str);}
   var clearMess=function() {divMess.myText('');}
   var toggleVerified=function(boT){  boT=Boolean(boT);   uploadButton.prop("disabled",!boT); }
-  var verifyFun=function(){  
+  var verifyFun=async function(){  
     clearMess();
     var arrFile=this.files;
     if(arrFile.length>1) {setMess('Max 1 file',5); toggleVerified(0); return;}
@@ -751,52 +751,62 @@ var uploadImageDivExtend=function(el){
     if(objFile.size==0){ setMess("objFile.size==0",5); toggleVerified(0); return; }
     var tmpMB=(objFile.size/(1024*1024)).toFixed(2);
 
+
+    var [err,blob]=await reduceImageSize(objFile, 200, 50, 50, 0.9); if(err){setMess(err); toggleVerified(0); return;}
+    //el.image.src=URL.createObjectURL(blob);
+    var base64Img=el.base64Img=await blobToBase64(blob);
+    
+
+
     toggleVerified(1);
   }
   var sendFun=function(){
     clearMess();
-    if(boFormDataOK==0) {alert("This browser doesn't support FormData"); return; };
-    var formData = new FormData();
-    formData.append("type", 'single');
-    formData.append("kind", strKind);
-    formData.append("fileToUpload[]", objFile);
+    // if(boFormDataOK==0) {alert("This browser doesn't support FormData"); return; };
+    // var formData = new FormData();
+    // formData.append("type", 'single');
+    // formData.append("kind", strKind);
+    // formData.append("fileToUpload[]", objFile);
+     
+    // //var vecIn=[['uploadImage'], ['CSRFCode',CSRFCode]];
+    // var vecIn=[['uploadImage'], ['CSRFCode',getItem('CSRFCode')]];
+    // var arrRet=[sendFunRet];
+    // formData.append('vec', JSON.stringify(vecIn));
+    // var xhr = new XMLHttpRequest();
+    // xhr.open('POST', uBE, true);
+    // var dataOut=formData;
+    // xhr.setRequestHeader('x-type','single');
+    
+    // progress.visible(); //progress.visible();
+    // xhr.onprogress=progressHandlingFunction;
+    // xhr.onload=function() {
+    //   var dataFetched=this.response;
+    //   //var data; try{ data=JSON.parse(this.response); }catch(e){ setMess(e);  return; }
+    //   var data=deserialize(this.response);  
+    //   var dataArr=data.dataArr||[];  // Each argument of dataArr is an array, either [argument] or [altFuncArg,altFunc]
+    //   delete data.dataArr;
+    //   beRet(data);
+    //   for(var i=0;i<dataArr.length;i++){
+    //     var r=dataArr[i];
+    //     //if(r.length) { if('strMessage' in r[0]) setMess(r[0].strMessage);   }
+    //     if(r.length==1) {var f=arrRet[i]; if(f) f(r[0]);} else { window[r[1]].call(window,r[0]);   }
+    //   }
+    //   progress.attr({value:0});  progress.invisible();  //sendFunRet();
+    // }
+    // xhr.onerror=function(e){ progress.invisible(); errorFunc.call(this,arguments); }
+    
+    // xhr.send(dataOut); 
+    
+
+    var vec=[['uploadImageB64', {kind:strKind, base64Img:el.base64Img}, uploadRet]];   majax(vec);
      
 
-  
-    //var vecIn=[['uploadImage'], ['CSRFCode',CSRFCode]];
-    var vecIn=[['uploadImage'], ['CSRFCode',getItem('CSRFCode')]];
-    var arrRet=[sendFunRet];
-    formData.append('vec', JSON.stringify(vecIn));
-    var xhr = new XMLHttpRequest();
-    xhr.open('POST', uBE, true);
-    var dataOut=formData;
-    xhr.setRequestHeader('x-type','single');
-    
-    progress.visible(); //progress.visible();
-    xhr.onprogress=progressHandlingFunction;
-    xhr.onload=function() {
-      var dataFetched=this.response;
-      var data; try{ data=JSON.parse(this.response); }catch(e){ setMess(e);  return; }
-      
-      var dataArr=data.dataArr||[];  // Each argument of dataArr is an array, either [argument] or [altFuncArg,altFunc]
-      delete data.dataArr;
-      beRet(data);
-      for(var i=0;i<dataArr.length;i++){
-        var r=dataArr[i];
-        //if(r.length) { if('strMessage' in r[0]) setMess(r[0].strMessage);   }
-        if(r.length==1) {var f=arrRet[i]; if(f) f(r[0]);} else { window[r[1]].call(window,r[0]);   }
-      }
-      progress.attr({value:0});  progress.invisible();  //sendFunRet();
-    }
-    xhr.onerror=function(e){ progress.invisible(); errorFunc.call(this,arguments); }
-    
-    xhr.send(dataOut); 
-    busyLarge.show();
-    
-    
-     
-    setMess('Uploading ...');
+    busyLarge.show();    setMess('Uploading ...');
     uploadButton.prop("disabled",true);
+  }
+  var uploadRet=function(data){
+    var {boOK, strMessage, imageHash}=data; setMess(strMessage);  uploadButton.prop("disabled",false);
+    callback(data);
   }
   var sendFunRet=function(data){
     if('strMessage' in data) setMess(data.strMessage); progress.invisible(); uploadButton.prop("disabled",false);
@@ -820,7 +830,7 @@ var uploadImageDivExtend=function(el){
   var inpFile=createElement('input').prop({type:'file', name:'file', id:'file', accept:"image/*"}).css({background:'lightgrey'});
   //var inpUploadButton=createElement('input').prop({type:"button", value:"Upload"});
   var uploadButton=createElement('button').myText('Upload').addClass('highStyle').prop("disabled",true).css({'margin-right':'0.5em'}); //, 'float':'right'
-  var progress=createElement('progress').prop({max:100, value:0}).css({'display':'block','margin-top':'1em'}).invisible();
+  //var progress=createElement('progress').prop({max:100, value:0}).css({'display':'block','margin-top':'1em'}).invisible();
   var divMess=createElement('div').css({'margin-top':'1.2em', 'min-height':'1em'});
   
   var objFile;
@@ -834,7 +844,7 @@ var uploadImageDivExtend=function(el){
   //el.append(head, formFile, progress, divMess,menuBottom); 
 
   var blanket=createElement('div').addClass("blanket");
-  var centerDiv=createElement('div').myAppend(head, formFile, progress, divMess,menuBottom);
+  var centerDiv=createElement('div').myAppend(head, formFile, divMess,menuBottom);  //, progress
   centerDiv.addClass("Center").css({'max-width':'21em', padding: '0.3em 0.5em 1.2em 0.6em'}); // , height:'15em'
   el.addClass("Center-Container").myAppend(centerDiv,blanket); //
 
@@ -1319,7 +1329,8 @@ var majax=function(vecIn){  // Each argument of vecIn is an array: [serverSideFu
   
   xhr.onload=function () {
     var dataFetched=this.response;
-    var data; try{ data=JSON.parse(this.response); }catch(e){ setMess(e);  return; }
+    //var data; try{ data=JSON.parse(this.response); }catch(e){ setMess(e);  return; }
+    var data=deserialize(this.response);
     
     var dataArr=data.dataArr;  // Each argument of dataArr is an array, either [argument] or [altFuncArg,altFunc]
     delete data.dataArr;
@@ -1637,10 +1648,8 @@ app.boFF = uaLC.indexOf("firefox") > -1;
 app.boChrome= /chrome/.test(uaLC);
 app.boIOS= /iphone|ipad|ipod/.test(uaLC);
 app.boEpiphany=/epiphany/.test(uaLC);    if(boEpiphany && !boAndroid) boTouch=false;  // Ugly workaround
-app.boEdge= /\bedg\b/.test(uaLC);
 
 app.boOpera=RegExp('OPR\\/').test(ua); if(boOpera) boChrome=false; //alert(ua);
-
 
 
 if(boTouch){
@@ -1989,10 +1998,10 @@ if(boAuthReq){
   })();
 }
 
-
 }
 
-
+//window.onload=funLoad;
+funLoad()
 
 
 

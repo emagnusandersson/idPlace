@@ -1,28 +1,20 @@
 
+-- developement
+ALTER TABLE id192_user MODIFY COLUMN image varchar(512) CHARSET utf8 NOT NULL DEFAULT '';
+ALTER TABLE idL750_user MODIFY COLUMN image varchar(512) CHARSET utf8 NOT NULL DEFAULT '';
+ALTER TABLE idLoc_user MODIFY COLUMN image varchar(512) CHARSET utf8 NOT NULL DEFAULT '';
 
-ALTER TABLE taxi_user MODIFY COLUMN image varchar(512) CHARSET utf8 NOT NULL DEFAULT '';
-ALTER TABLE transport_user MODIFY COLUMN image varchar(512) CHARSET utf8 NOT NULL DEFAULT '';
-ALTER TABLE cleaner_user MODIFY COLUMN image varchar(512) CHARSET utf8 NOT NULL DEFAULT '';
-ALTER TABLE windowcleaner_user MODIFY COLUMN image varchar(512) CHARSET utf8 NOT NULL DEFAULT '';
-ALTER TABLE lawnmowing_user MODIFY COLUMN image varchar(512) CHARSET utf8 NOT NULL DEFAULT '';
-ALTER TABLE snowremoval_user MODIFY COLUMN image varchar(512) CHARSET utf8 NOT NULL DEFAULT '';
-ALTER TABLE fruitpicker_user MODIFY COLUMN image varchar(512) CHARSET utf8 NOT NULL DEFAULT '';
-ALTER TABLE programmer_user MODIFY COLUMN image varchar(512) CHARSET utf8 NOT NULL DEFAULT '';
-
-
-
+-- production
+ALTER TABLE id_user MODIFY COLUMN image varchar(512) CHARSET utf8 NOT NULL DEFAULT '';
 
 
 -- Set Back
 
+-- developement
+ALTER TABLE id192_user MODIFY COLUMN image varchar(256) CHARSET utf8 NOT NULL DEFAULT '';
+ALTER TABLE idL750_user MODIFY COLUMN image varchar(256) CHARSET utf8 NOT NULL DEFAULT '';
+ALTER TABLE idLoc_user MODIFY COLUMN image varchar(256) CHARSET utf8 NOT NULL DEFAULT '';
 
-ALTER TABLE taxi_user MODIFY COLUMN image varchar(256) CHARSET utf8 NOT NULL DEFAULT '';
-ALTER TABLE transport_user MODIFY COLUMN image varchar(256) CHARSET utf8 NOT NULL DEFAULT '';
-ALTER TABLE cleaner_user MODIFY COLUMN image varchar(256) CHARSET utf8 NOT NULL DEFAULT '';
-ALTER TABLE windowcleaner_user MODIFY COLUMN image varchar(256) CHARSET utf8 NOT NULL DEFAULT '';
-ALTER TABLE lawnmowing_user MODIFY COLUMN image varchar(256) CHARSET utf8 NOT NULL DEFAULT '';
-ALTER TABLE snowremoval_user MODIFY COLUMN image varchar(256) CHARSET utf8 NOT NULL DEFAULT '';
-ALTER TABLE fruitpicker_user MODIFY COLUMN image varchar(256) CHARSET utf8 NOT NULL DEFAULT '';
-ALTER TABLE programmer_user MODIFY COLUMN image varchar(256) CHARSET utf8 NOT NULL DEFAULT '';
-
+-- production
+ALTER TABLE id_user MODIFY COLUMN image varchar(256) CHARSET utf8 NOT NULL DEFAULT '';
 
