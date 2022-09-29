@@ -23,8 +23,9 @@ UrlGraph={fb:"https://graph.facebook.com/"+strFBVersion+"/me", google:"https://w
 strIPPrim='fb';  strIPAlt='google';
 
   // Sendgrid credentials
-apiKeySendGrid="XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX";
-//sendgridName="appXXXXXXX@heroku.com"; sendgridPassword="XXXXXXXXXXXX";
+//apiKeySendGrid="XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX";
+objSendinblueAuth={ user:"noreply@example.com", pass:"XXXXXXXXXXXXXX" }
+emailRegisterdUser=objSendinblueAuth.user;
 
   //
   //  Since one might want use the software on several different infrastrucures (heroku.com, appfog.com, digitalocean.com, localhost ...),

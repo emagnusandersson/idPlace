@@ -212,7 +212,7 @@ ReqBE.prototype.go=async function(){
   var arrCSRF, arrNoCSRF, allowed, boCheckCSRF, boSetNewCSRF;
   
   if(caller=='index'){
-    arrCSRF=['loginGetGraph', 'deleteExtId', 'uploadUser', 'UUpdate', 'createUser', 'UDelete', 'loginWEmail', 'devAppListGet', 'devAppSecret', 'devAppSet', 'devAppDelete', 'setConsent', 'userAppListGet', 'userAppSet', 'userAppDelete', 'changePW', 'verifyEmail', 'verifyPWReset', 'deleteImage', 'uploadImage'];  // Functions that changes something must check and refresh CSRF-code
+    arrCSRF=['loginGetGraph', 'deleteExtId', 'uploadUser', 'UUpdate', 'createUser', 'UDelete', 'loginWEmail', 'devAppListGet', 'devAppSecret', 'devAppSet', 'devAppDelete', 'setConsent', 'userAppListGet', 'userAppSet', 'userAppDelete', 'changePW', 'verifyEmail', 'verifyPWReset', 'deleteImage', 'uploadImage', 'uploadImageB64'];  // Functions that changes something must check and refresh CSRF-code
     arrNoCSRF=['setupById','logout'];  // ,'testA','testB'
     allowed=arrCSRF.concat(arrNoCSRF);
 
@@ -954,11 +954,14 @@ ReqBE.prototype.verifyEmail=async function(inObj){
 
   const msg = { to:email, from:emailRegisterdUser, subject:'Email verification',  html:strTxt};
 
-  var [err]=await sgMail.send(msg).toNBP();
-  if(err) {console.log(err); return [new ErrorClient(err.body)]; }
+  // var [err]=await sgMail.send(msg).toNBP();
+  // if(err) {console.log(err); return [new ErrorClient(err.body)]; }
+  // this.mes('Email sent');
+
+  let sendResult=await smtpTransport.sendMail(msg)
+  this.mes(sendResult.response);
 
   
-  this.mes('Email sent');
   Ou.boOK=1;
   return [null, [Ou]];
 }
@@ -997,11 +1000,14 @@ ReqBE.prototype.verifyPWReset=async function(inObj){
   
   const msg = { to:email, from:emailRegisterdUser, subject:'Password reset request',  html:strTxt};
 
-  var [err]=await sgMail.send(msg).toNBP();
-  if(err) {console.log(err); return [new ErrorClient(err.body)]; }
+  // var [err]=await sgMail.send(msg).toNBP();
+  // if(err) {console.log(err); return [new ErrorClient(err.body)]; }
+  // this.mes('Email sent');
+  
+  let sendResult=await smtpTransport.sendMail(msg)
+  this.mes(sendResult.response);
 
-
-  this.mes('Email sent'); Ou.boOK=1;
+  Ou.boOK=1;
   return [null, [Ou]];
 }
 
@@ -1025,7 +1031,7 @@ ReqBE.prototype.deleteImage=async function(inObj){
 
   if(inObj.kind=='u'){ 
     Ou.strMessage="Done";
-    Ou.imageHash=results[0].imageHash;
+    Ou.imageHash=results[0][0].imageHash;
   }else{  
     var mess=results[0][0].mess;
     Ou.strMessage=mess;
@@ -1049,9 +1055,9 @@ ReqBE.prototype.uploadImage=async function(inObj){
   var File=this.File;
   var n=File.length; this.mes("nFile: "+n);
 
-  var file=File[0], tmpname=file.path, fileName=file.name; 
-  var Match=RegExp('\\.(\\w{1,3})$').exec(fileName); 
-  if(!Match){ Ou.strMessage="The file name should have an extension: \".xxx\""; return [null, [Ou]]; }
+  var file=File[0], tmpname=file.filepath, fileName=file.originalFilename; 
+  var Match=RegExp('\\.(\\w{1,4})$').exec(fileName); 
+  if(!Match){ Ou.strMessage='The file name should have a three or four letter extension, ex: ".jpg"'; return [null, [Ou]]; }
   var type=Match[1].toLowerCase();
   var [err, buf]=await fsPromises.readFile(tmpname).toNBP();    if(err) return [err];
   var data=buf; 
@@ -1090,7 +1096,7 @@ ReqBE.prototype.uploadImage=async function(inObj){
 
   if(this.kind=='u'){ 
     Ou.strMessage="Done";
-    Ou.imageHash=results[0].imageHash;
+    Ou.imageHash=results[0][0].imageHash;
   }else{  
     var mess=results[0][0].mess;
     Ou.strMessage=mess;
@@ -1103,4 +1109,42 @@ ReqBE.prototype.uploadImage=async function(inObj){
 }
   
 
+ReqBE.prototype.uploadImageB64=async function(inObj){
+  var self=this, {req}=this, {site}=req, {siteName}=site,  {userTab, appTab}=site.TableName;
+  var {idUser}=this.sessionCache; if(!idUser){ return [new ErrorClient('No session')];}
+
+  var Ou={};
+
+  var {kind, base64Img}=inObj;
+
+    // base64Img
+  var data = Buffer.from(base64Img.split(",")[1], 'base64');
+  console.log('data.length: '+data.length);
+  if(data.length==0) return [Error('data.length==0')];
+  if(data.length>10000) return [Error('data.length>10000 !?!, aborting!')];
+
+  var Sql=[], Val=[];
+  if(kind=='u'){ 
+    Sql.push("CALL "+siteName+"setImage(?, ?)"); Val.push(idUser, data);
+  }else{  
+    var idApp=Number(kind.substr(1));
+    Sql.push("CALL "+siteName+"setAppImage(?, ?, ?)"); Val.push(idUser, idApp, data);
+  }
+
+  var sql=Sql.join('\n');
+  var [err, results]=await this.myMySql.query(sql, Val); if(err) return [err];
+
+  Ou.boOK=1;
+  if(kind=='u'){ 
+    Ou.strMessage="ok";
+    Ou.imageHash=results[0][0].imageHash;
+  }else{  
+    var mess=results[0][0].mess;
+    Ou.strMessage=mess;
+    if(mess=='ok'){
+      Ou.imageHash=results[1][0].imageHash;
+    } else Ou.boOK=0;
+  }
+  return [null, [Ou]];
+}
 

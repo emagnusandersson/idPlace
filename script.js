@@ -10,7 +10,7 @@ import mysql from 'mysql';
 import concat from 'concat-stream';
 import fetch from 'node-fetch';
 import formidable from "formidable";
-import crypto from 'crypto';
+import myCrypto from 'crypto';
 import zlib from 'zlib';
 import redis from "redis";
 import Streamify from 'streamify-string';
@@ -18,14 +18,15 @@ import serialize from 'serialize-javascript';
 import validator from 'validator';
 import mime from "mime";
 import minimist from 'minimist';
-import sgMail from '@sendgrid/mail';
+//import sgMail from '@sendgrid/mail';
 import ip from 'ip';
 import gmTmp from 'gm';
 app.gm=gmTmp.subClass({ imageMagick: true });
+import nodemailer from 'nodemailer';
 //UglifyJS from "uglify-js";
 
 app.extend=Object.assign;
-extend(app, {http, url, path, fsPromises, mysql, concat, fetch, formidable, crypto, zlib, redis, Streamify, serialize, validator, mime, sgMail, ip, gm});
+extend(app, {http, url, path, fsPromises, mysql, concat, fetch, formidable, myCrypto, zlib, redis, Streamify, serialize, validator, mime, ip, gm}); //, sgMail
 
 var argv = minimist(process.argv.slice(2));
 
@@ -89,7 +90,7 @@ extend(app, {boDbg:0, boAllowSql:1, port:5000, levelMaintenance:0, googleSiteVer
   UrlGraph:null, 
   response_type:'code',
   strIPPrim:'fb',  strIPAlt:'google',
-  apiKeySendGrid:"XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
+  //apiKeySendGrid:"XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
   emailRegisterdUser:"mail@example.com",
   strReCaptchaSiteKey:"XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
   strReCaptchaSecretKey:"XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
@@ -126,8 +127,12 @@ if(boNewConfig) { var tmp=await setRedis(redisVar, strMd5Config);  }
 if('levelMaintenance' in process.env) levelMaintenance=process.env.levelMaintenance;
 
 
-sgMail.setApiKey(apiKeySendGrid);
-//objSendgrid  = sendgrid(sendgridName, sendgridPassword);
+//sgMail.setApiKey(apiKeySendGrid);
+app.smtpTransport=nodemailer.createTransport({
+  host:'smtp-relay.sendinblue.com',
+  port:587,
+  auth:objSendinblueAuth
+})
 
 app.SiteName=Object.keys(Site);
 
