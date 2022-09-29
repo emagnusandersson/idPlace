@@ -2,7 +2,7 @@
 
 
 "use strict"
-window.onload=function(){
+app.funLoad=function(){
 
 var popUpExtend=function(el){
   el.openPop=function() {
@@ -25,7 +25,7 @@ var vippButtonExtend=function(el){
   var o0={background:'url('+uVipp0+') no-repeat'}, o1={background:'url('+uVipp1+') no-repeat'};
     
   el.attr({boOn:0});
-  el.css({'background':'url('+uVipp0+') no-repeat',height:'33px',width:'90px',zoom:'60%','vertical-align':'-0.5em',cursor:'pointer',display:'inline-block'}).addClass('unselectable');
+  el.css({'background':'url('+uVipp0+') no-repeat',height:'33px',width:'90px',transform:'scale(0.60)','vertical-align':'-0.5em',cursor:'pointer',display:'inline-block'}).addClass('unselectable');
   el.on('click',function(){var t=1-el.attr('boOn');   el.setStat(t);});
   return el;
 }
@@ -48,7 +48,7 @@ var toggleButtonExtend=function(el){
 
 var divMessageTextCreate=function(){
   var spanInner=createElement('span');
-  var imgBusyLoc=imgBusy.cloneNode().css({zoom:'65%','margin-left':'0.4em'}).hide();
+  var imgBusyLoc=imgBusy.cloneNode().css({transform:'scale(0.65)','margin-left':'0.4em'}).hide();
   var el=createElement('div').myAppend(spanInner, imgBusyLoc);
   el.resetMess=function(time){
     clearTimeout(messTimer);
@@ -80,47 +80,49 @@ var divMessageTextCreate=function(){
 app.histGoTo=function(view){}
 app.historyBack=function(){  history.back();}
 app.doHistPush=function(obj){
-    // Set "scroll" of stateNew  (If the scrollable div is already visible)
-  var view=obj.view;
-  var scrollT=window.scrollTop();
-  if(typeof view.setScroll=='function') view.setScroll(scrollT); else history.StateMy[history.state.ind].scroll=scrollT;  //view.intScroll=scrollT;
-
-  if((boChrome || boOpera) && !boTouch)  history.boFirstScroll=true;
-
-  var indNew=history.state.ind+1;
-  stateTrans={hash:history.state.hash, ind:indNew};  // Should be called stateLast perhaps
-  history.pushState(stateTrans, strHistTitle, uCanonical);
-  history.StateMy=history.StateMy.slice(0, indNew);
-  history.StateMy[indNew]=obj;
+  var stateT=history.state
+  var {strView}=obj;
+  var scroll=(strView==stateT.strView)?stateT.scroll:0;
+  
+  var indNew=stateT.ind+1;
+  stateMem={hash:stateT.hash, ind:indNew, strView, scroll};
+  history.pushState(stateMem, strHistTitle, uCanonical);
+  history.StateOpen=history.StateOpen.slice(0, indNew);
+  history.StateOpen[indNew]=obj;
 }
 app.doHistReplace=function(obj, indDiff=0){
-  history.StateMy[history.state.ind+indDiff]=obj;
+  if(indDiff==0){
+    copySome(stateMem, obj, ['strView']);
+    history.pushState(stateMem, strHistTitle, uCanonical);
+  }
+  history.StateOpen[history.state.ind+indDiff]=obj;
 }
 app.changeHist=function(obj){
-  history.StateMy[history.state.ind]=obj;
+  doHistReplace(obj, 0)
 }
 app.getHistStatName=function(){
-  return history.StateMy[history.state.ind].view.toString();
+  return history.StateOpen[history.state.ind].strView;
 }
-history.distToGoal=function(viewGoal){
+history.distToGoal=function(strViewGoal){
   var ind=history.state.ind;
   var indGoal;
   for(var i=ind; i>=0; i--){
-    var obj=history.StateMy[i];
-    var view; if(typeof obj=='object') view=obj.view; else continue;
-    if(view===viewGoal) {indGoal=i; break;}
+    var obj=history.StateOpen[i];
+    var strView; if(typeof obj=='object') strView=obj.strView; else continue;
+    if(strView===strViewGoal) {indGoal=i; break;}
   }
   var dist; if(typeof indGoal!='undefined') dist=indGoal-ind;
   return dist;
 }
-history.fastBack=function(viewGoal, boRefreshHash){
-  var dist=history.distToGoal(viewGoal);
+history.fastBack=function(strViewGoal, boRefreshHash){
+  var dist=history.distToGoal(strViewGoal);
   if(dist) {
     if(typeof boRefreshHash!='undefined') history.boResetHashCurrent=boRefreshHash;
     history.go(dist);
   }
 }
-
+// doHistPush\(\{view:([a-zA-Z]+)\}\)
+//   doHistPush({strView:'$1'})
 
 
 
@@ -168,14 +170,13 @@ var divLoginInfoExtend=function(el){
 
 var mainDivExtend=function(el){
   el.toString=function(){return 'mainDiv';}
-
   el.setUp=function(){
     var boIn=Boolean(Object.keys(userInfoFrDB).length);
     loggedOutDiv.toggle(!boIn);
     loggedInDiv.toggle(boIn);
   }
 
-  var cssCol={display:'inline-block','box-sizing': 'border-box','text-align':'center',padding:'1em',flex:1}; //width:'50%',
+  var cssCol={display:'inline-block','text-align':'center',padding:'1em',flex:1}; //width:'50%',
 
 
     //
@@ -183,11 +184,11 @@ var mainDivExtend=function(el){
     //
 
   var buttonSignIn=createElement('button').addClass('highStyle').myText('Sign in').on('click',function(){
-    doHistPush({view:loginSelectorDiv});
+    doHistPush({strView:'loginSelectorDiv'});
     loginSelectorDiv.setVis();
   });
   var buttonCreateAccount=createElement('button').addClass('highStyle').myText('Create an account').on('click',function(){
-    doHistPush({view:createUserSelectorDiv});
+    doHistPush({strView:'createUserSelectorDiv'});
     createUserSelectorDiv.setVis();
   });
   var signInDiv=createElement('div').css(cssCol).myAppend(buttonSignIn);
@@ -214,16 +215,16 @@ var mainDivExtend=function(el){
 
 
   var buttonUserSetting=createElement('button').addClass('highStyle').myText('Settings').on('click',function(){ //.css({display: 'block'})
-    doHistPush({view:userSettingDiv});
+    doHistPush({strView:'userSettingDiv'});
     userSettingDiv.setVis();
     el.devStuffToggleEventF();
   });
   var buttonUserAppList=createElement('button').addClass('highStyle').myText('Apps I use').on('click',function(){ //.css({display: 'block'})
-    doHistPush({view:userAppList});
+    doHistPush({strView:'userAppList'});
     userAppList.setVis();
   });
   var buttonDevAppList=createElement('button').addClass('highStyle').myText('Apps I own').on('click',function(){ // .css({display: 'block'})
-    doHistPush({view:devAppList});
+    doHistPush({strView:'devAppList'});
     devAppList.setVis();
   });
   var divA=createElement('div').myAppend(buttonUserSetting), divB=createElement('div').myAppend(buttonUserAppList),  divDev=createElement('div').myAppend(buttonDevAppList); 
@@ -257,8 +258,15 @@ var mainDivExtend=function(el){
  *
  *******************************************************************************************************************
  *******************************************************************************************************************/
-var createUPop=function(IP, uRedir, nonce, boReauthenticate){
-  var arrQ=["client_id="+site.client_id[IP], "redirect_uri="+encodeURIComponent(uRedir), "state="+nonce, "response_type=code"];
+
+app.objToQueryArr=function(o){
+  var K=Object.keys(o), V=Object.values(o), l=K.length, arr=Array(l);
+  for(var i=0; i<l; i++){ arr[i]=K[i]+'='+V[i]; }
+  return arr;
+}
+
+var createUPop=function(IP, uRedir, nonce, boReauthenticate=false){
+  var arrQ=["client_id="+site.client_id[IP], "redirect_uri="+encodeURIComponent(uRedir), "state="+nonce, "response_type="+response_type];
   if(IP=='fb')   arrQ.push("scope=email"); //, "display=popup"
   else if(IP=='google')    arrQ.push("scope=profile,email");
   else if(IP=='idplace')    arrQ.push("scope=name,image,email");
@@ -267,13 +275,35 @@ var createUPop=function(IP, uRedir, nonce, boReauthenticate){
 }
 var getOAuthCode=async function(boReauthenticate=false){
   var strQS, nonce=randomHash(), uPop=createUPop(strIPPrim, uSite+'/'+leafLoginBack, nonce, boReauthenticate);
-  if('wwwLoginScope' in site) document.domain = site.wwwLoginScope;
+  //if('wwwLoginScope' in site) document.domain = site.wwwLoginScope;  // Commented out because document.domain is discouraged
+
+  var strBroadcastChannel='broadcastChannel_'+randomHash();
+  var objCookie={strBroadcastChannel:encodeURIComponent(strBroadcastChannel), 'max-age':300, SameSite:'Strict', Secure:'True'}
+  var {hostname}=new URL(uSite);
+  // if(/^192\.168\.0\.[0-9]$/.test(hostname)) objCookie.domain=hostname;  // To make it work when debugging
+  // else {
+  //   var ind=hostname.indexOf('.');  if(ind!=-1) objCookie.domain=hostname.substr(ind+1);  
+  // }
+  var strCookie=objToQueryArr(objCookie).join(';');
+  document.cookie=strCookie
+
+  extend(sessionStorage, {strBroadcastChannel});
+
   window.open(uPop); //, '_blank', 'popup', 'width=580,height=400'  , '_blank', 'width=580,height=400'
+  // var strQS=await new Promise(resolve=>{
+  //   window.loginReturn=function(strQST){ resolve(strQST); }
+  // });
+
+  var broadcastChannel=new BroadcastChannel(strBroadcastChannel);
   var strQS=await new Promise(resolve=>{
-    window.loginReturn=function(strQST){ resolve(strQST); }
+    broadcastChannel.on('message', function(e){
+      resolve(e.data)
+    })
   });
+  broadcastChannel.close()
+  var strParams=response_type=='code'?strQS:strHash;
   
-  var params=parseQS(strQS.substring(1));
+  var params=parseQS(strParams.substring(1));
   if(!('state' in params) || params.state !== nonce) {   return ['Invalid state parameter: '+params.state]; } 
   if('error' in params) { return [params.error]; }
   if(!('code' in params)) { return ['No "code" parameter in response from IdP']; }
@@ -332,7 +362,7 @@ var loginSelectorDivExtend=function(el){
   //el.setUp=function(){ messDiv.insertAfter(formLogin); divRight.append(idPLoginDiv);  }
   el.setUp=function(){ formLogin.insertAdjacentElement('afterEnd', messDiv); divRight.append(idPLoginDiv);  }
   var h1=createElement('h1').myText('Sign in');
-  var cssCol={display:'inline-block','box-sizing': 'border-box',padding:'1em',flex:1}; //width:'50%',
+  var cssCol={display:'inline-block',padding:'1em',flex:1}; //width:'50%',
 
   var messDiv=createElement('div').css({color:'red'});
   var buttForgot=createElement('a').prop({href:''}).myText('Forgot your password?').on('click',forgotClickF);
@@ -356,7 +386,7 @@ var devAppSecretDivExtend=function(el){
   el.openFunc=function(){
     var elR=this.parentNode.parentNode; idApp=elR.r.idApp;
     spanSecret.myText('');
-    doHistPush({view:devAppSecretDiv});
+    doHistPush({strView:'devAppSecretDiv'});
     el.setVis();
     inpPass.focus()
   }
@@ -395,7 +425,7 @@ var devAppSecretDivExtend=function(el){
   var hSecret=createElement('span').css({margin:'0 .5em 0 0','font-weight': 'bold'}).myText('Secret: ');
   
   
-  var cssCol={display:'inline-block','box-sizing': 'border-box',padding:'1em',flex:1}; //width:'50%',
+  var cssCol={display:'inline-block',padding:'1em',flex:1}; //width:'50%',
   var divLeft=createElement('div').css(cssCol).myText('Password: ').myAppend(inpPass, buttSend);
   var divRight=createElement('div').css(cssCol).css({'text-align':'center', 'border-left':'2px solid grey'}).myAppend(...Im);
   var divRow=createElement('div').myAppend(divLeft, divRight).css({display: 'flex', 'justify-content':'space-around'});
@@ -414,9 +444,9 @@ var devAppSecretDivExtend=function(el){
 var createUserSelectorDivExtend=function(el){
   el.toString=function(){return 'createUserSelectorDiv';}
   el.setUp=function(){ divRight.append(idPLoginDiv);   }
-  var cssCol={display:'inline-block','box-sizing': 'border-box',padding:'1em',flex:1}; //width:'50%',
+  var cssCol={display:'inline-block',padding:'1em',flex:1}; //width:'50%',
   var buttonCreateAccount=createElement('button').addClass('highStyle').myText('Create an account').on('click',function(){
-    doHistPush({view:createUserDiv});
+    doHistPush({strView:'createUserDiv'});
     createUserDiv.setVis();
   });
   
@@ -559,7 +589,7 @@ var deleteAccountPopExtend=function(el){
     //var vec=[['VDelete',{},function(data){historyBack();historyBack();}]];   majax(vec);
     userInfoFrDB={};
     var vec=[['UDelete',{}, function(data){
-      history.fastBack(mainDiv,true);
+      history.fastBack('mainDiv',true);
     }]];   majax(vec);
   });
   var cancel=createElement('button').addClass('highStyle').myText(langHtml.Cancel).on('click',historyBack);
@@ -596,7 +626,7 @@ var changePWPopExtend=function(el){
   }
 
   el.openFunc=function(){
-    doHistPush({view:changePWPop});
+    doHistPush({strView:'changePWPop'});
     el.setVis();
     inpPassOld.value=''; inpPass.value=''; inpPassB.value='';
   }
@@ -634,7 +664,7 @@ var verifyEmailPopExtend=function(el){
     
   };
   el.openFunc=function(){
-    doHistPush({view:verifyEmailPop});
+    doHistPush({strView:'verifyEmailPop'});
     spanEmail.myText(userInfoFrDB.email);
     el.setVis();
   }
@@ -670,7 +700,7 @@ var forgottPWPopExtend=function(el){
     
   };
   el.openFunc=function(){
-    doHistPush({view:forgottPWPop});
+    doHistPush({strView:'forgottPWPop'});
     el.setVis();
     inpEmail.value='';
   }
@@ -737,12 +767,12 @@ var consentDivExtend=function(el){
 
 var uploadImageDivExtend=function(el){
   el.toString=function(){return 'uploadImageDiv';}
-  var progressHandlingFunction=function(e){      if(e.lengthComputable){   progress.attr({value:e.loaded,max:e.total});      }      }
+  //var progressHandlingFunction=function(e){      if(e.lengthComputable){   progress.attr({value:e.loaded,max:e.total});      }      }
 
   var setMess=function(str) {divMess.myText(str);}
   var clearMess=function() {divMess.myText('');}
   var toggleVerified=function(boT){  boT=Boolean(boT);   uploadButton.prop("disabled",!boT); }
-  var verifyFun=function(){  
+  var verifyFun=async function(){  
     clearMess();
     var arrFile=this.files;
     if(arrFile.length>1) {setMess('Max 1 file',5); toggleVerified(0); return;}
@@ -751,52 +781,62 @@ var uploadImageDivExtend=function(el){
     if(objFile.size==0){ setMess("objFile.size==0",5); toggleVerified(0); return; }
     var tmpMB=(objFile.size/(1024*1024)).toFixed(2);
 
+
+    var [err,blob]=await reduceImageSize(objFile, 200, 50, 50, 0.9); if(err){setMess(err); toggleVerified(0); return;}
+    //el.image.src=URL.createObjectURL(blob);
+    var base64Img=el.base64Img=await blobToBase64(blob);
+    
+
+
     toggleVerified(1);
   }
   var sendFun=function(){
     clearMess();
-    if(boFormDataOK==0) {alert("This browser doesn't support FormData"); return; };
-    var formData = new FormData();
-    formData.append("type", 'single');
-    formData.append("kind", strKind);
-    formData.append("fileToUpload[]", objFile);
+    // if(boFormDataOK==0) {alert("This browser doesn't support FormData"); return; };
+    // var formData = new FormData();
+    // formData.append("type", 'single');
+    // formData.append("kind", strKind);
+    // formData.append("fileToUpload[]", objFile);
+     
+    // //var vecIn=[['uploadImage'], ['CSRFCode',CSRFCode]];
+    // var vecIn=[['uploadImage'], ['CSRFCode',getItem('CSRFCode')]];
+    // var arrRet=[sendFunRet];
+    // formData.append('vec', JSON.stringify(vecIn));
+    // var xhr = new XMLHttpRequest();
+    // xhr.open('POST', uBE, true);
+    // var dataOut=formData;
+    // xhr.setRequestHeader('x-type','single');
+    
+    // progress.visible(); //progress.visible();
+    // xhr.onprogress=progressHandlingFunction;
+    // xhr.onload=function() {
+    //   var dataFetched=this.response;
+    //   //var data; try{ data=JSON.parse(this.response); }catch(e){ setMess(e);  return; }
+    //   var data=deserialize(this.response);  
+    //   var dataArr=data.dataArr||[];  // Each argument of dataArr is an array, either [argument] or [altFuncArg,altFunc]
+    //   delete data.dataArr;
+    //   beRet(data);
+    //   for(var i=0;i<dataArr.length;i++){
+    //     var r=dataArr[i];
+    //     //if(r.length) { if('strMessage' in r[0]) setMess(r[0].strMessage);   }
+    //     if(r.length==1) {var f=arrRet[i]; if(f) f(r[0]);} else { window[r[1]].call(window,r[0]);   }
+    //   }
+    //   progress.attr({value:0});  progress.invisible();  //sendFunRet();
+    // }
+    // xhr.onerror=function(e){ progress.invisible(); errorFunc.call(this,arguments); }
+    
+    // xhr.send(dataOut); 
+    
+
+    var vec=[['uploadImageB64', {kind:strKind, base64Img:el.base64Img}, uploadRet]];   majax(vec);
      
 
-  
-    //var vecIn=[['uploadImage'], ['CSRFCode',CSRFCode]];
-    var vecIn=[['uploadImage'], ['CSRFCode',getItem('CSRFCode')]];
-    var arrRet=[sendFunRet];
-    formData.append('vec', JSON.stringify(vecIn));
-    var xhr = new XMLHttpRequest();
-    xhr.open('POST', uBE, true);
-    var dataOut=formData;
-    xhr.setRequestHeader('x-type','single');
-    
-    progress.visible(); //progress.visible();
-    xhr.onprogress=progressHandlingFunction;
-    xhr.onload=function() {
-      var dataFetched=this.response;
-      var data; try{ data=JSON.parse(this.response); }catch(e){ setMess(e);  return; }
-      
-      var dataArr=data.dataArr||[];  // Each argument of dataArr is an array, either [argument] or [altFuncArg,altFunc]
-      delete data.dataArr;
-      beRet(data);
-      for(var i=0;i<dataArr.length;i++){
-        var r=dataArr[i];
-        //if(r.length) { if('strMessage' in r[0]) setMess(r[0].strMessage);   }
-        if(r.length==1) {var f=arrRet[i]; if(f) f(r[0]);} else { window[r[1]].call(window,r[0]);   }
-      }
-      progress.attr({value:0});  progress.invisible();  //sendFunRet();
-    }
-    xhr.onerror=function(e){ progress.invisible(); errorFunc.call(this,arguments); }
-    
-    xhr.send(dataOut); 
-    busyLarge.show();
-    
-    
-     
-    setMess('Uploading ...');
+    busyLarge.show();    setMess('Uploading ...');
     uploadButton.prop("disabled",true);
+  }
+  var uploadRet=function(data){
+    var {boOK, strMessage, imageHash}=data; setMess(strMessage);  uploadButton.prop("disabled",false);
+    callback(data);
   }
   var sendFunRet=function(data){
     if('strMessage' in data) setMess(data.strMessage); progress.invisible(); uploadButton.prop("disabled",false);
@@ -804,7 +844,7 @@ var uploadImageDivExtend=function(el){
   }
   el.openFunc=function(strKindT, callbackT){
     strKind=strKindT; callback=callbackT; setMess('');  inpFile.value='';
-    doHistPush({view:uploadImageDiv});
+    doHistPush({strView:'uploadImageDiv'});
     el.setVis();    
   };
   el.setVis=function(){
@@ -820,7 +860,7 @@ var uploadImageDivExtend=function(el){
   var inpFile=createElement('input').prop({type:'file', name:'file', id:'file', accept:"image/*"}).css({background:'lightgrey'});
   //var inpUploadButton=createElement('input').prop({type:"button", value:"Upload"});
   var uploadButton=createElement('button').myText('Upload').addClass('highStyle').prop("disabled",true).css({'margin-right':'0.5em'}); //, 'float':'right'
-  var progress=createElement('progress').prop({max:100, value:0}).css({'display':'block','margin-top':'1em'}).invisible();
+  //var progress=createElement('progress').prop({max:100, value:0}).css({'display':'block','margin-top':'1em'}).invisible();
   var divMess=createElement('div').css({'margin-top':'1.2em', 'min-height':'1em'});
   
   var objFile;
@@ -834,7 +874,7 @@ var uploadImageDivExtend=function(el){
   //el.append(head, formFile, progress, divMess,menuBottom); 
 
   var blanket=createElement('div').addClass("blanket");
-  var centerDiv=createElement('div').myAppend(head, formFile, progress, divMess,menuBottom);
+  var centerDiv=createElement('div').myAppend(head, formFile, divMess,menuBottom);  //, progress
   centerDiv.addClass("Center").css({'max-width':'21em', padding: '0.3em 0.5em 1.2em 0.6em'}); // , height:'15em'
   el.addClass("Center-Container").myAppend(centerDiv,blanket); //
 
@@ -844,7 +884,7 @@ var uploadImageDivExtend=function(el){
 
 
 var userSettingDivExtend=function(el){
-  el.toString=function(){return 'userSetting';}
+  el.toString=function(){return 'userSettingDiv';}
   var save=function(){ 
     resetMess();  
     var o={},boErr=0;
@@ -891,7 +931,7 @@ var userSettingDivExtend=function(el){
   el.StrProp=['name', 'password', 'image', 'email', 'boEmailVerified', 'telephone',   'country', 'federatedState', 'county', 'city', 'zip', 'address',     'idFB', 'idNational', 'birthdate', 'motherTongue', 'gender']; //'idFB', 'idGoogle', 
 
   var buttonDelete=createElement('button').myText('Delete account').addClass('highStyle').on('click',function(){ 
-    doHistPush({view:deleteAccountPop});
+    doHistPush({strView:'deleteAccountPop'});
     deleteAccountPop.setVis();
   }).css({margin:'0.2em 0 0 0'});  //'float':'right',
   var divCreated=createElement('div').myAppendHtml('Account created <b></b> ago ', buttonDelete).css({'font-size':'90%', 'border-bottom':'2px solid grey', 'margin-bottom':'1em', 'padding-bottom':'0.5em'});
@@ -986,7 +1026,7 @@ var userAppDeleteDivExtend=function(el){
   }
   el.openFunc=function(){
     elR=this.parentNode.parentNode; spanApp.myText(elR.r.appName);
-    doHistPush({view:userAppDeleteDiv});
+    doHistPush({strView:'userAppDeleteDiv'});
     el.setVis();
   }
   el.setVis=function(){
@@ -1126,7 +1166,7 @@ var devAppSetDivExtend=function(el){
       var elR=this.parentNode.parentNode;
       r=elR.r;
     } else {r=rDefault;}
-    doHistPush({view:devAppSetDiv});
+    doHistPush({strView:'devAppSetDiv'});
     el.setVis();
     el.setUp();
   }
@@ -1172,7 +1212,7 @@ var devAppDeleteDivExtend=function(el){
   }
   el.openFunc=function(){
     elR=this.parentNode.parentNode; spanApp.myText(elR.r.appName);
-    doHistPush({view:devAppDeleteDiv});
+    doHistPush({strView:'devAppDeleteDiv'});
     el.setVis();
   }
   el.setVis=function(){
@@ -1319,7 +1359,8 @@ var majax=function(vecIn){  // Each argument of vecIn is an array: [serverSideFu
   
   xhr.onload=function () {
     var dataFetched=this.response;
-    var data; try{ data=JSON.parse(this.response); }catch(e){ setMess(e);  return; }
+    //var data; try{ data=JSON.parse(this.response); }catch(e){ setMess(e);  return; }
+    var data=deserialize(this.response);
     
     var dataArr=data.dataArr;  // Each argument of dataArr is an array, either [argument] or [altFuncArg,altFunc]
     delete data.dataArr;
@@ -1637,15 +1678,14 @@ app.boFF = uaLC.indexOf("firefox") > -1;
 app.boChrome= /chrome/.test(uaLC);
 app.boIOS= /iphone|ipad|ipod/.test(uaLC);
 app.boEpiphany=/epiphany/.test(uaLC);    if(boEpiphany && !boAndroid) boTouch=false;  // Ugly workaround
-app.boEdge= /\bedg\b/.test(uaLC);
 
 app.boOpera=RegExp('OPR\\/').test(ua); if(boOpera) boChrome=false; //alert(ua);
 
 
-
 if(boTouch){
   if(boIOS) {  
-    [elBody,elHtml].forEach(ele=>ele.css({"height":"100%", "overflow-y":"scroll", "-webkit-overflow-scrolling":"touch"}));
+    // var tmp={height:"100%", "overflow-y":"scroll", "-webkit-overflow-scrolling":"touch"};
+    // elBody.css(tmp);  elHtml.css(tmp);
   }
 } 
 
@@ -1721,58 +1761,68 @@ var imgProt=createElement('img').css({height:strSizeIcon,width:strSizeIcon,'vert
   //
   // History
   //
-  
-var strHistTitle=site.wwwSite;
 
-var histList=[];
-var stateLoaded=history.state;
-var tmpi=stateLoaded?stateLoaded.ind:0,    stateLoadedNew={hash:randomHash(), ind:tmpi};
-history.replaceState(stateLoadedNew, '', uCanonical);
-var stateTrans=stateLoadedNew;
-history.StateMy=[];
+var strViewOrg='mainDiv';
+var strHistTitle=site.wwwSite;
+var stateRun=history.state;
+var stateMem={hash:randomHash(), ind:0, strView:strViewOrg, scroll:0}
+if(stateRun){
+  let {strView, ind, scroll}=stateRun;
+  if(strView!=strViewOrg)  scroll=0;
+  extend(stateMem, {ind, scroll});
+}
+history.replaceState(stateMem, '', uCanonical);  // ind, hash, strView, scroll
+history.StateOpen=[];
+history.StateOpen[history.state.ind]=copySome({}, stateMem, ['strView','scroll']);    //  strView, scroll
+
+
 
 window.on('popstate', function(event) {
-  var dir=history.state.ind-stateTrans.ind;
+  var stateT=history.state;
+  var dir=stateT.ind-stateMem.ind;
   //if(Math.abs(dir)>1) {debugger; alert('dir=',dir); }
-  var boSameHash=history.state.hash==stateTrans.hash;
+  var boSameHash=stateT.hash==stateMem.hash;
   if(boSameHash){
-    var tmpObj=history.state;
     if('boResetHashCurrent' in history && history.boResetHashCurrent) {
-      tmpObj.hash=randomHash();
-      history.replaceState(tmpObj, '', uCanonical);
+      stateT.hash=randomHash();
+      history.replaceState(stateT, '', uCanonical);
       history.boResetHashCurrent=false;
     }
 
-    var stateMy=history.StateMy[history.state.ind];
-    if(typeof stateMy!='object' ) {
-      var tmpStr=window.location.href +" Error: typeof stateMy: "+(typeof stateMy)+', history.state.ind:'+history.state.ind+', history.StateMy.length:'+history.StateMy.length+', Object.keys(history.StateMy):'+Object.keys(history.StateMy);
-      if(!boEpiphany) alert(tmpStr); else  console.log(tmpStr);
-      debugger;
-      return;
-    }
-    var view=stateMy.view;
-    view.setVis();
-    if(typeof view.getScroll=='function') {
-      var scrollT=view.getScroll();
-      setTimeout(function(){window.scrollTop(scrollT);}, 1);
-    } else {
-      //var scrollT=stateMy.scroll;  setTimeout(function(){  window.scrollTop(scrollT);}, 1);
-    }
-    
-    if('funOverRule' in history && history.funOverRule) {history.funOverRule(); history.funOverRule=null;}
-    else{
-      if('fun' in stateMy && stateMy.fun) {var fun=stateMy.fun(stateMy); }
-    }
-
-    stateTrans=extend({}, tmpObj);
+    var scroll=(stateMem.strView==stateT.strView && stateT.strView==strViewOrg)?stateMem.scroll:stateT.scroll;
+    stateT.scroll=scroll
+    stateMem=copyDeep(stateT);
+    history.replaceState(stateMem, '', uCanonical);
+    var stateOpen=history.StateOpen[stateT.ind]
+    stateOpen.scroll=scroll
+    setMyState(stateOpen);
   }else{
-    stateTrans=history.state; extend(stateTrans, {hash:randomHash()}); history.replaceState(stateTrans, '', uCanonical);
+    if(stateMem.strView!=strViewOrg) stateMem.scroll=0
+    extend(stateMem, {hash:randomHash(), strView:strViewOrg});  //, arg:"page"
+    copySome(stateMem, stateT, ["ind"]);
+    history.replaceState(stateMem, '', uCanonical);
+    history.StateOpen[stateT.ind]={strView:strViewOrg, scroll:stateMem.scroll};
     history.go(sign(dir));
   }
 });
-if(boFF){
-  window.on('beforeunload', function(){   });
-} 
+
+var setMyState=function(state){
+  var view=MainDiv[StrMainDivFlip[state.strView]];
+  view.setVis();  // state.arg
+  if(history.funOverRule) {history.funOverRule(); history.funOverRule=null;}
+  else if(state.fun) {state.fun(state); }
+  else{ view.funPopped?.(state); }
+}
+
+window.on('pagehide', function(){ 
+  var stateT=history.state, stateOpen=history.StateOpen[stateT.ind];
+  var {strView, scroll}=stateOpen;
+  if(strView!=strViewOrg) scroll=0;
+  extend(stateT, {strView:strViewOrg, scroll});
+  history.replaceState(stateT, '', uCanonical);
+});
+
+if(boFF){ window.on('beforeunload', function(){   }); } 
 
 app.errorFunc=function(jqXHR, textStatus, errorThrown){
   setMess('responseText: '+jqXHR.responseText+', textStatus: '+' '+textStatus+', errorThrown: '+errorThrown);     throw 'bla';
@@ -1835,16 +1885,14 @@ var userSettingDiv=userSettingDivExtend(createElement('div'));
 var consentDiv=consentDivExtend(createElement('div'));
 
 
-//app.StrMainDiv=['mainDiv', 'loginSelectorDiv', 'createUserSelectorDiv', 'createUserDiv', 'userSettingDiv', 'consentDiv', 'deleteAccountPop', 'verifyEmailPop', 'forgottPWPop', 'changePWPop', 'uploadImageDiv',
-//'devAppList', 'devAppSetDiv', 'devAppDeleteDiv', 'devAppSecretDiv', 'userAppSetDiv', 'userAppDeleteDiv', 'userAppList'];  //'divLoginInfo', 'H1', 
-//var MainDiv=[];  for(var i=0;i<StrMainDiv.length;i++){    MainDiv[i]=window[StrMainDiv[i]];  };
 
-var MainDiv=[mainDiv, loginSelectorDiv, createUserSelectorDiv, createUserDiv, userSettingDiv, consentDiv, deleteAccountPop, verifyEmailPop, forgottPWPop, changePWPop, uploadImageDiv, devAppList, devAppSetDiv, devAppDeleteDiv, devAppSecretDiv, userAppSetDiv, userAppDeleteDiv, userAppList]; 
+var MainDiv=[mainDiv, loginSelectorDiv, deleteAccountPop, changePWPop, verifyEmailPop, forgottPWPop, uploadImageDiv, devAppList, devAppSetDiv, devAppDeleteDiv, devAppSecretDiv, userAppSetDiv, userAppDeleteDiv, userAppList, createUserDiv, createUserSelectorDiv, userSettingDiv, consentDiv]; 
 
-
+var StrMainDiv=MainDiv.map(obj=>obj.toString());
+var StrMainDivFlip=array_flip(StrMainDiv);
 
 
-history.StateMy[history.state.ind]={view:mainDiv};
+
 
 
 mainDiv.setVis=function(){
@@ -1926,9 +1974,8 @@ var setBottomMargin=function() { // This is not very beautiful. But how should o
   else if(devAppList.style.display!='none'){devAppList.divCont.css({'padding-bottom':devAppList.fixedDiv.offsetHeight+'px'});}
 }
 if(boFF) window.on("DOMMouseScroll", setBottomMargin, false); else   window.on('mousewheel', setBottomMargin);
-window.scroll(setBottomMargin);
-elBody.on('click',setBottomMargin);
 
+if(boTouch) elBody.on('touchstart',setBottomMargin); else { elBody.on('click',setBottomMargin);  window.scroll(setBottomMargin); }
 
 
 //mainDiv
@@ -1939,8 +1986,8 @@ elBody.on('click',setBottomMargin);
 
   // In normal case: go back to mainDiv after successfull login/logout/createUser
 idPLoginDiv.cb=formLogin.cb=createUserDiv.cb=divLoginInfo.cb=function(){
-  if(history.StateMy[history.state.ind].view===mainDiv) {mainDiv.setVis();}
-  else history.fastBack(mainDiv);
+  if(history.StateOpen[history.state.ind].strView==='mainDiv') {mainDiv.setVis();}
+  else history.fastBack('mainDiv');
 };
 if(boAuthReq){
   (async function (){ 
@@ -1989,10 +2036,10 @@ if(boAuthReq){
   })();
 }
 
-
 }
 
-
+//window.onload=funLoad;
+funLoad()
 
 
 

@@ -10,6 +10,7 @@
 // Clearing image, cause a JSON object returned with a property with undefined, (which causes JSON.parse to fail)
 // node-zip is obsolete.
 
+
 /******************************************************************************
  * reqIndex
  ******************************************************************************/
@@ -96,10 +97,6 @@ app.reqIndex=async function() {
   
 
   var ua=req.headers['user-agent']||''; ua=ua.toLowerCase();
-  var boMSIE=RegExp('msie').test(ua);
-  var boAndroid=RegExp('android').test(ua);
-  var boFireFox=RegExp('firefox').test(ua);
-  //var boIOS= RegExp('iPhone|iPad|iPod','i').test(ua);
   var boIOS= RegExp('iphone','i').test(ua);
   if(/facebookexternalhit/.test(ua)) { objQS.lang='en';  }
   if('fb_locale' in objQS) objQS.lang=objQS.fb_locale.substr(0,2);   
@@ -128,7 +125,7 @@ app.reqIndex=async function() {
   Str.push('<link rel="icon" type="image/png" href="'+srcIcon16+'" />');
   Str.push('<link rel="apple-touch-icon" href="'+srcIcon114+'"/>');
 
-  Str.push("<meta name='viewport' id='viewportMy' content='initial-scale=1'/>");
+  Str.push("<meta name='viewport' id='viewportMy' content='width=device-width, initial-scale=1, minimum-scale=1'/>"); //, interactive-widget=resizes-content
   Str.push('<meta name="theme-color" content="#ff0"/>');
 
   if(boAuthReq){ Str.push('<meta name="robots" content="noindex">\n'); }
@@ -138,7 +135,7 @@ app.reqIndex=async function() {
   var strTitle='idPlace - an ID provider using OAuth';
   var strH1='idPlace - an ID provider using OAuth';
   var strDescription='Open source ID provider using OAuth';
-  var strKeywords=strDescription;
+  var strKeywords="Id provider, OAuth";
   var strSummary=strDescription;
 
 
@@ -187,38 +184,7 @@ app.reqIndex=async function() {
 </script>`;
   Str.push(tmp);
 
-
-
-Str.push(`<style>
-:root { --maxWidth:800px; height:100%}
-body {margin:0; height:100%; display:flow-root; font-family:arial, verdana, helvetica; }  /*text-align:center;*/
-/*.mainDiv { margin: 0em auto; height:100%; width:100%; display:flex; flex-direction:column; max-width:var(--maxWidth) }*/
-/*.mainDivR { box-sizing:border-box; margin:0em auto; width:100%; display:flex; max-width:var(--maxWidth) }*/
-h1.mainH1 { box-sizing:border-box; margin:0em auto; width:100%; max-width:var(--maxWidth); border:solid 1px; color:black;font-size:1.6em; font-weight:bold; text-align:center; padding:0.4em 0em 0.4em 0em;  }
-</style>`);
-
-
-  //Str.push('<script type="module" src="'+uSite+'/lib/foundOnTheInternet/md5.js" async></script>');
-
-    // If boDbg then set vTmp=0 so that the url is the same, this way the debugger can reopen the file between changes
-
-    // Use normal vTmp on iOS (since I don't have any method of disabling cache on iOS devices (nor any debugging interface))
-  var boDbgT=boDbg; if(boIOS) boDbgT=0;
   
-  var keyTmp=siteName+'/'+leafManifest, vTmp=boDbgT?0:CacheUri[keyTmp].eTag;     Str.push(`<link rel="manifest" href="`+uSite+`/`+leafManifest+`?v=`+vTmp+`"/>`);
-  
-    // Include stylesheets
-  var pathTmp='/stylesheets/style.css', vTmp=boDbgT?0:CacheUri[pathTmp].eTag;    Str.push('<link rel="stylesheet" href="'+uSite+pathTmp+'?v='+vTmp+'" type="text/css">');
-
-    // Include JS-files
-  var StrTmp=['lib.js', 'libClient.js', 'client.js'];
-  for(var i=0;i<StrTmp.length;i++){
-    var pathTmp='/'+StrTmp[i], vTmp=boDbgT?0:CacheUri[pathTmp].eTag;    Str.push('<script type="module" src="'+uSite+pathTmp+'?v='+vTmp+'" async></script>');
-  }
-
-
-  Str.push('<script type="module" src="'+uSite+'/lib/foundOnTheInternet/sha1.js" async></script>');
-
   var strTracker, tmpID=site.googleAnalyticsTrackingID||null;
   tmpID=null;  // Disabling ga
   if(boDbg||!tmpID){strTracker="<script> ga=function(){};</script>";}else{ 
@@ -236,26 +202,34 @@ h1.mainH1 { box-sizing:border-box; margin:0em auto; width:100%; max-width:var(--
   //ga('create', '`+tmpID+`', 'auto');
 
   //Str.push("<script src='https://www.google.com/recaptcha/api.js?render=explicit'></script>");
-  Str.push("<script src='https://www.google.com/recaptcha/api.js?render=explicit' defer></script>");
+  Str.push('<script src="https://www.google.com/recaptcha/api.js?render=explicit" defer></script>');
 
 
-
-  Str.push("</head>");
-  Str.push(`<body>
-<title>`+strTitle+`</title>
-<div id=divLoginInfo class="mainDivR" style="min-height:2rem; visibility:hidden;" ></div>
-<h1 class=mainH1>`+strH1+`</h1>
-<noscript><div style="text-align:center">You don't have javascript enabled, so this app won't work.</div></noscript>`);
-
-
+  Str.push(`<style>
+:root { --maxWidth:800px; height:100%}
+body {margin:0; height:100%; display:flow-root; font-family:arial, verdana, helvetica; }  /*text-align:center;*/
+/*.mainDiv { margin: 0em auto; height:100%; width:100%; display:flex; flex-direction:column; max-width:var(--maxWidth) }*/
+/*.mainDivR { box-sizing:border-box; margin:0em auto; width:100%; display:flex; max-width:var(--maxWidth) }*/
+h1.mainH1 { box-sizing:border-box; margin:0em auto; width:100%; max-width:var(--maxWidth); border:solid 1px; color:black;font-size:1.6em; font-weight:bold; text-align:center; padding:0.4em 0em 0.4em 0em;  }
+</style>`);
 
 
+  //Str.push('<script type="module" src="'+uSite+'/lib/foundOnTheInternet/md5.js"></script>');
 
+    // If boDbg then set vTmp=0 so that the url is the same, this way the debugger can reopen the file between changes
+
+    // Use normal vTmp on iOS (since I don't have any method of disabling cache on iOS devices (nor any debugging interface))
+  var boDbgT=boDbg; if(boIOS) boDbgT=0;
+  
+  var keyTmp=siteName+'/'+leafManifest, vTmp=boDbgT?0:CacheUri[keyTmp].eTag;     Str.push(`<link rel="manifest" href="`+uSite+`/`+leafManifest+`?v=`+vTmp+`"/>`);
+  
+    // Include stylesheets
+  var pathTmp='/stylesheets/style.css', vTmp=boDbgT?0:CacheUri[pathTmp].eTag;    Str.push('<link rel="stylesheet" href="'+uSite+pathTmp+'?v='+vTmp+'" type="text/css">');
 
 
   //var objOut=copySome({}, app, ['wwwSite', 'CSRFCode', 'Prop', 'strSalt', 'boDbg', 'site', 'leafBE', 'flLibImageFolder', 'UrlOAuth', 'leafLoginBack', 'userInfoFrDB', 'objApp', 'objUApp', 'strReCaptchaSiteKey', 'strIPPrim', 'nHash']);
 
-  var objOut={wwwSite, CSRFCode, Prop, strSalt, boDbg, site, leafBE, flLibImageFolder, UrlOAuth, leafLoginBack, userInfoFrDB, objApp, objUApp, strReCaptchaSiteKey, strIPPrim, nHash};
+  var objOut={wwwSite, CSRFCode, Prop, strSalt, boDbg, site, leafBE, flLibImageFolder, UrlOAuth, response_type, leafLoginBack, userInfoFrDB, objApp, objUApp, strReCaptchaSiteKey, strIPPrim, nHash};
   copySome(objOut,site,['boTLS']);
 
   Str.push(`<script>
@@ -265,7 +239,33 @@ Object.assign(window, tmp);
 function indexAssign(){
   setItem('CSRFCode',CSRFCode);
 }
-</script>
+</script>`);
+
+
+    // Include JS-files
+  var StrTmp=['lib.js', 'libClient.js'];
+  for(var i=0;i<StrTmp.length;i++){
+    var pathTmp='/'+StrTmp[i], vTmp=boDbgT?0:CacheUri[pathTmp].eTag;    Str.push('<script type="module" src="'+uSite+pathTmp+'?v='+vTmp+'"></script>');
+  }
+
+
+  Str.push('<script type="module" src="'+uSite+'/lib/foundOnTheInternet/sha1.js" async></script>');
+
+
+
+
+    // Include JS-files
+  var StrTmp=['client.js'];
+  for(var i=0;i<StrTmp.length;i++){
+    var pathTmp='/'+StrTmp[i], vTmp=boDbgT?0:CacheUri[pathTmp].eTag;    Str.push('<script type="module" src="'+uSite+pathTmp+'?v='+vTmp+'"></script>');
+  }
+
+  Str.push("</head>");
+  Str.push(`<body>
+<title>`+strTitle+`</title>
+<div id=divLoginInfo class="mainDivR" style="min-height:2rem; visibility:hidden;" ></div>
+<h1 class=mainH1>`+strH1+`</h1>
+<noscript><div style="text-align:center">Javascript is disabled, so this app won't work.</div></noscript>
 <form id=formLogin style="display:none">
 <label name=email>Email</label><input type=email name=email>
 <label name=password>Password</label><input type=password name=password>
@@ -514,17 +514,27 @@ app.reqLoginBack=async function(){
 </head>
 <body>
 <script>
-var wwwLoginScope=`+serialize(wwwLoginScopeTmp)+`;
-if(wwwLoginScope) document.domain = wwwLoginScope;
+const getCookie=(c_name)=>{
+  var arr=document.cookie.split(";");
+  for (var i=0;i<arr.length;i++){
+    var [k,v]=arr[i].split("=");
+    if (k.trim()==c_name){return unescape(v);}   
+  }
+}
+var strBroadcastChannel=getCookie('strBroadcastChannel');
+
 var {search:strQS, hash:strHash}=location;
 debugger
-//alert('strHash: '+strHash);
-window.opener.loginReturn(strQS,strHash);
+//window.opener.loginReturn(strQS,strHash);
+
+new BroadcastChannel(strBroadcastChannel).postMessage(strQS);
 window.close();
 </script>
 </body>
 </html>
 `);
+//var wwwLoginScope=`+serialize(wwwLoginScopeTmp)+`;
+//if(wwwLoginScope) document.domain = wwwLoginScope;
   res.setHeader('Content-Type', MimeType.html);
   var str=Str.join('\n');  res.end(str);
 }
@@ -594,11 +604,13 @@ app.reqVerifyPWResetReturn=async function() {
   
   const msg = { to:email, from:emailRegisterdUser, subject:'Password reset', html:strTxt };
 
-  var [err]=await sgMail.send(msg).toNBP();
-  if(err) {res.out500(err); return; }
+  //var [err]=await sgMail.send(msg).toNBP();
+  //if(err) {res.out500(err); return; }
+  let sendResult=await smtpTransport.sendMail(msg)
+  //res.end(sendResult.response);
   
   res.setHeader('Content-Type', MimeType.html);
-  res.end("A new password has been generated and sent to your email address.<br>Close this tab and login with your new password in the orignal tab.");
+  res.end("A new password has been generated and sent to your email address.<br>Response: "+sendResult.response+"<br>Close this tab and login with your new password in the orignal tab.");
 }
 
 
@@ -614,7 +626,7 @@ function parseSignedRequest(signedRequest, secret) {
   var [b64UrlMac, b64UrlPayload] = signedRequest.split('.', 2);
   //var mac = b64UrlDecode(b64UrlMac);
   var payload = b64UrlDecode(b64UrlPayload),  data = JSON.parse(payload);
-  var b64ExpectedMac = crypto.createHmac('sha256', secret).update(b64UrlPayload).digest('base64');
+  var b64ExpectedMac = myCrypto.createHmac('sha256', secret).update(b64UrlPayload).digest('base64');
   var b64UrlExpectedMac=b64ExpectedMac.replace(/\+/g, '-').replace(/\//g, '_').replace('=', '');
   if (b64UrlMac !== b64UrlExpectedMac) {
     return [Error('Invalid mac: ' + b64UrlMac + '. Expected ' + b64UrlExpectedMac)];
@@ -723,7 +735,7 @@ app.reqImage=async function() {
   
   if(results.length>0){
     var strData=results[0].data;
-    var eTag=crypto.createHash('md5').update(strData).digest('hex'); 
+    var eTag=myCrypto.createHash('md5').update(strData).digest('hex'); 
     ETagImage[keyCache]=eTag;  if(eTag===this.eTagIn) { res.out304(); return; }
     var maxAge=3600*8760, mimeType=MimeType.jpg;
     res.writeHead(200, {"Content-Type": mimeType, "Content-Length":strData.length, ETag: eTag, "Cache-Control":"public, max-age="+maxAge}); // "Last-Modified": maxModTime.toUTCString(),
@@ -829,7 +841,7 @@ app.reqMonitor=async function() {
  ******************************************************************************/
 app.reqStat=async function() {
   var {req, res}=this;
-  
+  res.outCode(501, "Not implemented yet. On Todo list."); return
   if(!req.boCookieLaxOK) {res.outCode(401, "Lax cookie not set");  return;  }
 
   var Sql=[]; 
@@ -869,15 +881,15 @@ app.reqStat=async function() {
 
     // Include site specific JS-files
   //var uSite=req.strSchemeLong+req.wwwSite;
-  //var keyCache=req.strSite+'/'+leafSiteSpecific, vTmp=CacheUri[keyCache].eTag; if(boDbg) vTmp=0;  Str.push('<script type="module" src="'+uSite+'/'+leafSiteSpecific+'?v='+vTmp+'" async></script>');
+  //var keyCache=req.strSite+'/'+leafSiteSpecific, vTmp=CacheUri[keyCache].eTag; if(boDbg) vTmp=0;  Str.push('<script type="module" src="'+uSite+'/'+leafSiteSpecific+'?v='+vTmp+'"></script>');
 
     // Include JS-files
   var StrTmp=['lib.js', 'libClient.js'];
   for(var i=0;i<StrTmp.length;i++){
-    var pathTmp='/'+StrTmp[i], vTmp=CacheUri[pathTmp].eTag; if(boDbg) vTmp=0;    Str.push('<script type="module" src="'+uSite+pathTmp+'?v='+vTmp+'" async></script>');
+    var pathTmp='/'+StrTmp[i], vTmp=CacheUri[pathTmp].eTag; if(boDbg) vTmp=0;    Str.push('<script type="module" src="'+uSite+pathTmp+'?v='+vTmp+'"></script>');
   }
 
-  Str.push('<script type="module" src="'+uSite+'/lib/foundOnTheInternet/sortable.js" async></script>');
+  Str.push('<script type="module" src="'+uSite+'/lib/foundOnTheInternet/sortable.js"></script>');
 
   Str.push("</head>");
   Str.push('<body style="margin:0">');
@@ -963,7 +975,7 @@ app.SetupSql.prototype.createTable=async function(siteName,boDropOnly){
   idUser int(4) NOT NULL auto_increment,
   name varchar(128) NOT NULL DEFAULT '',
   password char(40) NOT NULL DEFAULT '',
-  image varchar(256) NOT NULL DEFAULT '',
+  image varchar(512) NOT NULL DEFAULT '',
   eTagImage char(32) NOT NULL DEFAULT '',
   sizeImage int(4) NOT NULL DEFAULT 0,
   imageHash char(56) NULL,

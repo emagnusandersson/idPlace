@@ -229,6 +229,115 @@ app.isVisible=function(el) {
 
 
 
+//
+// Image compress, autorotate etc
+//
+
+// Modified from https://stackoverflow.com/a/32490603, cc by-sa 3.0
+// returns an array [error, orientation];
+// orientation = 1..8 (see link above)
+app.getExifOrientation=function(abData) { // The input is an ArrayBuffer
+  const intSOI=0xFFD8, APP1=0xFFE1, intExifHeader=0x45786966;
+  var view = new DataView(abData);
+  if(view.getUint16(0, false) != intSOI) { return [new Error("notJpeg")];   }
+  var length = view.byteLength, offset = 2;
+  while(offset < length) {
+    if(view.getUint16(offset+2, false) <= 8) return [new Error("notDefined")];
+    var marker = view.getUint16(offset, false);
+    offset += 2;
+    if(marker == APP1) {
+      if(view.getUint32(offset += 2, false) != intExifHeader) { return [new Error("notDefined")];  }
+      var little = view.getUint16(offset += 6, false) == 0x4949;
+      offset += view.getUint32(offset + 4, little);
+      var tags = view.getUint16(offset, little);
+      offset += 2;
+      for(var i = 0; i < tags; i++)
+        if(view.getUint16(offset + (i * 12), little) == 0x0112) {
+          var orientation=view.getUint16(offset + (i * 12) + 8, little);  return [null, orientation]; 
+        }
+    }
+    else if((marker & 0xFF00) != 0xFF00) break;
+    else offset += view.getUint16(offset, false);
+  }
+  return [new Error("notDefined")];
+}
+
+
+// Derived from https://stackoverflow.com/a/40867559, cc by-sa
+app.imgToCanvasWithOrientation=function(img, rawWidth, rawHeight, orientation) {
+  var canvas = document.createElement('canvas');
+  if(orientation > 4) {  canvas.width=rawHeight; canvas.height=rawWidth; }
+  else {  canvas.width=rawWidth;  canvas.height=rawHeight;  }
+
+  if(orientation > 1) { console.log("EXIF orientation = " + orientation + ", rotating picture"); }
+
+  var ctx = canvas.getContext('2d');
+  switch(orientation) {
+    case 2: ctx.transform(-1, 0, 0, 1, rawWidth, 0); break;
+    case 3: ctx.transform(-1, 0, 0, -1, rawWidth, rawHeight); break;
+    case 4: ctx.transform(1, 0, 0, -1, 0, rawHeight); break;
+    case 5: ctx.transform(0, 1, 1, 0, 0, 0); break;
+    case 6: ctx.transform(0, 1, -1, 0, rawHeight, 0); break;
+    case 7: ctx.transform(0, -1, -1, 0, rawHeight, rawWidth); break;
+    case 8: ctx.transform(0, -1, 1, 0, 0, rawWidth); break;
+  }
+  ctx.drawImage(img, 0, 0, rawWidth, rawHeight);
+  return canvas;
+}
+
+app.reduceImageSize=async function(file, acceptFileSize, maxWidth, maxHeight, quality) {
+  if(file.size <= acceptFileSize) {  return [null, file]; }
+
+    // Extract w and h (one could probably read these from the jpeg header more or less as one reads the orientation from the header below. (And doing this would probably be faster))
+  var img = new Image();
+  var [err]=await new Promise(function(resolve) {
+    img.onerror = function(e) { resolve([e]);  };
+    img.onload = function() { resolve([null]); };
+    img.src = URL.createObjectURL(file);
+  });
+  URL.revokeObjectURL(img.src);
+  if(err){ return [err];}
+
+    // Slice out the beginning of the file
+      // Suggestion from http://code.flickr.net/2012/06/01/parsing-exif-client-side-using-javascript-2/:
+  if(file.slice) {
+    file = file.slice(0, 131072);
+  } else if(file.webkitSlice) {
+    file = file.webkitSlice(0, 131072);
+  }
+
+    // Convert the beginning of the file to ArrayBuffer
+  var reader = new FileReader();
+  var abData=await new Promise(function(resolve) {
+    reader.onload = function(e) { resolve(e.target.result); };
+    reader.readAsArrayBuffer(file);
+  });
+  
+    // Extract orientation
+  var [err, orientation]=getExifOrientation(abData);
+  if(err) {
+    var {message}=err
+    if(message=="notDefined" || message=="notJpeg") orientation=1;
+    else  return [err]  
+  }
+
+    // Decide new dimensions
+  var w=img.width, h=img.height;
+  var scale=(orientation>4 ?
+    Math.min(maxHeight/w, maxWidth/h, 1) :
+    Math.min(maxWidth/w, maxHeight/h, 1));
+  h=Math.round(h*scale);    w=Math.round(w*scale);
+
+    // Create canvas
+  var canvas = imgToCanvasWithOrientation(img, w, h, orientation);
+    // Create new image
+  var [err, blob]=await new Promise(function(resolve) {
+    canvas.toBlob(function(blob) { resolve([null, blob]) }, 'image/jpeg', quality);
+  });
+
+  return [null, blob];
+}
+
 
 /*******************************************************************************************************************
  * popupHover: popup a elBubble when you hover over elArea
@@ -321,7 +430,7 @@ app.vippButtonExtend=function($el){
   var o0={background:'url('+uVipp0+') no-repeat'}, o1={background:'url('+uVipp1+') no-repeat'};
     
   $el.attr({boOn:0});
-  $el.css({'background':'url('+uVipp0+') no-repeat',height:'54px',width:'102px',zoom:'60%','vertical-align':'-0.5em',cursor:'pointer',display:'inline-block'}).addClass('unselectable');
+  $el.css({'background':'url('+uVipp0+') no-repeat',height:'54px',width:'102px',transform:'scale(0.60)','vertical-align':'-0.5em',cursor:'pointer',display:'inline-block'}).addClass('unselectable');
   $el.on('click',function(){var t=1-$el.attr('boOn');   $el.setStat(t);});
   return $el;
 }

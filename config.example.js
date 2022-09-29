@@ -16,15 +16,17 @@ strSaltID='klmnopqrstu'; // Random letters to prevent that the hashed IDs can be
 
 
 strFBVersion="v13.0"
-UrlOAuth={fb:"https://www.facebook.com/"+strFBVersion+"/dialog/oauth", google:"https://accounts.google.com/o/oauth2/v2/auth"}
-UrlToken={fb:"https://graph.facebook.com/"+strFBVersion+"/oauth/access_token", google:"https://accounts.google.com/o/oauth2/token"}
-UrlGraph={fb:"https://graph.facebook.com/"+strFBVersion+"/me", google:"https://www.googleapis.com/plus/v1/people/me"}; 
-
+app.UrlOAuth={fb:"https://www.facebook.com/"+strFBVersion+"/dialog/oauth", google:"https://accounts.google.com/o/oauth2/v2/auth"}
+app.UrlToken={fb:"https://graph.facebook.com/"+strFBVersion+"/oauth/access_token", google:"https://accounts.google.com/o/oauth2/token"}
+app.UrlGraph={fb:"https://graph.facebook.com/"+strFBVersion+"/me", google:"https://www.googleapis.com/plus/v1/people/me"}; 
+app.response_type='token';  
+app.response_type='code';
 strIPPrim='fb';  strIPAlt='google';
 
   // Sendgrid credentials
-apiKeySendGrid="XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX";
-//sendgridName="appXXXXXXX@heroku.com"; sendgridPassword="XXXXXXXXXXXX";
+//apiKeySendGrid="XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX";
+objSendinblueAuth={ user:"noreply@example.com", pass:"XXXXXXXXXXXXXX" }
+emailRegisterdUser=objSendinblueAuth.user;
 
   //
   //  Since one might want use the software on several different infrastrucures (heroku.com, appfog.com, digitalocean.com, localhost ...),

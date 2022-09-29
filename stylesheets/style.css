@@ -1,6 +1,18 @@
 
 
 
+* {box-sizing:border-box}
+html, body { -webkit-overflow-scrolling: touch; }
+html, body {-webkit-appearance:none}
+/* -webkit-appearance:none is required to make disabled buttons have grey text on Safari. */
+body {overscroll-behavior: contain;}
+
+body { -webkit-text-size-adjust: 100%; }
+
+select, button, input  {color: inherit} /* Removing blue text in buttons ... on Safari */
+:disabled {color:grey}
+input, button, textarea, select { font: inherit; }  /* Preventing zoom, especially on Safari. */
+
 p {
     margin: 0.3em 0em 0.3em 0em;
     line-height: 1.2em;
@@ -18,9 +30,6 @@ a:active {
 	color: #faa700;
 }
 
-/*body {font-size:100%}*/
-body { -webkit-text-size-adjust: 100%; }
-body { -webkit-overflow-scrolling: touch; }
 
 .fillScreen { height:100%;overflow:hidden}
 
@@ -55,7 +64,7 @@ tr {border-width:inherit;border-style:inherit }
 tbody,thead {border-width:inherit;border-style:inherit }
 
 
-button.highStyle, select { box-sizing:border-box; height:2.5em; font-size:0.8em; margin:0.5 0.5; padding:0 0.2em; font-size: inherit;vertical-align:middle;background-color:#eee;border-radius:0.4em}
+button.highStyle, select { height:2.5em; font-size:0.8em; margin:0.5 0.5; padding:0 0.2em; font-size: inherit;vertical-align:middle;background-color:#eee;border-radius:0.4em}
 
 
 .devAppList td, .userAppList td { background-color: #ccc;}
@@ -114,7 +123,6 @@ button.highStyle, select { box-sizing:border-box; height:2.5em; font-size:0.8em;
   top: 50%;
   left: 50%;
   background-color: #eeeeee;
-  box-sizing: border-box;
   border:1px solid;
   z-index: 9002;
   transform: translate(-50%,-50%);
