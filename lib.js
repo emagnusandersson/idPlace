@@ -12,20 +12,6 @@ Promise.prototype.toNBP=function(){   return this.then(a=>{return [null,a];}).ca
 
 app.ucfirst=function(string){  return string.charAt(0).toUpperCase() + string.slice(1);  }
 app.isAlpha=function(star){  var regEx = /^[a-zA-Z0-9]+$/;  return str.match(regEx); } 
-//String.prototype.trim = function() { return this.replace(/^\s+|\s+$/g,"");}
-
-
-app.ltrim=function(str,charlist){
-  if(charlist === undefined) charlist = "\\s";
-  return str.replace(new RegExp("^[" + charlist + "]+"), "");
-};
-app.rtrim=function(str,charlist){
-  if (charlist === undefined) charlist = "\\s";
-  return str.replace(new RegExp("[" + charlist + "]+$"), "");
-};
-app.trim=function(str,charlist){
-  return ltrim(rtrim(str,charlist),charlist);
-};
 
 app.arrArrange=function(arrV,arrI){
   var arrNew=[]; if(typeof arrV=='String') arrNew='';
@@ -111,13 +97,6 @@ app.isEmpty=function(obj) {    return Object.keys(obj).length === 0;  }
 app.copyDeep=function(objI) { return JSON.parse(JSON.stringify(objI));};
 app.myFlip=function(A){ var B={}; for(var k in A){B[A[k]]=k;} return B;} // Flips key and values
 
-/*JSON.myParse=function(str){
-    try{
-        return [null, JSON.parse(str)];
-    }catch(err){
-        return [err, undefined];
-    }
-}*/
 
 
 //

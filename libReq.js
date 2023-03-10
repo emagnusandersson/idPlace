@@ -684,7 +684,7 @@ app.reqDataDeleteStatus=async function(){
   var {req, res}=this, {site, objQS, uSite}=req;
   var objUrl=url.parse(req.url), qs=objUrl.query||'', objQS=parseQS2(qs);
   var confirmation_code=objQS.confirmation_code||'';
-  var [err,mess]=await cmdRedis('GET', [confirmation_code+'_DeleteRequest']); 
+  var [err,mess]=await getRedis(confirmation_code+'_DeleteRequest'); 
   if(err) {var mess=err.message;}
   else if(mess==null) {
     var [t,u]=getSuitableTimeUnit(timeOutDeleteStatusInfo);

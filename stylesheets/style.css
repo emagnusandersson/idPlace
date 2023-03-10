@@ -1,21 +1,21 @@
 
 
-
 * {box-sizing:border-box}
 html, body { -webkit-overflow-scrolling: touch; }
-html, body {-webkit-appearance:none}
-/* -webkit-appearance:none is required to make disabled buttons have grey text on Safari. */
 body {overscroll-behavior: contain;}
 
-body { -webkit-text-size-adjust: 100%; }
+  /* Is there really a difference using this. Tested values "100%" and "none" (Used by Chrome, Edge. Not used by Safari, Firefox) */
+/* body { -webkit-text-size-adjust: none; } */
 
+  /* -webkit-appearance:none is required to make disabled buttons have grey text on Safari. */
+html, body {-webkit-appearance:none}
 select, button, input  {color: inherit} /* Removing blue text in buttons ... on Safari */
 :disabled {color:grey}
 input, button, textarea, select { font: inherit; }  /* Preventing zoom, especially on Safari. */
 
 p {
-    margin: 0.3em 0em 0.3em 0em;
-    line-height: 1.2em;
+  margin: 0.3em 0em 0.3em 0em;
+  line-height: 1.2em;
 }
 
 a {
@@ -35,7 +35,7 @@ a:active {
 
 
 
-button::-moz-focus-inner {   padding: 0;    border: 0  } /*Making firefox buttons behave like other browsers*/
+button::-moz-focus-inner { padding: 0;border: 0 } /*Making firefox buttons behave like other browsers*/
 
 input[type='text'],input[type='number'],textarea {font-size:16px;}
 
@@ -52,10 +52,10 @@ div.vPassword{
 
 /* Sortable tables */
 table.sortable thead {
-    background-color:#eee;
-    color:#666666;
-    font-weight: bold;
-    cursor: default;
+  background-color:#eee;
+  color:#666666;
+  font-weight: bold;
+  cursor: default;
 }
 
 
@@ -129,12 +129,8 @@ button.highStyle, select { height:2.5em; font-size:0.8em; margin:0.5 0.5; paddin
 }
 
 *.unselectable {
-   -webkit-user-select: none; /* Safari, Chrome */
-    -khtml-user-select: none; /* Konqueror */
-    -moz-user-select: none; /* Firefox */
-    -ms-user-select: none; /* IE */
-    -o-user-select: none;
-    user-select: none; /* CSS3 */
+  -webkit-user-select: none; /* Safari */
+  user-select: none;
 }
 
 .message{

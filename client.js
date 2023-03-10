@@ -1069,7 +1069,7 @@ var userAppListExtend=function(el){
       //if('mySetSortVal' in td) { td.mySetSortVal(val);}   else td.valSort=val;
     }
     var buttEdit=createElement('button').attr('name','buttonEdit').myText('Edit').addClass('highStyle').on('click',function(){
-      userAppSetDiv.openFunc.call(this,1,1);
+      userAppSetDiv.openFunc.call(this,1);
     });
     var buttDelete=createElement('button').attr('name','buttonDelete').addClass('highStyle').css({'margin-right':'0.2em'}).myAppend(imgDelete.cloneNode()).on('click',userAppDeleteDiv.openFunc);
     var tEdit=createElement('td').myAppend(buttEdit), tDelete=createElement('td').myAppend(buttDelete); 
@@ -1160,12 +1160,13 @@ var devAppSetDivExtend=function(el){
     inpAppName.value=r.appName; inpURL.value=r.redir_uri;
     inpAppName.focus();  return true;
   }
-  el.openFunc=function(boUpdT,boGotData){
+  el.openFunc=function(boUpdT){
     boUpd=boUpdT;
-    if(boGotData){
+    if(this==null){r=extend({},rDefault);}
+    else{
       var elR=this.parentNode.parentNode;
       r=elR.r;
-    } else {r=rDefault;}
+    } 
     doHistPush({strView:'devAppSetDiv'});
     el.setVis();
     el.setUp();
@@ -1269,7 +1270,7 @@ var devAppListExtend=function(el){
       //if('mySetSortVal' in td) { td.mySetSortVal(val);}   else td.valSort=val;
     }
     var buttEdit=createElement('button').attr('name','buttonEdit').myText('Edit').addClass('highStyle').on('click',function(){
-      devAppSetDiv.openFunc.call(this,1,1);
+      devAppSetDiv.openFunc.call(this,1);
     });
     var buttSecret=createElement('button').attr('name','buttonSecret').myText('Secret').addClass('highStyle').on('click',function(){
       devAppSecretDiv.openFunc.call(this);
@@ -1330,7 +1331,7 @@ var devAppListExtend=function(el){
   var imgDelete=imgProt.cloneNode().prop({src:uDelete, alt:"delete"});
       // menuA
   var buttonAdd=createElement('button').myText('Add').addClass('highStyle', 'fixWidth').css({'margin-left':'0.8em','margin-right':'1em'}).on('click',function(){
-    devAppSetDiv.openFunc.call({},0,0);
+    devAppSetDiv.openFunc.call(null,0);
   });
   var spanLabel=createElement('span').myText('devAppList').css({'float':'right',margin:'0.2em 0 0 0'});  
   var menuA=createElement('div').myAppend(buttonAdd,spanLabel).css({padding:'0 0.3em 0 0',overflow:'hidden','max-width':maxWidth,'text-align':'left',margin:'.3em auto .4em'}); 

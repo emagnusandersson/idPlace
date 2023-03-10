@@ -12,7 +12,8 @@ import fetch from 'node-fetch';
 import formidable from "formidable";
 import myCrypto from 'crypto';
 import zlib from 'zlib';
-import redis from "redis";
+//import redis from "redis";
+import Redis from "ioredis";
 import Streamify from 'streamify-string';
 import serialize from 'serialize-javascript';
 import validator from 'validator';
@@ -26,7 +27,7 @@ import nodemailer from 'nodemailer';
 //UglifyJS from "uglify-js";
 
 app.extend=Object.assign;
-extend(app, {http, url, path, fsPromises, mysql, concat, fetch, formidable, myCrypto, zlib, redis, Streamify, serialize, validator, mime, ip, gm}); //, sgMail
+extend(app, {http, url, path, fsPromises, mysql, concat, fetch, formidable, myCrypto, zlib, Streamify, serialize, validator, mime, ip, gm}); //, sgMail
 
 var argv = minimist(process.argv.slice(2));
 
@@ -65,11 +66,13 @@ if(StrUnknown.length){ console.log('Unknown arguments: '+StrUnknown.join(', '));
 
 
   // Set up redisClient
-var urlRedis=process.env.REDIS_URL;
-if(  urlRedis ) {
-  app.redisClient=redis.createClient(urlRedis, {no_ready_check: true}); //
-}else { app.redisClient=redis.createClient();}
-    
+// var urlRedis=process.env.REDIS_URL;
+// if(  urlRedis ) {
+//   app.redisClient=redis.createClient(urlRedis, {no_ready_check: true}); //
+// }else { app.redisClient=redis.createClient();}
+
+var REDIS_URL="redis://localhost:6379"
+app.redis = new Redis(REDIS_URL);
 
 
   // Default config variables (If you want to change them I suggest you create a file config.js and overwrite them there)
@@ -186,6 +189,14 @@ app.strCookiePropLax=";"+StrCookiePropProt.concat("SameSite=Lax").join(';');
 app.strCookiePropStrict=";"+StrCookiePropProt.concat("SameSite=Strict").join(';');  
 
 
+var luaDDosCounterFun=`local c=redis.call('INCR',KEYS[1]); redis.call('EXPIRE',KEYS[1], ARGV[1]); return c`
+redis.defineCommand("myDDosCounterFun", { numberOfKeys: 1, lua: luaDDosCounterFun });
+
+var luaGetNExpire=`local c=redis.call('GET',KEYS[1]); redis.call('EXPIRE',KEYS[1], ARGV[1]); return c`;
+//var luaGetNExpire=`local c=redis.call('GET',KEYS[1]); if(c) then redis.call('EXPIRE',KEYS[1], ARGV[1]); end; return c`;
+redis.defineCommand("myGetNExpire", { numberOfKeys: 1, lua: luaGetNExpire });
+
+
 const handler=async function(req, res){
   if(typeof isRedirAppropriate!='undefined'){ 
     var tmpUrl=isRedirAppropriate(req); if(tmpUrl) { res.out301(tmpUrl); return; }
@@ -226,7 +237,7 @@ const handler=async function(req, res){
   var boSessionCookieInInput='sessionIDNormal' in cookies, sessionID=null, redisVarSessionCache;
   if(boSessionCookieInInput) {
     sessionID=cookies.sessionIDNormal;  redisVarSessionCache=sessionID+'_Cache';
-    var [err, tmp]=await cmdRedis('EXISTS', redisVarSessionCache); req.boCookieNormalOK=tmp;
+    var [err, tmp]=await existsRedis(redisVarSessionCache); req.boCookieNormalOK=tmp;
   } 
   
   if(req.boCookieNormalOK){
@@ -240,8 +251,9 @@ const handler=async function(req, res){
   }
   
     // Increase DDOS counter 
-  var luaCountFunc=`local c=redis.call('INCR',KEYS[1]); redis.call('EXPIRE',KEYS[1], ARGV[1]); return c`;
-  var [err, intCount]=await cmdRedis('EVAL',[luaCountFunc, 1, redisVarDDOSCounter, tDDOSBan]);
+  //var luaDDosCounterFun=`local c=redis.call('INCR',KEYS[1]); redis.call('EXPIRE',KEYS[1], ARGV[1]); return c`;
+  //var [err, intCount]=await cmdRedis('EVAL',[luaDDosCounterFun, 1, redisVarDDOSCounter, tDDOSBan]);
+  var [err, intCount]=await redis.myDDosCounterFun(redisVarDDOSCounter, tDDOSBan).toNBP();
   
   
   res.setHeader("Set-Cookie", ["sessionIDNormal="+sessionID+strCookiePropNormal, "sessionIDLax="+sessionID+strCookiePropLax, "sessionIDStrict="+sessionID+strCookiePropStrict]);
@@ -256,8 +268,9 @@ const handler=async function(req, res){
   
     // Refresh / create  redisVarSessionCache
   if(req.boCookieNormalOK){
-    var luaCountFunc=`local c=redis.call('GET',KEYS[1]); redis.call('EXPIRE',KEYS[1], ARGV[1]); return c`;
-    var [err, value]=await cmdRedis('EVAL',[luaCountFunc, 1, redisVarSessionCache, maxUnactivity]); req.sessionCache=JSON.parse(value)
+    //var luaGetNExpire=`local c=redis.call('GET',KEYS[1]); redis.call('EXPIRE',KEYS[1], ARGV[1]); return c`;
+    //var [err, value]=await cmdRedis('EVAL',[luaGetNExpire, 1, redisVarSessionCache, maxUnactivity]); req.sessionCache=JSON.parse(value)
+    var [err, value]=await redis.myGetNExpire(redisVarSessionCache, maxUnactivity).toNBP(); req.sessionCache=JSON.parse(value)
   } else { 
     await setRedis(redisVarSessionCache, {}, maxUnactivity); 
     req.sessionCache={};
