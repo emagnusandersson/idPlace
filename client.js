@@ -5,44 +5,19 @@
 app.funLoad=function(){
 
 var popUpExtend=function(el){
-  el.openPop=function() {
-    el.append(spanMessageText);
-    container.empty().append(el);  elBody.append(blanket);  elBody.append(container);
+  el.setVis=function(){
+    if(boDialog) el.showModal(); else el.show();
+    return 1;
   }
-  el.closePop=function() {  el.remove();  container.remove();  blanket.remove();  elBody.append(spanMessageText);  }
-
-  el.addClass('Center');
-  var blanket=createElement('div').addClass('blanket');
-  var container=createElement('div').addClass('Center-Container');
+  el.addEventListener('cancel', (event) => {
+    event.preventDefault();
+    historyBack()
+  })
   return el;
 }
 
-var vippButtonExtend=function(el){
-  el.setStat=function(bo1){
-    if(!bo1) {el.css(o0);} else {el.css(o1);} 
-    el.attr({boOn:bo1});
-  }
-  var o0={background:'url('+uVipp0+') no-repeat'}, o1={background:'url('+uVipp1+') no-repeat'};
-    
-  el.attr({boOn:0});
-  el.css({'background':'url('+uVipp0+') no-repeat',height:'33px',width:'90px',transform:'scale(0.60)','vertical-align':'-0.5em',cursor:'pointer',display:'inline-block'}).addClass('unselectable');
-  el.on('click',function(){var t=1-el.attr('boOn');   el.setStat(t);});
-  return el;
-}
 
-var toggleButtonExtend=function(el){
-  el.setStat=function(bo1){
-    if(bo1) {el.css(colOn);} else {el.css(colOff);} 
-    //el.toggleClass('on',Boolean(bo1));
-    el.attr({boOn:bo1});
-  }
-  var colOn={background:'#4f4'}, colOff={background:''};
-    
-  el.attr({boOn:0});
-  el.css({height:'1em',width:'1em'});
-  el.on('click',function(){var t=1-el.attr('boOn');   el.setStat(t);});
-  return el;
-}
+
 
 
 
@@ -68,6 +43,7 @@ var divMessageTextCreate=function(){
     if(time)     messTimer=setTimeout(resetMess, time*1000);
     imgBusyLoc.toggle(Boolean(boRot));
   };
+  el.on('click',el.resetMess)
   var messTimer;
   el.addClass('message');
   return el;
@@ -143,7 +119,7 @@ var divLoginInfoExtend=function(el){
   }
   el.cb=null;
   var spanName=createElement('span'); 
-  var logoutButt=createElement('button').myText(langHtml.divLoginInfo.logoutButt).css({'margin-left':'auto'}); //.css({'float':'right','font-size':'90%'});
+  var logoutButt=createElement('button').myText(langHtml.divLoginInfo.logoutButt).css({'margin-left':'auto'});
   logoutButt.on('click',function(e){
     e.preventDefault();
     //userInfoFrDB={}; 
@@ -183,19 +159,19 @@ var mainDivExtend=function(el){
     // loggedOutDiv
     //
 
-  var buttonSignIn=createElement('button').addClass('highStyle').myText('Sign in').on('click',function(){
+  var butSignIn=createElement('button').addClass('highStyle').myText('Sign in').on('click',function(){
     doHistPush({strView:'loginSelectorDiv'});
     loginSelectorDiv.setVis();
   });
-  var buttonCreateAccount=createElement('button').addClass('highStyle').myText('Create an account').on('click',function(){
+  var butCreateAccount=createElement('button').addClass('highStyle').myText('Create an account').on('click',function(){
     doHistPush({strView:'createUserSelectorDiv'});
     createUserSelectorDiv.setVis();
   });
-  var signInDiv=createElement('div').css(cssCol).myAppend(buttonSignIn);
-  var createAccountDiv=createElement('div').css(cssCol).css({'border-left':'2px solid grey','vertical-align':'top'}).myAppend(buttonCreateAccount);
+  var signInDiv=createElement('div').css(cssCol).myAppend(butSignIn);
+  var createAccountDiv=createElement('div').css(cssCol).css({'border-left':'2px solid','vertical-align':'top'}).myAppend(butCreateAccount);
 
   var divWhatIsOpen=createElement('div');
-  var imgIdPlaceCompare=createElement('img').css({width:'100%', 'max-width':'calc(var(--maxWidth)*0.8)', display:'block', margin:'1em auto'}).prop({src:uIdPlaceCompare, alt:"IdP comparission"});  
+  var imgIdPlaceCompare=createElement('img').css({width:'100%', 'max-width':'calc(var(--maxWidth)*0.8)', display:'block', margin:'1em auto'}).prop({src:uIdPlaceCompare, alt:"IdP comparission"}).addClass('invertOnDark');  
   var aMoreInfo=createElement('a').css({display:'block', margin:'3em auto', 'text-align':'center'}).prop({href:"http://emagnusandersson.com/idPlace"}).myText("More info");
   var headComparing=createElement('h2').myText("Comparing some common ID providers:").css({'text-align':'center'});
 
@@ -214,23 +190,23 @@ var mainDivExtend=function(el){
   var timeSpecialR=0, nSpecialReq=0;
 
 
-  var buttonUserSetting=createElement('button').addClass('highStyle').myText('Settings').on('click',function(){ //.css({display: 'block'})
+  var butUserSetting=createElement('button').addClass('highStyle').myText('Settings').on('click',function(){ //.css({display: 'block'})
     doHistPush({strView:'userSettingDiv'});
     userSettingDiv.setVis();
     el.devStuffToggleEventF();
   });
-  var buttonUserAppList=createElement('button').addClass('highStyle').myText('Apps I use').on('click',function(){ //.css({display: 'block'})
+  var butUserAppList=createElement('button').addClass('highStyle').myText('Apps I use').on('click',function(){ //.css({display: 'block'})
     doHistPush({strView:'userAppList'});
     userAppList.setVis();
   });
-  var buttonDevAppList=createElement('button').addClass('highStyle').myText('Apps I own').on('click',function(){ // .css({display: 'block'})
+  var butDevAppList=createElement('button').addClass('highStyle').myText('Apps I own').on('click',function(){ // .css({display: 'block'})
     doHistPush({strView:'devAppList'});
     devAppList.setVis();
   });
-  var divA=createElement('div').myAppend(buttonUserSetting), divB=createElement('div').myAppend(buttonUserAppList),  divDev=createElement('div').myAppend(buttonDevAppList); 
+  var divA=createElement('div').myAppend(butUserSetting), divB=createElement('div').myAppend(butUserAppList),  divDev=createElement('div').myAppend(butDevAppList); 
 
   var DivAll=[divA, divB, divDev]; DivAll.forEach(ele=>ele.css(cssCol));
-  [divB, divDev].forEach(ele=>ele.css({'border-left':'2px solid grey'}));
+  [divB, divDev].forEach(ele=>ele.css({'border-left':'2px solid'}));
 
   var divRowB=createElement('div').myAppend(...DivAll).css({display: 'flex', 'justify-content':'space-around'});
 
@@ -343,7 +319,7 @@ var formLoginExtend=function(el){
   el.cb=null;
   el.labEmail=el.querySelector("label[name='email']"); el.inpEmail=el.querySelector("input[name='email']").css({'max-width':'100%'});
   el.labPass=el.querySelector("label[name='password']"); el.inpPass=el.querySelector("input[name='password']").css({'max-width':'100%'});
-  el.buttLogin=el.querySelector("button[name='submit']").css({"margin-top": "1em"}).on('click',login);
+  el.butLogin=el.querySelector("button[name='submit']").css({"margin-top": "1em"}).on('click',login);
 
   [...el.querySelectorAll('input[type=text],[type=email],[type=number],[type=password]')].forEach(ele=>ele.css({display:'block'}).on('keypress', function(e){ if(e.which==13) { login(e); }} ) );
   return el;
@@ -365,28 +341,37 @@ var loginSelectorDivExtend=function(el){
   var cssCol={display:'inline-block',padding:'1em',flex:1}; //width:'50%',
 
   var messDiv=createElement('div').css({color:'red'});
-  var buttForgot=createElement('a').prop({href:''}).myText('Forgot your password?').on('click',forgotClickF);
-  var divForgot=createElement('div').css({'margin-top':'1em'}).myAppend(buttForgot);
+  var butForgot=createElement('a').prop({href:''}).myText('Forgot your password?').on('click',forgotClickF);
+  var divForgot=createElement('div').css({'margin-top':'1em'}).myAppend(butForgot);
  
   var divLeft=createElement('div').css(cssCol).myAppend(messDiv,    formLogin,     divForgot); formLogin.show();
-  var divRight=createElement('div').css(cssCol).css({'text-align':'center', 'border-left':'2px solid grey'});
+  var divRight=createElement('div').css(cssCol).css({'text-align':'center', 'border-left':'2px solid'});
   var divRow=createElement('div').myAppend(divLeft, divRight).css({display: 'flex', 'justify-content':'space-around'});
-  var divCont=createElement('div').myAppend(h1, divRow);
-  el.append(divCont);
+  var divCont=el.divCont=createElement('div').myAppend(h1, divRow);
+  divCont.css({padding:'0 0.3em 0 0', overflow:'hidden', 'max-width':maxWidth, 'text-align':'left', margin:'1em auto 0'}); 
+
+  var butBack=createElement('button').myText(charBack).addClass('highStyle').on('click',historyBack).css({'margin-left':'1em'});
+  var spanLabel=createElement('span').myText('loginSelector').css({'margin-left':'auto'});
+  var menuA=createElement('div').myAppend(butBack, spanLabel).css({margin:'.3em auto 0em', width:`min(${maxWidth}, 100%)`, display:'flex', gap:'1em'});
+
+  el.fixedDiv=createElement('div').myAppend(menuA).css(cssFixed).css({});
+
+
+  el.myAppend(el.divCont, el.fixedDiv);
 
   return el;
 }
 
 
-var devAppSecretDivExtend=function(el){
-  el.toString=function(){return 'devAppSecretDiv';}
+var devAppSecretPopExtend=function(el){
+  el.toString=function(){return 'devAppSecretPop';}
   var ret=function(data){
     spanSecret.myText(data.secret); inpPass.value=''
   }
   el.openFunc=function(){
     var elR=this.parentNode.parentNode; idApp=elR.r.idApp;
     spanSecret.myText('');
-    doHistPush({strView:'devAppSecretDiv'});
+    doHistPush({strView:'devAppSecretPop'});
     el.setVis();
     inpPass.focus()
   }
@@ -394,16 +379,20 @@ var devAppSecretDivExtend=function(el){
     //var hashPW=SHA1(inpPass.value+strSalt);
     var hashPW=inpPass.value+strSalt; for(var i=0;i<nHash;i++) hashPW=SHA1(hashPW);
     var vec=[['devAppSecret',{idApp, password:hashPW},ret]];   majax(vec);
-    
   }
   el.setVis=function(){
-    el.show(); return 1;
+    if(boDialog) el.showModal(); else el.show();
+    return 1;
   }
+  el.addEventListener('cancel', (event) => {
+    event.preventDefault();
+    historyBack()
+  })
   var idApp;
  
     // Authenticate with password
-  var inpPass=createElement('input').prop('type','password').on('keypress', function(e){ if(e.which==13) { send();   }} );
-  var buttSend=createElement('button').myText('Send').css({"margin-top": "1em"}).on('click',send);
+  var inpPass=createElement('input').prop('type','password').css({width:'100%'}).on('keypress', function(e){ if(e.which==13) { send();   }} );
+  var butSend=createElement('button').myText('Send').css({"margin-top": "1em"}).on('click',send);
 
 
     // Authenticate with IdP
@@ -420,23 +409,31 @@ var devAppSecretDivExtend=function(el){
   var Im=[imgFb]; Im.forEach(ele=>ele.css({align:'center', display:'block', 'margin-top': '0.7em'})); 
 
 
- 
-  var head=createElement('h3').myText('Reauthenticate to see secret');
+  var head=createElement('h3').myText('Reauthenticate to see secret').css({'margin':'0'});
   var hSecret=createElement('span').css({margin:'0 .5em 0 0','font-weight': 'bold'}).myText('Secret: ');
   
-  
   var cssCol={display:'inline-block',padding:'1em',flex:1}; //width:'50%',
-  var divLeft=createElement('div').css(cssCol).myText('Password: ').myAppend(inpPass, buttSend);
-  var divRight=createElement('div').css(cssCol).css({'text-align':'center', 'border-left':'2px solid grey'}).myAppend(...Im);
+  var divLeft=createElement('div').css(cssCol).myText('Password: ').myAppend(inpPass, butSend);
+  var divRight=createElement('div').css(cssCol).css({'text-align':'center', 'border-left':'2px solid'}).myAppend(...Im);
   var divRow=createElement('div').myAppend(divLeft, divRight).css({display: 'flex', 'justify-content':'space-around'});
   
   var spanSecret=createElement('span');//.css({'font-weight': 'bold'});
-  var p=createElement('div').myAppend(hSecret, spanSecret).css({margin:'0.5em 0',border:'solid 1px',background:'yellow'});
-  var cancel=createElement('button').addClass('highStyle').myText('Back').on('click',historyBack).css({display:'block', margin:'1em 0em'});
+  var p=createElement('div').myAppend(hSecret, spanSecret).css({margin:'0.5em 0',border:'solid 1px',background:'var(--bg-yellow)'});
+  var butClose=createElement('button').addClass('highStyle').myText(langHtml.Close).on('click',historyBack);
+  var divBottom=createElement('div').myAppend(butClose)
 
-  var blanket=createElement('div').addClass("blanket");
-  var centerDiv=createElement('div').addClass("Center").myAppend(head, divRow, p,cancel).css({'min-width':'17em','max-width':'25em', padding:'0.1em'}); // height:'19em', 
-  el.addClass("Center-Container").myAppend(centerDiv,blanket); 
+
+  var El=[head, divRow, p, divBottom];
+  var centerDiv=createElement('div').myAppend(...El);
+  if(boDialog){
+    el.myAppend(centerDiv);
+  } else{
+    var blanket=createElement('div').addClass("blanket");
+    centerDiv.addClass("Center-Flex");
+    el.addClass("Center-Container-Flex").myAppend(centerDiv,blanket);
+  }
+  centerDiv.css({display:'flex', gap:'1em', 'flex-direction':'column', 'justify-content':'space-evenly'})
+
   return el;
 }
 
@@ -445,7 +442,7 @@ var createUserSelectorDivExtend=function(el){
   el.toString=function(){return 'createUserSelectorDiv';}
   el.setUp=function(){ divRight.append(idPLoginDiv);   }
   var cssCol={display:'inline-block',padding:'1em',flex:1}; //width:'50%',
-  var buttonCreateAccount=createElement('button').addClass('highStyle').myText('Create an account').on('click',function(){
+  var butCreateAccount=createElement('button').addClass('highStyle').myText('Create an account').on('click',function(){
     doHistPush({strView:'createUserDiv'});
     createUserDiv.setVis();
   });
@@ -454,13 +451,20 @@ var createUserSelectorDivExtend=function(el){
   var headUN=createElement('h2').myText('Using password');
   var headFB=createElement('h2').myText('Using Facebook');
 
-  var divLeft=createElement('div').myAppend(headUN, buttonCreateAccount);
+  var divLeft=createElement('div').myAppend(headUN, butCreateAccount);
   var divRight=createElement('div').myAppend(headFB);
-  divLeft.css(cssCol); divRight.css(cssCol).css({'border-left':'2px solid grey'}); //'text-align':'center', 
+  divLeft.css(cssCol); divRight.css(cssCol).css({'border-left':'2px solid'}); //'text-align':'center', 
   var divRow=createElement('div').myAppend(divLeft, divRight).css({display: 'flex', 'justify-content':'space-around'});
-  el.divCont=createElement('div').css({padding:'0 0.3em 0 0', overflow:'hidden', 'max-width':maxWidth, 'text-align':'left', margin:'1em auto 0'}).myAppend(h1, divRow);
-  el.append(el.divCont);
+  el.divCont=createElement('div').myAppend(h1, divRow);
+  el.divCont.css({padding:'0 0.3em 0 0', overflow:'hidden', 'max-width':maxWidth, 'text-align':'left', margin:'1em auto 0'})
 
+  var butBack=createElement('button').myText(charBack).addClass('highStyle').on('click',historyBack).css({'margin-left':'1em'});
+  var spanLabel=createElement('span').myText('createUserSelector').css({'margin-left':'auto'});
+  var menuA=createElement('div').myAppend(butBack, spanLabel).css({margin:'.3em auto 0em', width:`min(${maxWidth}, 100%)`, display:'flex', gap:'1em'});
+
+  el.fixedDiv=createElement('div').myAppend(menuA).css(cssFixed).css({});
+
+  el.myAppend(el.divCont, el.fixedDiv);
   return el;
 }
 
@@ -562,9 +566,12 @@ var createUserDivExtend=function(el){
   divCont.append(h1, el.divDisclaimerW, messDiv,   labPass, inpPass, labPassB, inpPassB);  //, obliDiv
   el.createInputs();
 
-  var spanLabel=createElement('span').myText(langHtml.CreateAccount).css({'float':'right',margin:'0.2em 0 0 0'}); 
-  var buttonSave=createElement('button').addClass('highStyle').myText(langHtml.Create).on('click',save);
-  var menuA=createElement('div').myAppend(buttonSave,spanLabel).css({padding:'0 0.3em 0 0', overflow:'hidden', 'max-width':maxWidth, 'text-align':'left', margin:'.3em auto .4em'}); 
+  var butBack=createElement('button').myText(charBack).addClass('highStyle').on('click',historyBack).css({'margin-left':'1em'});
+  var spanLabel=createElement('span').myText(langHtml.CreateAccount).css({'margin-left':'auto'}); 
+  var butSave=createElement('button').addClass('highStyle').myText(langHtml.Create).on('click',save);
+  var menuA=createElement('div').myAppend(butBack, butSave, spanLabel)
+  //menuA.css({padding:'0 0.3em 0 0', overflow:'hidden', 'max-width':maxWidth, 'text-align':'left', margin:'.3em auto .4em'}); 
+  menuA.css({margin:'.3em auto 0em', width:`min(${maxWidth}, 100%)`, display:'flex', gap:'1em'});
 
   el.fixedDiv=createElement('div').myAppend(menuA).css(cssFixed);
   el.append(el.divCont, el.fixedDiv);
@@ -592,19 +599,32 @@ var deleteAccountPopExtend=function(el){
       history.fastBack('mainDiv',true);
     }]];   majax(vec);
   });
-  var cancel=createElement('button').addClass('highStyle').myText(langHtml.Cancel).on('click',historyBack);
+  var butCancel=createElement('button').addClass('highStyle').myText(langHtml.Cancel).on('click',historyBack);
   //el.myAppendHtml(langHtml.deleteBox.regret,'<br>',yes,cancel);
   //el.css({padding:'1.1em',border:'1px solid'});
   el.setVis=function(){
-    el.show();   
+    if(boDialog) el.showModal(); else el.show();
     return true;
   }
+  el.addEventListener('cancel', (event) => {
+    event.preventDefault();
+    historyBack()
+  })
 
-  var h1=createElement('div').myText(langHtml.deleteBox.regret).css({'margin-bottom':'1em'});
-  var blanket=createElement('div').addClass("blanket");
-  var centerDiv=createElement('div').myAppend(h1,cancel,yes);
-  centerDiv.addClass("Center").css({padding:'1.1em'}); // 'width':'20em', height:'9em', 
-  el.addClass("Center-Container").myAppend(centerDiv,blanket); //
+  var h1=createElement('h3').myText(langHtml.deleteBox.regret).css({'margin':'0'});
+  var divBottom=createElement('div').myAppend(butCancel,yes).css({display:'flex', gap:'0.4em', 'justify-content':'space-between'})
+
+  var El=[h1, divBottom];
+  var centerDiv=createElement('div').myAppend(...El);
+  if(boDialog){
+    el.myAppend(centerDiv);
+  } else{
+    var blanket=createElement('div').addClass("blanket");
+    centerDiv.addClass("Center-Flex")
+    centerDiv.css({height:'min(8em, 98%)', width:'min(21em,98%)'});
+    el.addClass("Center-Container-Flex").myAppend(centerDiv,blanket);
+  }
+  centerDiv.css({display:'flex', gap:'1em', 'flex-direction':'column', 'justify-content':'space-evenly'})
 
   return el;
 }
@@ -631,28 +651,43 @@ var changePWPopExtend=function(el){
     inpPassOld.value=''; inpPass.value=''; inpPassB.value='';
   }
   el.setVis=function(){
-    el.show();   
+    if(boDialog) el.showModal(); else el.show();
     return true;
   }
   var changePWRet=function(data){
     if(data.boOK) { inpPassOld.value=''; inpPass.value=''; inpPassB.value='';  historyBack(); }
   }
+  el.addEventListener('cancel', (event) => {
+    event.preventDefault();
+    historyBack()
+  })
 
-  var h1=createElement('h3').myText('Change your password');
-  var blanket=createElement('div').addClass("blanket");
-  var messDiv=createElement('div').css({color:'red'});
+  var h1=createElement('h3').myText('Change your password').css({'margin':'0'});
+  var messDiv=createElement('div').css({color:'red', height:'1em'});
   var labPassOld=createElement('label').myText('Old password'), labPass=createElement('label').myText('New password'),  labPassB=createElement('label').myText('New password again');  
   var inpPassOld=createElement('input').prop({type:'password'}), inpPass=createElement('input').prop({type:'password', placeholder:"at least 6 characters"}),  inpPassB=createElement('input').prop({type:'password'});
 
-  [inpPassOld, inpPass, inpPassB].forEach(ele=>ele.css({display:'block', 'margin-bottom':'0.5em'}).on('keypress', function(e){ if(e.which==13) {okF();return false;}} )   );
+  var secPassOld=createElement('section').myAppend(labPassOld, inpPassOld);
+  var secPass=createElement('section').myAppend(labPass, inpPass);
+  var secPassB=createElement('section').myAppend(labPassB, inpPassB);
 
-  var ok=createElement('button').myText(langHtml.OK).addClass('highStyle').on('click',save);
-  var cancel=createElement('button').myText(langHtml.Cancel).addClass('highStyle').on('click',historyBack);
-  var divBottom=createElement('div').myAppend(cancel,ok);  //buttonCancel,
+  [inpPassOld, inpPass, inpPassB].forEach(ele=>ele.css({display:'block', width:'100%'}).on('keypress', function(e){ if(e.which==13) {okF();return false;}} )   ); //, 'margin-bottom':'0.5em'
 
-  var centerDiv=createElement('div').myAppend(h1, messDiv,   labPassOld, inpPassOld, labPass, inpPass, labPassB, inpPassB, divBottom);
-  centerDiv.addClass("Center").css({padding:'1.1em'}); // 'width':'20em', height:'21em', 
-  el.addClass("Center-Container").myAppend(centerDiv,blanket); //
+  var butOk=createElement('button').myText(langHtml.OK).addClass('highStyle').on('click',save);
+  var butCancel=createElement('button').myText(langHtml.Cancel).addClass('highStyle').on('click',historyBack);
+  var divBottom=createElement('div').myAppend(butCancel,butOk).css({display:'flex', gap:'0.4em', 'justify-content':'space-between'})
+
+  var El=[h1, messDiv, secPassOld, secPass, secPassB, divBottom];
+  var centerDiv=createElement('div').myAppend(...El);
+  if(boDialog){
+    el.myAppend(centerDiv);
+  } else{
+    var blanket=createElement('div').addClass("blanket");
+    centerDiv.addClass("Center-Flex")
+    centerDiv.css({height:'min(20em, 98%)', width:'min(21em,98%)'});
+    el.addClass("Center-Container-Flex").myAppend(centerDiv,blanket);
+  }
+  centerDiv.css({display:'flex', gap:'1em', 'flex-direction':'column', 'justify-content':'space-evenly'})
 
   return el;
 }
@@ -669,26 +704,37 @@ var verifyEmailPopExtend=function(el){
     el.setVis();
   }
   el.setVis=function(){
-    el.show();   
+    if(boDialog) el.showModal(); else el.show();
     return true;
   }
   var okRet=function(data){
     if(data.boOK) {  historyBack(); }
   }
+  el.addEventListener('cancel', (event) => {
+    event.preventDefault();
+    historyBack()
+  })
 
-  var h1=createElement('h3').myText('Verify emailaddress');
+  var h1=createElement('h3').myText('Verify email address').css({'margin':'0'});
   var spanEmail=createElement('span').css({'font-weight': 'bold'});
   var pTxt=createElement('p').myText('Send a verification email to ').myAppend(spanEmail);
   var pBottom=createElement('p').myText('Note! The verification code sent will only be valid for 10 minutes.');
-  var blanket=createElement('div').addClass("blanket");
 
-  var ok=createElement('button').myText(langHtml.OK).addClass('highStyle').on('click',okF);
-  //var cancel=createElement('button').myText(langHtml.Cancel).on('click',historyBack);
-  var divBottom=createElement('div').myAppend(ok);  //cancel,
+  var butOk=createElement('button').myText(langHtml.OK).addClass('highStyle').on('click',okF);
+  var butCancel=createElement('button').myText(langHtml.Cancel).addClass('highStyle').on('click',historyBack);
+  var divBottom=createElement('div').myAppend(butCancel,butOk).css({display:'flex', gap:'0.4em', 'justify-content':'space-between'})
 
-  var centerDiv=createElement('div').myAppend(h1, pTxt, pBottom, divBottom);
-  centerDiv.addClass("Center").css({padding:'1.1em'});  // 'width':'20em', height:'15em', 
-  el.addClass("Center-Container").myAppend(centerDiv,blanket); //
+  var El=[h1, pTxt, pBottom, divBottom];
+  var centerDiv=createElement('div').myAppend(...El);
+  if(boDialog){
+    el.myAppend(centerDiv);
+  } else{
+    var blanket=createElement('div').addClass("blanket");
+    centerDiv.addClass("Center-Flex")
+    centerDiv.css({height:'min(16em, 98%)', width:'min(20em,98%)'});
+    el.addClass("Center-Container-Flex").myAppend(centerDiv,blanket);
+  }
+  centerDiv.css({display:'flex', gap:'1em', 'flex-direction':'column', 'justify-content':'space-evenly'})
 
   return el;
 }
@@ -705,26 +751,38 @@ var forgottPWPopExtend=function(el){
     inpEmail.value='';
   }
   el.setVis=function(){
-    el.show();   
+    if(boDialog) el.showModal(); else el.show();
     return true;
   }
   var okRet=function(data){
     if(data.boOK) { inpEmail.value='';  historyBack(); }
   }
+  el.addEventListener('cancel', (event) => {
+    event.preventDefault();
+    historyBack()
+  })
 
-  var h1=createElement('h3').myText('Forgott your password?');
-  var blanket=createElement('div').addClass("blanket");
+  var h1=createElement('h3').myText('Forgot your password?').css({'margin':'0'});
   var labEmail=createElement('label').myText('Email');  
   var inpEmail=createElement('input').prop({type:'email'}).on('keypress', function(e){ if(e.which==13) {okF();return false;}} );
-  inpEmail.css({display:'block', 'margin-bottom':'0.5em'});
+  inpEmail.css({display:'block', 'margin-bottom':'0.5em', width:'100%'});
+  var secEmail=createElement('section').myAppend(labEmail, inpEmail)
 
-  var ok=createElement('button').myText(langHtml.OK).addClass('highStyle').on('click',okF);
-  var cancel=createElement('button').myText(langHtml.Cancel).addClass('highStyle').on('click',historyBack);
-  var divBottom=createElement('div').myAppend(cancel,ok);  //buttonCancel,
+  var butOk=createElement('button').myText(langHtml.OK).addClass('highStyle').on('click',okF);
+  var butCancel=createElement('button').myText(langHtml.Cancel).addClass('highStyle').on('click',historyBack);
+  var divBottom=createElement('div').myAppend(butCancel,butOk).css({display:'flex', gap:'0.4em', 'justify-content':'space-between'});
 
-  var centerDiv=createElement('div').myAppend(h1, labEmail, inpEmail, divBottom);
-  centerDiv.addClass("Center").css({padding:'1.1em'}); // 'width':'20em', height:'13em', 
-  el.addClass("Center-Container").myAppend(centerDiv,blanket); //
+  var El=[h1, secEmail, divBottom];
+  var centerDiv=createElement('div').myAppend(...El);
+  if(boDialog){
+    el.myAppend(centerDiv);
+  } else{
+    var blanket=createElement('div').addClass("blanket");
+    centerDiv.addClass("Center-Flex")
+    centerDiv.css({height:'min(10em, 98%)', width:'min(20em,98%)'});
+    el.addClass("Center-Container-Flex").myAppend(centerDiv,blanket);
+  }
+  centerDiv.css({display:'flex', gap:'1em', 'flex-direction':'column', 'justify-content':'space-evenly'})
 
   return el;
 }
@@ -749,24 +807,22 @@ var consentDivExtend=function(el){
   var pA=createElement('p').myAppend('The app: ', spanApp, ", would like to be able to read these data: ", listPerm);
   var pOldPerm=createElement('p').myAppend('(Old permission: ', spanPermOld, ')');
   var pB=createElement('p').myText('(You can withdraw this right later.)').css({'font-size':'85%'});
-  var buttCancel=createElement('button').addClass('highStyle').myText('Cancel').on('click',function(){
+  var butCancel=createElement('button').addClass('highStyle').myText(langHtml.Cancel).on('click',function(){
     el.cb(false);
   });
-  var buttAllow=createElement('button').addClass('highStyle').myText('Allow').on('click',function(){
+  var butAllow=createElement('button').addClass('highStyle').myText('Allow').on('click',function(){
     //var vec=[['userAppSet',{scope:scopeAsked, idApp, maxUnactivityToken}], ['setupById',{idApp},el.cb]];   majax(vec);
     var maxUnactivityToken=objQS.response_type=='code'?60*24*3600:2*3600;
     var vec=[['setConsent',{scope:scopeAsked, idApp, maxUnactivityToken}], ['setupById',{idApp},function(data){el.cb(true);}]];   majax(vec); 
   });
-  el.append(pA, pOldPerm, pB, buttCancel, buttAllow);
+  el.append(pA, pOldPerm, pB, butCancel, butAllow);
 
   return el;
 }
 
 
-
-
-var uploadImageDivExtend=function(el){
-  el.toString=function(){return 'uploadImageDiv';}
+var uploadImagePopExtend=function(el){
+  el.toString=function(){return 'uploadImagePop';}
   //var progressHandlingFunction=function(e){      if(e.lengthComputable){   progress.attr({value:e.loaded,max:e.total});      }      }
 
   var setMess=function(str) {divMess.myText(str);}
@@ -844,41 +900,51 @@ var uploadImageDivExtend=function(el){
   }
   el.openFunc=function(strKindT, callbackT){
     strKind=strKindT; callback=callbackT; setMess('');  inpFile.value='';
-    doHistPush({strView:'uploadImageDiv'});
+    doHistPush({strView:'uploadImagePop'});
     el.setVis();    
   };
   el.setVis=function(){
-    el.show();   
+    if(boDialog) el.showModal(); else el.show();
     return true;
   }
+  el.addEventListener('cancel', (event) => {
+    event.preventDefault();
+    historyBack()
+  })
   var strKind='u', callback;
   //el=popUpExtend(el);  
   //el.css({'max-width':'20em', padding: '0.3em 0.5em 1.2em 0.6em'});
 
-  var head=createElement('h3').myText('Upload Image: ').css({'font-weight':'bold'});
+  var head=createElement('h3').myText('Upload Image:').css({'margin':'0'});
   var formFile=createElement('form'); //enctype="multipart/form-data"
-  var inpFile=createElement('input').prop({type:'file', name:'file', id:'file', accept:"image/*"}).css({background:'lightgrey'});
+  var inpFile=createElement('input').prop({type:'file', name:'file', id:'file', accept:"image/*"}).css({background:'var(--bg-colorEmp)', 'font-size':"0.95em"});
   //var inpUploadButton=createElement('input').prop({type:"button", value:"Upload"});
-  var uploadButton=createElement('button').myText('Upload').addClass('highStyle').prop("disabled",true).css({'margin-right':'0.5em'}); //, 'float':'right'
+  var uploadButton=createElement('button').myText('Upload').addClass('highStyle').prop("disabled",true); //.css({'margin-right':'0.5em'});
   //var progress=createElement('progress').prop({max:100, value:0}).css({'display':'block','margin-top':'1em'}).invisible();
-  var divMess=createElement('div').css({'margin-top':'1.2em', 'min-height':'1em'});
+  var divMess=createElement('div').css({'min-height':'1em'}); //'margin-top':'1.2em', 
   
   var objFile;
   inpFile.on('change',verifyFun).on('click',function(){uploadButton.prop("disabled",true);});
   formFile.append(inpFile);   formFile.css({display:'inline'});
    
 
-  var closeButton=createElement('button').myText('Close').addClass('highStyle').on('click',historyBack);
-  var menuBottom=createElement('div').myAppend(closeButton, uploadButton).css({'margin-top':'1.2em'});
-
-  //el.append(head, formFile, progress, divMess,menuBottom); 
-
-  var blanket=createElement('div').addClass("blanket");
-  var centerDiv=createElement('div').myAppend(head, formFile, divMess,menuBottom);  //, progress
-  centerDiv.addClass("Center").css({'max-width':'21em', padding: '0.3em 0.5em 1.2em 0.6em'}); // , height:'15em'
-  el.addClass("Center-Container").myAppend(centerDiv,blanket); //
+  var butClose=createElement('button').myText(langHtml.Close).addClass('highStyle').on('click',historyBack);
+  var divBottom=createElement('div').myAppend(butClose, uploadButton).css({display:'flex', gap:'0.4em', 'justify-content':'space-between'})
 
   uploadButton.on('click',sendFun);
+
+  var El=[head, formFile, divMess, divBottom];   //, progress
+  var centerDiv=createElement('div').myAppend(...El);
+  if(boDialog){
+    el.myAppend(centerDiv);
+  } else{
+    var blanket=createElement('div').addClass("blanket");
+    centerDiv.addClass("Center-Flex")
+    centerDiv.css({height:'min(12em, 98%)', width:'min(20em,98%)'});
+    el.addClass("Center-Container-Flex").myAppend(centerDiv,blanket);
+  }
+  centerDiv.css({display:'flex', gap:'1em', 'flex-direction':'column', 'justify-content':'space-evenly'})
+
   return el;
 }
 
@@ -930,22 +996,24 @@ var userSettingDivExtend=function(el){
 
   el.StrProp=['name', 'password', 'image', 'email', 'boEmailVerified', 'telephone',   'country', 'federatedState', 'county', 'city', 'zip', 'address',     'idFB', 'idNational', 'birthdate', 'motherTongue', 'gender']; //'idFB', 'idGoogle', 
 
-  var buttonDelete=createElement('button').myText('Delete account').addClass('highStyle').on('click',function(){ 
+  var butDelete=createElement('button').myText('Delete account').addClass('highStyle').on('click',function(){ 
     doHistPush({strView:'deleteAccountPop'});
     deleteAccountPop.setVis();
-  }).css({margin:'0.2em 0 0 0'});  //'float':'right',
-  var divCreated=createElement('div').myAppendHtml('Account created <b></b> ago ', buttonDelete).css({'font-size':'90%', 'border-bottom':'2px solid grey', 'margin-bottom':'1em', 'padding-bottom':'0.5em'});
+  }).css({margin:'0.2em 0 0 0'});
+  var divCreated=createElement('div').myAppendHtml('Account created <b></b> ago ', butDelete).css({'font-size':'90%', 'border-bottom':'2px solid', 'margin-bottom':'1em', 'padding-bottom':'0.5em'});
   el.divDisclaimerW=createElement('div').css({'margin':'0em', 'padding':'0em'});
 
   var divCont=el.divCont=createElement('div').myAppend(divCreated,el.divDisclaimerW).css({padding:'0 0.3em 0 0', overflow:'hidden', 'max-width':maxWidth, 'text-align':'left', margin:'1em auto 0'}); 
   el.createInputs();
 
-  var spanLabel=createElement('span').myText(langHtml.Settings).css({'float':'right',margin:'0.2em 0 0 0'});
-  var buttonSave=createElement('button').myText(langHtml.Save).addClass('highStyle').on('click',save);
-  var menuA=createElement('div').myAppend(buttonSave, spanLabel).css({padding:'0 0.3em 0 0', overflow:'hidden', 'max-width':maxWidth, 'text-align':'left', margin:'.3em auto .4em'}); 
+  var butBack=createElement('button').myText(charBack).addClass('highStyle').on('click',historyBack).css({'margin-left':'1em'});
+  var butSave=createElement('button').myText(langHtml.Save).addClass('highStyle').on('click',save);
+  var spanLabel=createElement('span').myText(langHtml.Settings).css({'margin-left':'auto'});
+  var menuA=createElement('div').myAppend(butBack, butSave, spanLabel).css({margin:'.3em auto 0em', width:`min(${maxWidth}, 100%)`, display:'flex', gap:'1em'});
 
-  el.fixedDiv=createElement('div').myAppend(menuA).css(cssFixed);
-  el.append(el.divCont, el.fixedDiv);
+  el.fixedDiv=createElement('div').myAppend(menuA).css(cssFixed).css({});
+
+  el.myAppend(el.divCont, el.fixedDiv);
   return el;
 }
 
@@ -991,12 +1059,12 @@ var headExtend=function(el, tableDiv, StrName, BoAscDefault, Label, strTR='tr', 
     var imgSort=createElement('img').attr('data-type', 'sort').prop({src:uUnsorted, alt:"sort"});
     var boAscDefault=(strName in BoAscDefault)?BoAscDefault[strName]:true;
     var label=(strName in Label)?Label[strName]:ucfirst(strName);
-    var h=createElement(strTH).myAppend(imgSort).addClass('unselectable').prop({UNSELECTABLE:"on"}).attr('name',strName).prop('boAscDefault',boAscDefault).prop('title',label).on('click',thClick);
+    var h=createElement(strTH).myAppend(imgSort).addClass('unselectable').attr('name',strName).prop('boAscDefault',boAscDefault).prop('title',label).on('click',thClick);
     Th[i]=h;
     arrImgSort[i]=imgSort;
   }
 
-  el.append(...Th);
+  el.myAppend(...Th);
   el.addClass('listHead');
   return el;
 }
@@ -1010,13 +1078,13 @@ var headExtend=function(el, tableDiv, StrName, BoAscDefault, Label, strTR='tr', 
  *******************************************************************************************************************
  *******************************************************************************************************************/
 
-var userAppSetDivExtend=function(el){
-  el.toString=function(){return 'userAppSetDiv';}
+var userAppSetPopExtend=function(el){
+  el.toString=function(){return 'userAppSetPop';}
   return el;
 }
-var userAppDeleteDivExtend=function(el){
-  el.toString=function(){return 'userAppDeleteDiv';}
-  var ok=createElement('button').myText('OK').addClass('highStyle').css({'margin-top':'1em'}).on('click',function(){    
+var userAppDeletePopExtend=function(el){
+  el.toString=function(){return 'userAppDeletePop';}
+  var butOk=createElement('button').myText('OK').addClass('highStyle').on('click',function(){    
     var idApp=elR.attr('idApp'), vec=[['userAppDelete',{idApp},okRet]];   majax(vec);    
   });
   var okRet=function(data){
@@ -1026,21 +1094,38 @@ var userAppDeleteDivExtend=function(el){
   }
   el.openFunc=function(){
     elR=this.parentNode.parentNode; spanApp.myText(elR.r.appName);
-    doHistPush({strView:'userAppDeleteDiv'});
+    doHistPush({strView:'userAppDeletePop'});
     el.setVis();
   }
   el.setVis=function(){
-    el.show(); return 1;
+    if(boDialog) el.showModal(); else el.show();
+    //return 1;
   }
+  el.addEventListener('cancel', (event) => {
+    event.preventDefault();
+    historyBack()
+  })
  
   var elR;
-  var head=createElement('h3').myText('Remove');
+  var head=createElement('h3').myText('Remove').css({'margin':0});
   var spanApp=createElement('span');//.css({'font-weight': 'bold'});
   var p=createElement('div').myAppend(spanApp);
 
-  var blanket=createElement('div').addClass("blanket");
-  var centerDiv=createElement('div').addClass("Center").myAppend(head,p,ok).css({'min-width':'17em','max-width':'25em', padding:'0.1em'}); //,cancel  height:'10em', 
-  el.addClass("Center-Container").myAppend(centerDiv,blanket); 
+  var butCancel=createElement('button').myText(langHtml.Cancel).addClass('highStyle').on('click',historyBack);
+  var divBottom=createElement('div').myAppend(butCancel, butOk).css({display:'flex', gap:'0.4em', 'justify-content':'space-between'})
+
+  var El=[head, p, divBottom];
+  var centerDiv=createElement('div').myAppend(...El);
+  if(boDialog){
+    el.myAppend(centerDiv);
+  } else{
+    var blanket=createElement('div').addClass("blanket");
+    centerDiv.addClass("Center-Flex")
+    centerDiv.css({height:'min(10em, 98%)', width:'min(16em,98%)'});
+    el.addClass("Center-Container-Flex").myAppend(centerDiv,blanket);
+  }
+  centerDiv.css({display:'flex', gap:'1em', 'flex-direction':'column', 'justify-content':'space-evenly'})
+
   return el;
 }
 var userAppListExtend=function(el){
@@ -1065,14 +1150,14 @@ var userAppListExtend=function(el){
     var Td=[];
     for(var i=0;i<StrCol.length;i++) { 
       var name=StrCol[i], val=r[name], td; if(name in TDConstructors) {td=new TDConstructors[name](); }   else td=createElement('td');   Td.push(td.attr('name',name));
-      //if('mySetVal' in td) { td.mySetVal(val);}   else td.append(val);
+      //if('mySetVal' in td) { td.mySetVal(val);}   else td.myAppend(val);
       //if('mySetSortVal' in td) { td.mySetSortVal(val);}   else td.valSort=val;
     }
-    var buttEdit=createElement('button').attr('name','buttonEdit').myText('Edit').addClass('highStyle').on('click',function(){
-      userAppSetDiv.openFunc.call(this,1);
+    var butEdit=createElement('button').attr('name','buttonEdit').myText('Edit').addClass('highStyle').on('click',function(){
+      userAppSetPop.openFunc.call(this,1);
     });
-    var buttDelete=createElement('button').attr('name','buttonDelete').addClass('highStyle').css({'margin-right':'0.2em'}).myAppend(imgDelete.cloneNode()).on('click',userAppDeleteDiv.openFunc);
-    var tEdit=createElement('td').myAppend(buttEdit), tDelete=createElement('td').myAppend(buttDelete); 
+    var butDelete=createElement('button').attr('name','buttonDelete').addClass('highStyle').css({'margin-right':'0.2em'}).myAppend(imgDelete.cloneNode()).on('click',userAppDeletePop.openFunc);
+    var tEdit=createElement('td').myAppend(butEdit), tDelete=createElement('td').myAppend(butDelete); 
     var elR=createElement('tr').myAppend(...Td, tDelete); elR.attr({idApp:r.idApp,appName:r.appName}).prop('r',r);  //, tEdit
     for(var i=0;i<StrCol.length;i++) { 
       var td=Td[i], name=StrCol[i], val=r[name]
@@ -1120,25 +1205,28 @@ var userAppListExtend=function(el){
   var StrCol=['idApp', 'appName','scope', 'imageHash', 'tAccess'], BoAscDefault={tAccess:0};
   var Label={tAccess:'Accessed',imageHash:'Image'};
   var tHead=headExtend(createElement('thead'),el,StrCol,BoAscDefault,Label);
-  tHead.css({background:'white', width:'inherit'});  //,height:'calc(12px + 1.2em)'
+  tHead.css({width:'inherit'});  //,height:'calc(12px + 1.2em)'
   el.table.prepend(tHead);
   el.nRowVisible=0;
 
   var imgDelete=imgProt.cloneNode().prop({src:uDelete, alt:"delete"});
       // menuA
-  var spanLabel=createElement('span').myText('userAppList').css({'float':'right',margin:'0.2em 0 0 0'});  
-  var menuA=createElement('div').myAppend(spanLabel).css({padding:'0 0.3em 0 0',overflow:'hidden','max-width':maxWidth,'text-align':'left',margin:'.3em auto .4em'}); 
+  var butBack=createElement('button').myText(charBack).addClass('highStyle').on('click',historyBack).css({'margin-left':'1em'});
+  var spanLabel=createElement('span').myText('userAppList').css({'margin-left':'auto'});  
+  var menuA=createElement('div').myAppend(butBack, spanLabel);
+  //menuA.css({padding:'0 0.3em 0 0',overflow:'hidden','max-width':maxWidth,'text-align':'left',margin:'.3em auto .4em'}); 
+  menuA.css({margin:'.3em auto 0em', width:`min(${maxWidth}, 100%)`, display:'flex', gap:'1em'});
 
-  el.addClass('userAppList');
   el.fixedDiv=createElement('div').myAppend(menuA).css(cssFixed);
-  el.css({'text-align':'center'});
-  el.append(el.divCont, el.fixedDiv);
+
+  //el.css({'text-align':'center'});
+  el.myAppend(el.divCont, el.fixedDiv).addClass('userAppList');
   return el;
 }
 
 
-var devAppSetDivExtend=function(el){
-  el.toString=function(){return 'devAppSetDiv';}
+var devAppSetPopExtend=function(el){
+  el.toString=function(){return 'devAppSetPop';}
   var save=function(){
     r.appName=inpAppName.value.trim(); if(r.appName.length==0){ setMess('empty app name',2);  return;}
     var uri=inpURL.value.trim();  if(uri.length==0){ setMess('empty redir_uri',2);  return;}
@@ -1167,45 +1255,59 @@ var devAppSetDivExtend=function(el){
       var elR=this.parentNode.parentNode;
       r=elR.r;
     } 
-    doHistPush({strView:'devAppSetDiv'});
+    doHistPush({strView:'devAppSetPop'});
     el.setVis();
     el.setUp();
   }
   el.setVis=function(){
-    el.show(); return 1;
+    if(boDialog) el.showModal(); else el.show();
+    return 1;
   }
+  el.addEventListener('cancel', (event) => {
+    event.preventDefault();
+    historyBack()
+  })
  
   var rDefault={appName:'', redir_uri:''};
   var boUpd, r; 
   
-
-  var labAppName=createElement('b').myText('appName');
+  var labAppName=createElement('label').myText('appName');
   var inpAppName=createElement('input').prop({type:'text'});
-  var labURL=createElement('b').myText('Redirect uri');
+  var secAppName=createElement('section').myAppend(labAppName, inpAppName)
+  var labURL=createElement('label').myText('Redirect uri');
   var inpURL=createElement('input').prop({type:'text'});
+  var secInpURL=createElement('section').myAppend(labURL, inpURL)
 
-
-  var Lab=[labAppName, labURL]; Lab.forEach(ele=>ele.css({'margin-right':'0.5em'}));
+  //var Lab=[labAppName, labURL]; Lab.forEach(ele=>ele.css({'margin-right':'0.5em'}));
   var Inp=[inpAppName, inpURL]; Inp.forEach(ele=>ele.css({display:'block',width:'100%'}).on('keypress', function(e){ if(e.which==13) {save();return false;}} )  );
-  var InpNLab=[labAppName, inpAppName, labURL, inpURL];
+  //var InpNLab=[labAppName, inpAppName, labURL, inpURL];
+  var Sec=[secAppName, secInpURL];
 
+  var butCancel=createElement('button').myText(langHtml.Cancel).addClass('highStyle').on('click',historyBack);
+  var butSave=createElement('button').myText(langHtml.Save).addClass('highStyle').on('click',save);
+  var divBottom=createElement('div').myAppend(butCancel, butSave).css({display:'flex', gap:'0.4em', 'justify-content':'space-between'})
 
-  var buttonSave=createElement('button').myText('Save').addClass('highStyle').on('click',save).css({'margin-top':'1em'});
-  var divBottom=createElement('div').myAppend(buttonSave);  //buttonCancel,
+  var El=[...Sec, divBottom];
+  var centerDiv=createElement('div').myAppend(...El);
+  if(boDialog){
+    el.myAppend(centerDiv);
+  } else{
+    var blanket=createElement('div').addClass("blanket");
+    centerDiv.addClass("Center-Flex")
+    centerDiv.css({height:'min(13em, 98%)', width:'min(20em,98%)'});
+    el.addClass("Center-Container-Flex").myAppend(centerDiv,blanket);
+  }
+  centerDiv.css({display:'flex', gap:'1em', 'flex-direction':'column', 'justify-content':'space-evenly'})
 
-  var blanket=createElement('div').addClass("blanket");
-  var centerDiv=createElement('div').addClass("Center").myAppend(...InpNLab,divBottom).css({'min-width':'17em','max-width':'30em', padding: '1.2em 0.5em 1.2em 1.2em'}); // height:'18em', 
-  el.addClass("Center-Container").myAppend(centerDiv,blanket); 
-   
   return el;
 }
 
 
-var devAppDeleteDivExtend=function(el){
-  el.toString=function(){return 'devAppDeleteDiv';}
-  var ok=createElement('button').myText('OK').addClass('highStyle').css({'margin-top':'1em'}).on('click',function(){    
+var devAppDeletePopExtend=function(el){
+  el.toString=function(){return 'devAppDeletePop';}
+  var okcb=function(){    
     var idApp=elR.attr('idApp'), vec=[['devAppDelete',{idApp},okRet]];   majax(vec);    
-  });
+  }
   var okRet=function(data){
     if(!data.boOK) return;
     devAppList.myRemove(elR);
@@ -1213,21 +1315,39 @@ var devAppDeleteDivExtend=function(el){
   }
   el.openFunc=function(){
     elR=this.parentNode.parentNode; spanApp.myText(elR.r.appName);
-    doHistPush({strView:'devAppDeleteDiv'});
+    doHistPush({strView:'devAppDeletePop'});
     el.setVis();
   }
   el.setVis=function(){
-    el.show(); return 1;
+    if(boDialog) el.showModal(); else el.show();
+    return 1;
   }
+  el.addEventListener('cancel', (event) => {
+    event.preventDefault();
+    historyBack()
+  })
  
   var elR;
-  var head=createElement('h3').myText('Delete');
+  var head=createElement('h3').myText('Delete').css({'margin':'0'});
   var spanApp=createElement('span');//.css({'font-weight': 'bold'});
   var p=createElement('div').myAppend(spanApp);
+  
+  var butOk=createElement('button').myText('OK').addClass('highStyle').on('click',okcb);
+  var butCancel=createElement('button').myText(langHtml.Cancel).addClass('highStyle').on('click',historyBack);
+  var divBottom=createElement('div').myAppend(butCancel, butOk).css({display:'flex', gap:'0.4em', 'justify-content':'space-between'})
 
-  var blanket=createElement('div').addClass("blanket");
-  var centerDiv=createElement('div').addClass("Center").myAppend(head,p,ok).css({'min-width':'17em','max-width':'25em', padding:'0.1em'}); //,cancel  height:'10em', 
-  el.addClass("Center-Container").myAppend(centerDiv,blanket); 
+  var El=[head, p, divBottom]
+  var centerDiv=createElement('div').myAppend(...El);
+  if(boDialog){
+    el.myAppend(centerDiv);
+  } else{
+    var blanket=createElement('div').addClass("blanket");
+    centerDiv.addClass("Center-Flex")
+    centerDiv.css({height:'min(10em, 98%)', width:'min(16em,98%)'});
+    el.addClass("Center-Container-Flex").myAppend(centerDiv,blanket);
+  }
+  centerDiv.css({display:'flex', gap:'1em', 'flex-direction':'column', 'justify-content':'space-evenly'})
+
   return el;
 }
 
@@ -1259,7 +1379,7 @@ var devAppListExtend=function(el){
       if('imageHash' in data)  i.prop({src:uImg}); 
       historyBack();
     }
-    uploadImageDiv.openFunc('a'+r.idApp, uploadCallback);
+    uploadImagePop.openFunc('a'+r.idApp, uploadCallback);
 
   }
   el.myAdd=function(r){
@@ -1269,14 +1389,14 @@ var devAppListExtend=function(el){
       //if('mySetVal' in td) { td.mySetVal(val);}   else td.append(val);
       //if('mySetSortVal' in td) { td.mySetSortVal(val);}   else td.valSort=val;
     }
-    var buttEdit=createElement('button').attr('name','buttonEdit').myText('Edit').addClass('highStyle').on('click',function(){
-      devAppSetDiv.openFunc.call(this,1);
+    var butEdit=createElement('button').attr('name','buttonEdit').myText('Edit').addClass('highStyle').on('click',function(){
+      devAppSetPop.openFunc.call(this,1);
     });
-    var buttSecret=createElement('button').attr('name','buttonSecret').myText('Secret').addClass('highStyle').on('click',function(){
-      devAppSecretDiv.openFunc.call(this);
+    var butSecret=createElement('button').attr('name','buttonSecret').myText('Secret').addClass('highStyle').on('click',function(){
+      devAppSecretPop.openFunc.call(this);
     });
-    var buttDelete=createElement('button').attr('name','buttonDelete').addClass('highStyle').css({'margin-right':'0.2em'}).myAppend(imgDelete.cloneNode()).on('click',devAppDeleteDiv.openFunc);
-    var tEdit=createElement('td').myAppend(buttEdit), tSecret=createElement('td').myAppend(buttSecret), tDelete=createElement('td').myAppend(buttDelete); 
+    var butDelete=createElement('button').attr('name','buttonDelete').addClass('highStyle').css({'margin-right':'0.2em'}).myAppend(imgDelete.cloneNode()).on('click',devAppDeletePop.openFunc);
+    var tEdit=createElement('td').myAppend(butEdit), tSecret=createElement('td').myAppend(butSecret), tDelete=createElement('td').myAppend(butDelete); 
     var elR=createElement('tr').myAppend(...Td, tSecret, tEdit, tDelete); elR.attr({idApp:r.idApp,appName:r.appName}).prop('r',r);
     for(var i=0;i<StrCol.length;i++) { 
       var td=Td[i], name=StrCol[i], val=r[name]
@@ -1324,22 +1444,24 @@ var devAppListExtend=function(el){
   var StrCol=['idApp','appName','redir_uri', 'imageHash', 'created'], BoAscDefault={created:0};
   var Label={imageHash:'Image', created:'Age'};
   var tHead=headExtend(createElement('thead'),el,StrCol,BoAscDefault,Label);
-  tHead.css({background:'white', width:'inherit'});  //,height:'calc(12px + 1.2em)'
+  tHead.css({width:'inherit'});  //,height:'calc(12px + 1.2em)'
   el.table.prepend(tHead);
   el.nRowVisible=0;
 
   var imgDelete=imgProt.cloneNode().prop({src:uDelete, alt:"delete"});
       // menuA
-  var buttonAdd=createElement('button').myText('Add').addClass('highStyle', 'fixWidth').css({'margin-left':'0.8em','margin-right':'1em'}).on('click',function(){
-    devAppSetDiv.openFunc.call(null,0);
+  var butBack=createElement('button').myText(charBack).addClass('highStyle').on('click',historyBack).css({'margin-left':'1em'});
+  var butAdd=createElement('button').myText('Add').addClass('highStyle', 'fixWidth').css({}).on('click',function(){
+    devAppSetPop.openFunc.call(null,0);
   });
-  var spanLabel=createElement('span').myText('devAppList').css({'float':'right',margin:'0.2em 0 0 0'});  
-  var menuA=createElement('div').myAppend(buttonAdd,spanLabel).css({padding:'0 0.3em 0 0',overflow:'hidden','max-width':maxWidth,'text-align':'left',margin:'.3em auto .4em'}); 
+  var spanLabel=createElement('span').myText('devAppList').css({'margin-left':'auto'});  
+  var menuA=createElement('div').myAppend(butBack, butAdd, spanLabel);
+  //menuA.css({padding:'0 0.3em 0 0',overflow:'hidden','max-width':maxWidth,'text-align':'left',margin:'.3em auto .4em'}); 
+  menuA.css({margin:'.3em auto 0em', width:`min(${maxWidth}, 100%)`, display:'flex', gap:'1em'});
 
-  el.addClass('devAppList');
   el.fixedDiv=createElement('div').myAppend(menuA).css(cssFixed);
-  el.css({'text-align':'center'});
-  el.append(el.divCont, el.fixedDiv);
+
+  el.myAppend(el.divCont, el.fixedDiv).addClass('devAppList').css({'text-align':'center'});
   return el;
 }
 
@@ -1478,7 +1600,7 @@ var PropExtend=function(){
     c.butDelete=createElement('button').addClass('highStyle').myText('Clear').on('click',function(){
       var vec=[['deleteExtId', {kind:'fb'}], ['setupById',{}, userSettingDiv.setUp]];   majax(vec); 
     });
-    c.buttFetch=createElement('button').addClass('highStyle').myText('Fetch').on('click',async function(){
+    c.butFetch=createElement('button').addClass('highStyle').myText('Fetch').on('click',async function(){
         var [err, code]=await getOAuthCode(); if(err) {setMess(err); return;}
         var timeZone=new Date().toString().match(/([A-Z]+[\+-][0-9]+.*)/)[1];
         var oT={IP:strIPPrim, fun:'fetchFun', caller:'index', code, timeZone};
@@ -1487,12 +1609,12 @@ var PropExtend=function(){
         userSettingDiv.setUp();
     });
     c.thumb=createElement('img').prop({alt:"user"}).css({'vertical-align':'middle'});
-    c.append(c.nr, c.thumb, c.butDelete, c.buttFetch);  //langHtml.YourImage+': ',
+    c.append(c.nr, c.thumb, c.butDelete, c.butFetch);  //langHtml.YourImage+': ',
     return c;
   };
   var tmpSetInp=function(c){
     c.nr.myText(userInfoFrDB.idFB);
-    var boExist=Boolean(userInfoFrDB.idFB); c.butDelete.toggle(boExist);  c.buttFetch.toggle(!boExist);
+    var boExist=Boolean(userInfoFrDB.idFB); c.butDelete.toggle(boExist);  c.butFetch.toggle(!boExist);
     var tmp=userInfoFrDB.image; c.thumb.prop({src:tmp}).toggle(Boolean(tmp.length)); 
   };
   extend(Prop.idFB, { strType:'span', crInp:tmpCrInp, setInp:tmpSetInp, saveInp:function(){return [null, null];}  });
@@ -1556,8 +1678,8 @@ var PropExtend=function(){
       };
       var vec=[ ['setupById',{},tmpF]];   majax(vec);
     }
-    var buttUploadImage=createElement('button').addClass('highStyle').myText(langHtml.uploadNewImg).on('click',function(){uploadImageDiv.openFunc('u',uploadCallback);});
-    c.append(c.thumb, c.butDeleteImg, buttUploadImage);  //langHtml.YourImage+': ',
+    var butUploadImage=createElement('button').addClass('highStyle').myText(langHtml.uploadNewImg).on('click',function(){uploadImagePop.openFunc('u',uploadCallback);});
+    c.append(c.thumb, c.butDeleteImg, butUploadImage);  //langHtml.YourImage+': ',
     return c;
   };
   app.calcImageUrl=function(rT){
@@ -1597,6 +1719,7 @@ app.langHtml={
   anIdentityIsNeeded:'An identity is needed...',
   noteLoginVendor:'<p>An external ID provider (currently Google or Facebook) is used to ensure uniqness (so that noone creates more than one account).<p>Your integrity has the highest priority. No data is sent to ID provider.<p>If your disappointed or just want to try around, then just login, play around, and delete you account, no hard feelings (And you are welcome back any time)',
   Cancel:'Cancel',
+  Close:'Close',
   pendingMessLogin:'Signing you in',
   cancelMessLogin:'Sign-in canceled',
   emailVerificationOfEmail:"Send verification email",
@@ -1713,10 +1836,7 @@ var boAuthReq=Boolean(Object.keys(objQS).length);
 var scopeAsked=objQS.scope||'';
 var idApp=Number(objQS.client_id)||null;
 
-var cssFixedTop={margin:'0em 0','text-align':'center',position:'fixed',top:0,width:'100%','border-top':'3px #aaa solid',background:'#fff'}; //,'z-index':5
-var cssFixed={margin:'0em 0','text-align':'center',position:'fixed',bottom:0,width:'100%','border-top':'3px #aaa solid',background:'#fff'}; //,'z-index':5
-var cssFixedDrag={margin:'0em 0','text-align':'center',position:'fixed',bottom:0,width:'100%',background:'#fff'}; //,'z-index':5
-if(boTouch) cssFixedDrag=cssFixed;
+var cssFixed={margin:'0em 0', 'text-align':'center', position:'fixed', bottom:0, width:'100%', background:'var(--bg-color)', opacity:0.9, 'border-top':'3px solid'};
 
 
 var strScheme='http'+(boTLS?'s':''),    strSchemeLong=strScheme+'://',    uSite=strSchemeLong+site.wwwSite,      uBE=uSite+"/"+leafBE;
@@ -1752,7 +1872,7 @@ var uIdPlaceCompare=uLibImageFolder+'idPlaceCompare.png';
 
 
 var imgHelp=createElement('img').prop({src:uHelpFile, alt:"help"}).css({'vertical-align':'-0.4em'});
-var hovHelpMy=createElement('span').myText('❓').addClass('btn-round', 'helpButtonGradient').css({color:'transparent', 'text-shadow':'0 0 0 #5780a8'});
+var hovHelpMy=createElement('span').myText('❓').addClass('btn-round', 'helpButton').css({color:'transparent', 'text-shadow':'0 0 0 #5780a8'});
 imgHelp=hovHelpMy;
 
 var sizeIcon=1.5, strSizeIcon=sizeIcon+'em';
@@ -1830,6 +1950,7 @@ app.errorFunc=function(jqXHR, textStatus, errorThrown){
 }
 
 
+var charBack='◄';
 
 var imgBusy=createElement('img').prop({src:uBusy});
 //messageText=messExtend(createElement('span'));  window.setMess=messageText.setMess;  window.resetMess=messageText.resetMess;   elBody.myText(messageText); 
@@ -1842,7 +1963,7 @@ var divMessageTextWInner=createElement('div').myAppend(divMessageText).css({marg
 var divMessageTextW=createElement('div').myAppend(divMessageTextWInner).css({width:'100%', position:'fixed', bottom:'0px', left:'0px', 'z-index':'10'});
 elBody.append(divMessageTextW);
 
-var busyLarge=createElement('img').prop({src:uBusyLarge}).css({position:'fixed',top:'50%',left:'50%','margin-top':'-42px','margin-left':'-42px','z-index':'1000',border:'black solid 1px'}).hide();
+var busyLarge=createElement('img').prop({src:uBusyLarge}).css({position:'fixed',top:'50%',left:'50%','margin-top':'-42px','margin-left':'-42px','z-index':'1000',border:'solid 1px'}).hide();
 elBody.append(busyLarge);
 
 
@@ -1861,23 +1982,27 @@ var formLogin=formLoginExtend(elBody.querySelector('#formLogin'));
 var loginSelectorDiv=loginSelectorDivExtend(createElement('div'));
 //loginForSecretDiv=loginForSecretDivExtend(createElement('div'));
 
+window.boDialog=true
+var strPopElementType='div';
+var strPopElementType='dialog'
+var strPopElementType=boDialog?'dialog':'div'
+var deleteAccountPop=deleteAccountPopExtend(createElement(strPopElementType));
+var changePWPop=changePWPopExtend(createElement(strPopElementType));
+var verifyEmailPop=verifyEmailPopExtend(createElement(strPopElementType));
+var forgottPWPop=forgottPWPopExtend(createElement(strPopElementType));
+var uploadImagePop=uploadImagePopExtend(createElement(strPopElementType));
 
-var deleteAccountPop=deleteAccountPopExtend(createElement('div'));
-var changePWPop=changePWPopExtend(createElement('div'));
-var verifyEmailPop=verifyEmailPopExtend(createElement('div'));
-var forgottPWPop=forgottPWPopExtend(createElement('div'));
-var uploadImageDiv=uploadImageDivExtend(createElement('div'));
+var devAppSetPop=devAppSetPopExtend(createElement(strPopElementType));
+var devAppDeletePop=devAppDeletePopExtend(createElement(strPopElementType));
+var devAppSecretPop=devAppSecretPopExtend(createElement(strPopElementType));
+var userAppDeletePop=userAppDeletePopExtend(createElement(strPopElementType));
 
 var devAppList=devAppListExtend(createElement('div'));
-var devAppSetDiv=devAppSetDivExtend(createElement('div'));
-var devAppDeleteDiv=devAppDeleteDivExtend(createElement('div'));
-var devAppSecretDiv=devAppSecretDivExtend(createElement('div'));
-var userAppSetDiv=userAppSetDivExtend(createElement('div'));
-var userAppDeleteDiv=userAppDeleteDivExtend(createElement('div'));
+var userAppSetPop=userAppSetPopExtend(createElement('div'));
 var userAppList=userAppListExtend(createElement('div'));
 
 
-var divDisclaimer=divDisclaimerExtend(createElement('div')).css({'background':'#fff5f6', 'margin-bottom':'1em', 'padding':'0.2em', border:'1px red solid'});
+var divDisclaimer=divDisclaimerExtend(createElement('div')).css({'background':'var(--bg-red)', 'margin-bottom':'1em', 'padding':'0.2em', border:'1px solid'});
 
 
 var createUserDiv=createUserDivExtend(createElement('div'));
@@ -1886,79 +2011,82 @@ var userSettingDiv=userSettingDivExtend(createElement('div'));
 var consentDiv=consentDivExtend(createElement('div'));
 
 
-
-var MainDiv=[mainDiv, loginSelectorDiv, deleteAccountPop, changePWPop, verifyEmailPop, forgottPWPop, uploadImageDiv, devAppList, devAppSetDiv, devAppDeleteDiv, devAppSecretDiv, userAppSetDiv, userAppDeleteDiv, userAppList, createUserDiv, createUserSelectorDiv, userSettingDiv, consentDiv]; 
+var MainDivFull=[mainDiv, loginSelectorDiv, devAppList, userAppList, createUserDiv, createUserSelectorDiv, userSettingDiv, consentDiv]; 
+var MainDivPop=[deleteAccountPop, verifyEmailPop, forgottPWPop, changePWPop, uploadImagePop, devAppSetPop, devAppDeletePop, devAppSecretPop, userAppSetPop, userAppDeletePop];
+var MainDiv=[].concat(MainDivFull, MainDivPop)
 
 var StrMainDiv=MainDiv.map(obj=>obj.toString());
 var StrMainDivFlip=array_flip(StrMainDiv);
 
+var MainDivNonFixWidth=[mainDiv, devAppList, userAppList, userSettingDiv, createUserDiv, loginSelectorDiv, createUserSelectorDiv];
+MainDivNonFixWidth.forEach(ele=>ele.css({display:'block','text-align':'center'}));
+
+var MainDivFixWidth=AMinusB([...MainDivFull, divLoginInfo, H1],[...MainDivNonFixWidth]);  MainDivFixWidth.forEach(ele=>ele.css({'max-width':maxWidth}));
 
 
-
+var closeAllView=function(){
+  MainDiv.forEach(ele=>{
+    if(ele.nodeName=='DIALOG') {if(ele.open) ele.close();} // 
+    else ele.hide();
+  });
+}
 
 mainDiv.setVis=function(){
-  MainDiv.forEach(ele=>ele.hide()); this.show();
+  closeAllView(); this.show();
   mainDiv.setUp();
   return true;
 }
 loginSelectorDiv.setVis=function(){
-  MainDiv.forEach(ele=>ele.hide()); this.show();
+  closeAllView(); this.show();
   this.setUp();
   return true;
 }
 createUserSelectorDiv.setVis=function(){
-  MainDiv.forEach(ele=>ele.hide()); this.show();
+  closeAllView(); this.show();
   this.setUp();
   return true;
 }
 createUserDiv.setVis=function(){
-  MainDiv.forEach(ele=>ele.hide()); this.show();
+  closeAllView(); this.show();
   this.divDisclaimerW.append(divDisclaimer);
   this.setUp();
   return true;
 }
 userSettingDiv.setVis=function(){
-  MainDiv.forEach(ele=>ele.hide()); this.show();
+  closeAllView(); this.show();
   this.setUp(); 
   this.divDisclaimerW.append(divDisclaimer);
   return true;
 }
 consentDiv.setVis=function(){
-  MainDiv.forEach(ele=>ele.hide()); this.show();
+  closeAllView(); this.show();
   this.setUp();
   return true; 
 }
 
 devAppList.setVis=function(){
-  MainDiv.forEach(ele=>ele.hide()); this.show();
+  closeAllView(); this.show();
   this.setUp();
   return true;
 }
 userAppList.setVis=function(){
-  MainDiv.forEach(ele=>ele.hide()); this.show();
+  closeAllView(); this.show();
   this.setUp();
   return true;
-}
+};
 
 
-MainDiv.forEach(ele=>ele.hide());
+
+
+//elBody.css({'text-align':'center'});
+[...MainDiv, divLoginInfo, H1].forEach(ele=>{
+  if(ele.nodeName!='DIALOG') ele.css({'margin-left':'auto','margin-right':'auto'})
+});
+//[...MainDiv, divLoginInfo].forEach(ele=>ele.css({'text-align':'left',background:'#fff'}));
+
+
 elBody.append(divLoginInfo, H1, ...MainDiv);
 
-
-elBody.css({'text-align':'center'});
-//MainDiv.css({'margin-left':'auto','margin-right':'auto'});
-//MainDiv.not(H1).css({'text-align':'left',background:'#fff'});
-[...MainDiv, divLoginInfo, H1].forEach(ele=>ele.css({'margin-left':'auto','margin-right':'auto'}));
-[...MainDiv, divLoginInfo].forEach(ele=>ele.css({'text-align':'left',background:'#fff'}));
-
-
-var mainDivsNonFixWidth=[mainDiv, devAppList, userAppList, userSettingDiv, createUserDiv];
-var mainDivsPop=[deleteAccountPop, verifyEmailPop, forgottPWPop, changePWPop, uploadImageDiv, devAppSetDiv, devAppDeleteDiv, devAppSecretDiv, userAppSetDiv, userAppDeleteDiv];
-
-mainDivsNonFixWidth.forEach(ele=>ele.css({display:'block','text-align':'center'}));
-mainDivsPop.forEach(ele=>ele.css({display:'block','text-align':'left'}));
-
-var mainDivsFixWidth=AMinusB([...MainDiv, divLoginInfo, H1],[...mainDivsNonFixWidth, ...mainDivsPop]);  mainDivsFixWidth.forEach(ele=>ele.css({'max-width':maxWidth}));
 
 
 elBody.visible();
@@ -1969,6 +2097,8 @@ divLoginInfo.setStat();
 
 var setBottomMargin=function() { // This is not very beautiful. But how should one else make a fixed div at the bottom without hiding the bottom of the scrollable content behind??
   if(mainDiv.style.display!='none'){mainDiv.divCont.css({'padding-bottom':mainDiv.fixedDiv.offsetHeight+'px'});}
+  else if(loginSelectorDiv.style.display!='none'){loginSelectorDiv.divCont.css({'padding-bottom':loginSelectorDiv.fixedDiv.offsetHeight+'px'});}
+  else if(createUserSelectorDiv.style.display!='none'){createUserSelectorDiv.divCont.css({'padding-bottom':createUserSelectorDiv.fixedDiv.offsetHeight+'px'});}
   else if(createUserDiv.style.display!='none'){createUserDiv.divCont.css({'padding-bottom':createUserDiv.fixedDiv.offsetHeight+'px'});}
   else if(userSettingDiv.style.display!='none'){userSettingDiv.divCont.css({'padding-bottom':userSettingDiv.fixedDiv.offsetHeight+'px'});}
   else if(userAppList.style.display!='none'){userAppList.divCont.css({'padding-bottom':userAppList.fixedDiv.offsetHeight+'px'});}

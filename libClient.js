@@ -392,7 +392,7 @@ app.popupHover=function(elArea, elBubble, tClose=4){
   }
   var elBlanket, timer, boIOSTmp=boTouch;
   if(boIOSTmp){
-    elBlanket=createElement('div').css({'background':'#555',opacity:0,'z-index': 9001,top:'0px',left:'0px',width:'100%',position:'fixed',height:'100%'});
+    elBlanket=createElement('div').css({background:'#000', opacity:0.25, 'z-index': 9001,top:'0px',left:'0px',width:'100%',position:'fixed',height:'100%'});
     elBlanket.on('click', closeFunc);
   }
   if(boTouch){
@@ -416,23 +416,5 @@ app.popupHover=function(elArea, elBubble, tClose=4){
   elBubble.classList.add('popupHover'); 
 }
 
-
-
-
-app.uVipp0="lib/image/vipp0.png";
-app.uVipp1="lib/image/vipp1.png";
-app.vippButtonExtend=function($el){
-"use strict"
-  $el.setStat=function(bo1){
-    if(!bo1) {$el.css(o0);} else {$el.css(o1);} 
-    $el.attr({boOn:bo1});
-  }
-  var o0={background:'url('+uVipp0+') no-repeat'}, o1={background:'url('+uVipp1+') no-repeat'};
-    
-  $el.attr({boOn:0});
-  $el.css({'background':'url('+uVipp0+') no-repeat',height:'54px',width:'102px',transform:'scale(0.60)','vertical-align':'-0.5em',cursor:'pointer',display:'inline-block'}).addClass('unselectable');
-  $el.on('click',function(){var t=1-$el.attr('boOn');   $el.setStat(t);});
-  return $el;
-}
 
 

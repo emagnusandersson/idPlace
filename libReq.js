@@ -10,6 +10,8 @@
 // Clearing image, cause a JSON object returned with a property with undefined, (which causes JSON.parse to fail)
 // node-zip is obsolete.
 
+// Alert popup, that nChanged will increase when changing things and disconnecting/connecting fb.
+
 
 /******************************************************************************
  * reqIndex
@@ -126,7 +128,7 @@ app.reqIndex=async function() {
   Str.push('<link rel="apple-touch-icon" href="'+srcIcon114+'"/>');
 
   Str.push("<meta name='viewport' id='viewportMy' content='width=device-width, initial-scale=1, minimum-scale=1'/>"); //, interactive-widget=resizes-content
-  Str.push('<meta name="theme-color" content="#ff0"/>');
+  //Str.push('<meta name="theme-color" content="#ff0"/>');
 
   if(boAuthReq){ Str.push('<meta name="robots" content="noindex">\n'); }
 
@@ -210,7 +212,7 @@ app.reqIndex=async function() {
 body {margin:0; height:100%; display:flow-root; font-family:arial, verdana, helvetica; }  /*text-align:center;*/
 /*.mainDiv { margin: 0em auto; height:100%; width:100%; display:flex; flex-direction:column; max-width:var(--maxWidth) }*/
 /*.mainDivR { box-sizing:border-box; margin:0em auto; width:100%; display:flex; max-width:var(--maxWidth) }*/
-h1.mainH1 { box-sizing:border-box; margin:0em auto; width:100%; max-width:var(--maxWidth); border:solid 1px; color:black;font-size:1.6em; font-weight:bold; text-align:center; padding:0.4em 0em 0.4em 0em;  }
+h1.mainH1 { box-sizing:border-box; margin:0em auto; width:100%; max-width:var(--maxWidth); border:solid 1px; font-size:1.6em; font-weight:bold; text-align:center; padding:0.4em 0em 0.4em 0em;  }
 </style>`);
 
 
@@ -669,8 +671,8 @@ app.reqDataDelete=async function(){  //
   var {user_id}=data;
 
   var [err,c]=await deleteOne.call(this, user_id);
-  if(c==1) var strPlur='entry'; else var strPlur='entries';
-  var mess='User: '+user_id+': '+c+' '+strPlur+' deleted';
+  var strEntry=c==1?'entry':'entries'
+  var mess='User: '+user_id+': '+c+' '+strEntry+' deleted';
   
   console.log('reqDataDelete: '+mess);
   var confirmation_code=genRandomString(32);
@@ -889,7 +891,6 @@ app.reqStat=async function() {
     var pathTmp='/'+StrTmp[i], vTmp=CacheUri[pathTmp].eTag; if(boDbg) vTmp=0;    Str.push('<script type="module" src="'+uSite+pathTmp+'?v='+vTmp+'"></script>');
   }
 
-  Str.push('<script type="module" src="'+uSite+'/lib/foundOnTheInternet/sortable.js"></script>');
 
   Str.push("</head>");
   Str.push('<body style="margin:0">');

@@ -164,12 +164,15 @@ ReqBE.prototype.go=async function(){
   var jsonInput;
   if(req.method=='POST'){ 
     if('x-type' in req.headers ){ //&& req.headers['x-type']=='single'
-      var form = new formidable.IncomingForm();
-      form.multiples = true;  
+      //var form = new formidable.IncomingForm();
+      var form = formidable({});
+      //form.multiples = true;  
       //form.uploadDir='tmp';
       
-      var [err, fields, files]=await new Promise(resolve=>{  form.parse(req, (...arg)=>resolve(arg));  });     if(err){ this.mesEO(err); return; } 
-      
+      //var [err, fields, files]=await new Promise(resolve=>{  form.parse(req, (...arg)=>resolve(arg));  });     if(err){ this.mesEO(err); return; }  
+      var [err, arrRes]=await form.parse(req).toNBP();    if(err){ this.mesEO(err); return; } 
+      var [fields, files]=arrRes;
+
       this.File=files['fileToUpload[]'];
       if('kind' in fields) this.kind=fields.kind; else this.kind='u';
       //if('captcha' in fields) this.captchaIn=fields.captcha; else this.captchaIn='';
@@ -743,7 +746,8 @@ ReqBE.prototype.userAppListGet=async function(inObj){
   var [err, results]=await this.myMySql.query(sql, Val); if(err) return [err];
   
   var Ou=arrObj2TabNStrCol(results); 
-  this.mes("Got "+results.length+" entries"); 
+  var strEntry=c==1?'entry':'entries'
+  this.mes("Got "+results.length+" "+strEntry); 
   extend(Ou, {boOK:1,nEntry:results.length});
   return [null, [Ou]];
 }
@@ -810,7 +814,8 @@ ReqBE.prototype.devAppListGet=async function(inObj){
   var [err, results]=await this.myMySql.query(sql, Val); if(err) return [err];
   
   var Ou=arrObj2TabNStrCol(results);
-  this.mes("Got "+results.length+" entries"); 
+  var strEntry=c==1?'entry':'entries'
+  this.mes("Got "+results.length+" "+strEntry); 
   extend(Ou, {boOK:1,nEntry:results.length});
   return [null, [Ou]];
 }
