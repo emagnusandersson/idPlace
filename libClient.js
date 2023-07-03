@@ -269,7 +269,7 @@ app.imgToCanvasWithOrientation=function(img, rawWidth, rawHeight, orientation) {
   if(orientation > 4) {  canvas.width=rawHeight; canvas.height=rawWidth; }
   else {  canvas.width=rawWidth;  canvas.height=rawHeight;  }
 
-  if(orientation > 1) { console.log("EXIF orientation = " + orientation + ", rotating picture"); }
+  if(orientation > 1) { console.log(`EXIF orientation = ${orientation}, rotating picture`); }
 
   var ctx = canvas.getContext('2d');
   switch(orientation) {

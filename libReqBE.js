@@ -138,7 +138,7 @@ ReqBE.prototype.mesEO=function(e, statusCode=500){
   if(typeof e=='string'){strEBrowser=e; StrELog.push(e);}
   else if(typeof e=='object'){
     if('syscal' in e) StrELog.push('syscal: '+e.syscal);
-    if(e instanceof Error) {strEBrowser='name: '+e.name+', code: '+e.code+', message: ' + e.message; }
+    if(e instanceof Error) {strEBrowser=`name: ${e.name}, code: ${e.code}, message: ${e.message}`; }
     else { strEBrowser=e.toString(); StrELog.push(strEBrowser); }
   }
     
@@ -328,7 +328,7 @@ ReqBE.prototype.loginGetGraph=async function(inObj){
   this.objGraph=objGraph;
 
     // interpretGraph
-  if('error' in objGraph) {var {type,message}=objGraph.error, tmp='Error accessing data from ID provider: '+type+' '+message+'<br>';  return [new Error(tmp)]; }
+  if('error' in objGraph) {var {type,message}=objGraph.error, tmp=`Error accessing data from ID provider: ${type} ${message}<br>`;  return [new Error(tmp)]; }
 
 
   if(strIP=='fb'){ 
@@ -362,7 +362,7 @@ ReqBE.prototype.userFun=async function(inObj){
    
   var password=randomHash();
   var Sql=[], Val=[]; 
-  Sql.push("CALL "+siteName+"loginWExternalIP(?,?,?,?,?);"); Val.push(this.idIP, this.nameIP, this.image, this.email, this.timeZone);
+  Sql.push(`CALL ${siteName}loginWExternalIP(?,?,?,?,?);`); Val.push(this.idIP, this.nameIP, this.image, this.email, this.timeZone);
 
   var sql=Sql.join('\n');
   var [err, results]=await this.myMySql.query(sql, Val); if(err) return [err];
@@ -385,7 +385,7 @@ ReqBE.prototype.fetchFun=async function(inObj){
 
   var password=randomHash();
   var Sql=[], Val=[]; 
-  Sql.push(`UPDATE `+userTab+` SET
+  Sql.push(`UPDATE ${userTab} SET
 tIdFB=IF(idFB<=>?, tIdFB, now()),
 tName=IF(name<=>?, tName, now()),
 tImage=IF(!(image<=>?) AND imageHash IS NULL, now(), tImage),
@@ -418,16 +418,16 @@ ReqBE.prototype.getSecretFun=async function(inObj){
   var idUser=this.sessionCache.idUser; if(!idUser){ return [new ErrorClient('No session')];}
 
   var Sql=[], Val=[]; 
-  Sql.push("SELECT @idUser:=idUser FROM "+userTab+" WHERE idFB=?;");
+  Sql.push(`SELECT @idUser:=idUser FROM ${userTab} WHERE idFB=?;`);
   Sql.push("SELECT @idUser AS idUser;");     Val.push(this.idIP);
-  Sql.push("SELECT secret FROM "+appTab+" WHERE idOwner=@idUser AND idApp=?;");    Val.push(inObj.idApp);
-  //var sql="SELECT idUser, secret FROM "+userTab+" u JOIN "+appTab+" a ON u.idUser=a.idOwner WHERE u.idFB=? AND a.idApp=?;";
+  Sql.push(`SELECT secret FROM ${appTab} WHERE idOwner=@idUser AND idApp=?;`);    Val.push(inObj.idApp);
+  //var sql=`SELECT idUser, secret FROM ${userTab} u JOIN ${appTab} a ON u.idUser=a.idOwner WHERE u.idFB=? AND a.idApp=?;`;
   //var Val=[this.idIP, inObj.idApp];
   var sql=Sql.join('\n');
   var [err, results]=await this.myMySql.query(sql, Val); if(err) return [err];
   //if(results.length!=1) {  return [new ErrorClient('results.length='+results.length)]; }
   if(results[1][0].idUser!=idUser) return [new ErrorClient('Wrong user')];
-  if(results[2].length!=1) return [new Error('Found '+results[2].length+' results')];
+  if(results[2].length!=1) return [new Error(`Found ${results[2].length} results`)];
   Ou.secret=results[2][0].secret;
   return [null, Ou];
 }
@@ -442,7 +442,7 @@ ReqBE.prototype.deleteExtId=async function(inObj){ // Remove link to the externa
   var idUser=this.sessionCache.idUser; if(!idUser){ return [new ErrorClient('No session')];}
 
   var Sql=[], Val=[]; 
-  Sql.push("UPDATE "+userTab+" SET idFB=NULL, image='', tIdFB=now(), tImage=IF(imageHash IS NULL, now(), tImage) WHERE idUser=?"); Val.push(idUser);
+  Sql.push(`UPDATE ${userTab} SET idFB=NULL, image='', tIdFB=now(), tImage=IF(imageHash IS NULL, now(), tImage) WHERE idUser=?`); Val.push(idUser);
 
   var sql=Sql.join('\n');
   var [err, results]=await this.myMySql.query(sql, Val); if(err) return [err];
@@ -465,7 +465,7 @@ ReqBE.prototype.setupById=async function(inObj){
   var idApp=inObj.idApp||null;
 
   var Sql=[], Val=[];
-  Sql.push("CALL "+siteName+"getUserAppInfo(?,?);"); Val.push(idUser, idApp);
+  Sql.push(`CALL ${siteName}getUserAppInfo(?,?);`); Val.push(idUser, idApp);
 
   var sql=Sql.join('\n');
   var [err, results]=await this.myMySql.query(sql, Val); if(err) return [err];
@@ -506,10 +506,10 @@ ReqBE.prototype.loginWEmail=async function(inObj){
   var userTab=site.TableName.userTab;
   var Sql=[], Val=[];
   var StrRequired=['email', 'password'];
-  for(var i=0; i<StrRequired.length; i++){      var tmp=StrRequired[i]; if(!(tmp in inObj)) { return [new ErrorClient('The parameter: '+tmp+' is required')]; }     }
+  for(var i=0; i<StrRequired.length; i++){      var tmp=StrRequired[i]; if(!(tmp in inObj)) { return [new ErrorClient(`The parameter: ${tmp} is required`)]; }     }
   
 
-  Sql.push("SELECT idUser, password FROM "+userTab+" WHERE email=?");
+  Sql.push(`SELECT idUser, password FROM ${userTab} WHERE email=?`);
   Val.push(inObj.email);
 
   var sql=Sql.join('\n');
@@ -543,7 +543,7 @@ ReqBE.prototype.UUpdate=async function(inObj){ // writing needSession
 
   var Sql=[], Val=[];
 
-  Sql.push(`UPDATE `+userTab+` SET
+  Sql.push(`UPDATE ${userTab} SET
 tName=IF(name!=?, now(), tName),
 tEmail=IF(email!=?, now(), tEmail),
 boEmailVerified=IF(email!=?, 0, boEmailVerified),
@@ -647,11 +647,11 @@ ReqBE.prototype.createUser=async function(inObj){ // writing needSession
   };
   
   var Sql=[]; 
-  Sql.push(`INSERT INTO `+userTab+` SET name=?, password=?, email=?, telephone=?, country=?, federatedState=?, county=?, city=?, zip=?, address=?, timeZone=?, idNational=?, birthdate=?, motherTongue=?, gender=?,
+  Sql.push(`INSERT INTO ${userTab} SET name=?, password=?, email=?, telephone=?, country=?, federatedState=?, county=?, city=?, zip=?, address=?, timeZone=?, idNational=?, birthdate=?, motherTongue=?, gender=?,
   tCreated=now(), tName=now(), tImage=now(), tEmail=now(), tTelephone=now(), tCountry=now(), tFederatedState=now(), tCounty=now(), tCity=now(), tZip=now(), tAddress=now(), tIdFB=now(), tIdGoogle=now(), tIdNational=now(), tBirthdate=now(), tMotherTongue=now(), tGender=now();`);
   var Val=[inObj.name, inObj.password, inObj.email, inObj.telephone, inObj.country, inObj.federatedState, inObj.county, inObj.city, inObj.zip, inObj.address, inObj.timeZone, inObj.idNational, inObj.birthdate, inObj.motherTongue, inObj.gender];
   Sql.push("SELECT LAST_INSERT_ID() AS idUser;");
-  //Sql.push("UPDATE "+userTab+" SET imageHash=LAST_INSERT_ID()%32 WHERE idUser=LAST_INSERT_ID();");
+  //Sql.push(`UPDATE ${userTab} SET imageHash=LAST_INSERT_ID()%32 WHERE idUser=LAST_INSERT_ID();`);
 
   var sql=Sql.join('\n');
   var [err, results]=await this.myMySql.query(sql, Val); 
@@ -678,16 +678,16 @@ ReqBE.prototype.setConsent=async function(inObj){
   var idUser=this.sessionCache.idUser; if(!idUser){ return [new ErrorClient('No session')];}
   //var access_token=randomHash();
   //var code=randomHash();
-  //var sql="INSERT INTO "+user2AppTab+" (idUser, idApp, scope, tAccess, access_token, maxUnactivityToken, code) VALUES (?,?,?,now(),?,?,?) ON DUPLICATE KEY UPDATE scope=?, access_token=?, maxUnactivityToken=?, code=?;";
+  //var sql=`INSERT INTO ${user2AppTab} (idUser, idApp, scope, tAccess, access_token, maxUnactivityToken, code) VALUES (?,?,?,now(),?,?,?) ON DUPLICATE KEY UPDATE scope=?, access_token=?, maxUnactivityToken=?, code=?;`;
   //var Val=[idUser, inObj.idApp, inObj.scope, access_token, inObj.maxUnactivityToken, code,    inObj.scope, access_token, inObj.maxUnactivityToken, code ];
 
   inObj.scope=myJSEscape(inObj.scope);
 
   var Sql=[], Val=[];
-  Sql.push("CALL "+siteName+"setConsent(?,?,?,?);"); Val.push(idUser, inObj.idApp, inObj.scope, inObj.maxUnactivityToken);
-  //var sql="UPDATE "+user2AppTab+" SET scope=? WHERE idUser=? AND idApp=?;"; 
+  Sql.push(`CALL ${siteName}setConsent(?,?,?,?);`); Val.push(idUser, inObj.idApp, inObj.scope, inObj.maxUnactivityToken);
+  //var sql=`UPDATE ${user2AppTab} SET scope=? WHERE idUser=? AND idApp=?;`; 
   //var Val=[inObj.scope, idUser, inObj.idApp];
-  //var sql="INSERT INTO "+user2AppTab+" (idUser, idApp, scope, tAccess, access_token, maxUnactivityToken) VALUES (?, ?, ?, now(), ?, ?);";
+  //var sql=`INSERT INTO ${user2AppTab} (idUser, idApp, scope, tAccess, access_token, maxUnactivityToken) VALUES (?, ?, ?, now(), ?, ?);`;
   //var Val=[idUser, inObj.idApp, inObj.scope, access_token, maxUnactivityToken];
   
   var sql=Sql.join('\n');
@@ -715,8 +715,8 @@ ReqBE.prototype.UDelete=async function(inObj){  // writing needSession
   var idUser=this.sessionCache.idUser; if(!idUser){ return [new ErrorClient('No session')];}
   
   var Sql=[], Val=[];
-  Sql.push("DELETE FROM "+userTab+" WHERE idUser=?;"); Val.push(idUser);
-  Sql.push("SELECT count(*) AS n FROM "+userTab+";");
+  Sql.push(`DELETE FROM ${userTab} WHERE idUser=?;`); Val.push(idUser);
+  Sql.push(`SELECT count(*) AS n FROM ${userTab};`);
   var sql=Sql.join('\n'); 
   var [err, results]=await this.myMySql.query(sql, Val); if(err) return [err];
 
@@ -740,15 +740,15 @@ ReqBE.prototype.userAppListGet=async function(inObj){
   //if(typeof this.sessionCache!='object' || !('idUser' in this.sessionCache)) { return [new ErrorClient('No session')];}
   var idUser=this.sessionCache.idUser; if(!idUser){ return [new ErrorClient('No session')];}
 
-  var sql="SELECT a.idApp AS idApp, a.name AS appName, scope, UNIX_TIMESTAMP(tAccess) AS tAccess, imageHash FROM "+user2AppTab+" ua JOIN  "+appTab+" a ON ua.idApp=a.idApp WHERE idUser=?;";
+  var sql=`SELECT a.idApp AS idApp, a.name AS appName, scope, UNIX_TIMESTAMP(tAccess) AS tAccess, imageHash FROM ${user2AppTab} ua JOIN  ${appTab} a ON ua.idApp=a.idApp WHERE idUser=?;`;
 
   var Val=[idUser];
   var [err, results]=await this.myMySql.query(sql, Val); if(err) return [err];
   
   var Ou=arrObj2TabNStrCol(results); 
-  var strEntry=c==1?'entry':'entries'
-  this.mes("Got "+results.length+" "+strEntry); 
-  extend(Ou, {boOK:1,nEntry:results.length});
+  var nEntry=results.length, strEntry=nEntry==1?'entry':'entries'
+  this.mes(`Got ${nEntry} ${strEntry}`);
+  extend(Ou, {boOK:1,nEntry});
   return [null, [Ou]];
 }
   //idUser, idApp, scope, tAccess, access_token, maxUnactivityToken
@@ -760,11 +760,11 @@ ReqBE.prototype.userAppSet=async function(inObj){
   var access_token=randomHash();
   var code=randomHash();
   inObj.scope=myJSEscape(inObj.scope);
-  var sql="INSERT INTO "+user2AppTab+" (idUser, idApp, scope, tAccess, access_token, maxUnactivityToken, code) VALUES (?,?,?,now(),?,?,?) ON DUPLICATE KEY UPDATE scope=?, access_token=?, maxUnactivityToken=?, code=?;";
+  var sql=`INSERT INTO ${user2AppTab} (idUser, idApp, scope, tAccess, access_token, maxUnactivityToken, code) VALUES (?,?,?,now(),?,?,?) ON DUPLICATE KEY UPDATE scope=?, access_token=?, maxUnactivityToken=?, code=?;`;
   var Val=[idUser, inObj.idApp, inObj.scope, access_token, inObj.maxUnactivityToken, code,    inObj.scope, access_token, inObj.maxUnactivityToken, code ];
-  //var sql="UPDATE "+user2AppTab+" SET scope=? WHERE idUser=? AND idApp=?;"; 
+  //var sql=`UPDATE ${user2AppTab} SET scope=? WHERE idUser=? AND idApp=?;`; 
   //var Val=[inObj.scope, idUser, inObj.idApp];
-  //var sql="INSERT INTO "+user2AppTab+" (idUser, idApp, scope, tAccess, access_token, maxUnactivityToken) VALUES (?, ?, ?, now(), ?, ?);";
+  //var sql=`INSERT INTO ${user2AppTab} (idUser, idApp, scope, tAccess, access_token, maxUnactivityToken) VALUES (?, ?, ?, now(), ?, ?);`;
   //var Val=[idUser, inObj.idApp, inObj.scope, access_token, maxUnactivityToken];
   
   var [err, results]=await this.myMySql.query(sql, Val);
@@ -787,8 +787,8 @@ ReqBE.prototype.userAppDelete=async function(inObj){
   var idUser=this.sessionCache.idUser; if(!idUser){ return [new ErrorClient('No session')];}
   var Ou={};
   
-  //var sql="DELETE au FROM "+user2AppTab+" ua JOIN  "+appTab+" a ON ua.idApp=a.idApp WHERE au.idUser=?;";
-  var sql="DELETE FROM "+user2AppTab+" WHERE idUser=? AND idApp=?;";
+  //var sql=`DELETE au FROM ${user2AppTab} ua JOIN  ${appTab} a ON ua.idApp=a.idApp WHERE au.idUser=?;`;
+  var sql=`DELETE FROM ${user2AppTab} WHERE idUser=? AND idApp=?;`;
   var Val=[idUser, inObj.idApp];
   var [err, results]=await this.myMySql.query(sql, Val); if(err) return [err];
   
@@ -809,14 +809,14 @@ ReqBE.prototype.devAppListGet=async function(inObj){
   var idUser=this.sessionCache.idUser; if(!idUser){ return [new ErrorClient('No session')];}
 
   var GRet=this.GRet;
-  var sql="SELECT idApp, name AS appName, redir_uri, imageHash, UNIX_TIMESTAMP(created) AS created FROM "+appTab+" WHERE idOwner=?;";
+  var sql=`SELECT idApp, name AS appName, redir_uri, imageHash, UNIX_TIMESTAMP(created) AS created FROM ${appTab} WHERE idOwner=?;`;
   var Val=[idUser];
   var [err, results]=await this.myMySql.query(sql, Val); if(err) return [err];
   
   var Ou=arrObj2TabNStrCol(results);
-  var strEntry=c==1?'entry':'entries'
-  this.mes("Got "+results.length+" "+strEntry); 
-  extend(Ou, {boOK:1,nEntry:results.length});
+  var nEntry=results.length, strEntry=nEntry==1?'entry':'entries'
+  this.mes(`Got ${nEntry} ${strEntry}`); 
+  extend(Ou, {boOK:1, nEntry});
   return [null, [Ou]];
 }
 ReqBE.prototype.devAppSecret=async function(inObj){ 
@@ -825,8 +825,8 @@ ReqBE.prototype.devAppSecret=async function(inObj){
   var idUser=this.sessionCache.idUser; if(!idUser){ return [new ErrorClient('No session')];}
 
   var Ou={};
-  //var sql="SELECT secret FROM "+appTab+" WHERE idOwner=? AND idApp=?;";
-  var sql="SELECT password, secret FROM "+userTab+" u JOIN "+appTab+" a ON u.idUser=a.idOwner WHERE u.idUser=? AND a.idApp=?;";
+  //var sql=`SELECT secret FROM ${appTab} WHERE idOwner=? AND idApp=?;`;
+  var sql=`SELECT password, secret FROM ${userTab} u JOIN ${appTab} a ON u.idUser=a.idOwner WHERE u.idUser=? AND a.idApp=?;`;
   var Val=[idUser, inObj.idApp];
   var [err, results]=await this.myMySql.query(sql, Val); if(err) return [err];
   if(results.length!=1){ debugger;  return [new Error('results.length='+results.length)];}
@@ -852,15 +852,15 @@ ReqBE.prototype.devAppSet=async function(inObj){
   var Sql=[], Val=[];
   var boUpd=inObj.boUpd||false;
   if(boUpd){
-    Sql.push("UPDATE "+appTab+" SET name=?, redir_uri=? WHERE idOwner=? AND idApp=?;"); 
+    Sql.push(`UPDATE ${appTab} SET name=?, redir_uri=? WHERE idOwner=? AND idApp=?;`); 
     var Val=[inObj.appName, inObj.redir_uri, idUser, inObj.idApp];
   } else {
     var secret=randomHash();
-    Sql.push("INSERT INTO "+appTab+" (name, redir_uri, idOwner, secret, created) VALUES (?, ?, ?, ?, now());");
+    Sql.push(`INSERT INTO ${appTab} (name, redir_uri, idOwner, secret, created) VALUES (?, ?, ?, ?, now());`);
     var Val=[inObj.appName, inObj.redir_uri, idUser, secret];
     Sql.push("SELECT LAST_INSERT_ID() AS idApp, NULL AS imageHash;");
     //Sql.push("SET @Vid=LAST_INSERT_ID(), @imageHash=LAST_INSERT_ID()%32;");
-    //Sql.push("UPDATE  "+appTab+" SET imageHash=LAST_INSERT_ID()%32 WHERE idApp=LAST_INSERT_ID();");
+    //Sql.push(`UPDATE  ${appTab} SET imageHash=LAST_INSERT_ID()%32 WHERE idApp=LAST_INSERT_ID();`);
     //Sql.push("SELECT @Vid AS idApp, @imageHash AS imageHash;");
     //Sql.push("COMMIT;");
   }
@@ -891,7 +891,7 @@ ReqBE.prototype.devAppDelete=async function(inObj){
   var idUser=this.sessionCache.idUser; if(!idUser){ return [new ErrorClient('No session')];}
   var GRet=this.GRet;
   var Ou={};
-  var sql="DELETE FROM "+appTab+" WHERE idOwner=? AND idApp=?";
+  var sql=`DELETE FROM ${appTab} WHERE idOwner=? AND idApp=?`;
   var Val=[idUser, inObj.idApp];
   var [err, results]=await this.myMySql.query(sql, Val); if(err) return [err];
   
@@ -913,9 +913,9 @@ ReqBE.prototype.changePW=async function(inObj){
   var passwordNew=inObj.passwordNew;
 
   var Sql=[], Val=[];
-  //Sql.push("UPDATE "+userTab+" SET password=? WHERE password=? AND idUser=?;");
+  //Sql.push(`UPDATE ${userTab} SET password=? WHERE password=? AND idUser=?;`);
   //Val.push(inObj.password, inObj.passwordOld, idUser);
-  Sql.push("CALL "+siteName+"setPassword(?,?,?);"); Val.push(idUser, passwordOld, passwordNew);
+  Sql.push(`CALL ${siteName}setPassword(?,?,?);`); Val.push(idUser, passwordOld, passwordNew);
 
   var sql=Sql.join('\n');
   var [err, results]=await this.myMySql.query(sql, Val); if(err) return [err];
@@ -940,7 +940,7 @@ ReqBE.prototype.verifyEmail=async function(inObj){
   var Ou={};
 
   var Sql=[], Val=[];
-  Sql.push("SELECT email FROM "+userTab+" WHERE idUser=?;");
+  Sql.push(`SELECT email FROM ${userTab} WHERE idUser=?;`);
   Val.push(idUser);
 
   var sql=Sql.join('\n');
@@ -949,12 +949,12 @@ ReqBE.prototype.verifyEmail=async function(inObj){
   if(results.length==0) { this.mes('No such idUser in the database'); return [null, [Ou]];}
   var email=results[0].email;
   var wwwSite=req.wwwSite;
-  var uVerification=req.strSchemeLong+wwwSite+'/'+leafVerifyEmailReturn+'?code='+code;
-  var strTxt=`<h3>Email verification on `+wwwSite+`</h3>
-<p>Someone (maybe you) uses `+wwwSite+` and claims that `+email+` is their email address. Is this you? If so use the link below to verify that you are the owner of this email address.</p>
+  var uVerification=`${req.strSchemeLong}${wwwSite}/${leafVerifyEmailReturn}?code=${code}`;
+  var strTxt=`<h3>Email verification on ${wwwSite}</h3>
+<p>Someone (maybe you) uses ${wwwSite} and claims that ${email} is their email address. Is this you? If so use the link below to verify that you are the owner of this email address.</p>
 <p>Otherwise neglect this message.</p>
-<p><a href=`+uVerification+`>`+uVerification+`</a></p>
-<p>Note! The links stops working `+expirationTime/60+` minutes after the email was sent.</p>`;
+<p><a href=${uVerification}>${uVerification}</a></p>
+<p>Note! The links stops working ${expirationTime/60} minutes after the email was sent.</p>`;
   
 
   const msg = { to:email, from:emailRegisterdUser, subject:'Email verification',  html:strTxt};
@@ -977,11 +977,11 @@ ReqBE.prototype.verifyPWReset=async function(inObj){
   var userTab=site.TableName.userTab;
   var Ou={boOK:0};
 
-  var tmp='email'; if(!(tmp in inObj)) { this.mes('The parameter '+tmp+' is required'); return [null, [Ou]];}
+  var tmp='email'; if(!(tmp in inObj)) { this.mes(`The parameter ${tmp} is required`); return [null, [Ou]];}
   var email=inObj.email;
 
   var Sql=[], Val=[];
-  Sql.push("SELECT email FROM "+userTab+" WHERE email=?;");
+  Sql.push(`SELECT email FROM ${userTab} WHERE email=?;`);
   Val.push(email);
 
   var sql=Sql.join('\n');
@@ -995,13 +995,13 @@ ReqBE.prototype.verifyPWReset=async function(inObj){
   var tmp=await setRedis(code+'_verifyPWReset', email, expirationTime);
 
   var wwwSite=req.wwwSite;
-  var uVerification=req.strSchemeLong+wwwSite+'/'+leafVerifyPWResetReturn+'?code='+code;
-  var strTxt=`<h3>Password reset request on `+wwwSite+`</h3>
-<p>Someone (maybe you) tries to reset their `+wwwSite+` password and entered `+email+` as their email.</p>
+  var uVerification=`${req.strSchemeLong}${wwwSite}/${leafVerifyPWResetReturn}?code=${code}`;
+  var strTxt=`<h3>Password reset request on ${wwwSite}</h3>
+<p>Someone (maybe you) tries to reset their ${wwwSite} password and entered ${email} as their email.</p>
 <p>Is this you, then use the link below to have a new password generated and sent to you.</p>
 <p>Otherwise neglect this message.</p>
-<p><a href=`+uVerification+`>`+uVerification+`</a></p>
-<p>Note! The links stops working `+expirationTime/60+` minutes after the email was sent.</p>`;
+<p><a href=${uVerification}>${uVerification}</a></p>
+<p>Note! The links stops working ${expirationTime/60} minutes after the email was sent.</p>`;
   
   const msg = { to:email, from:emailRegisterdUser, subject:'Password reset request',  html:strTxt};
 
@@ -1025,9 +1025,9 @@ ReqBE.prototype.deleteImage=async function(inObj){
 
   var Sql=[], Val=[];
   if(inObj.kind=='u'){
-    Sql.push("CALL "+siteName+"deleteImage(?);"); Val.push(idUser);
+    Sql.push(`CALL ${siteName}deleteImage(?);`); Val.push(idUser);
   }else{ 
-    Sql.push("CALL "+siteName+"deleteAppImage(?);"); Val.push(idUser, inObj.idApp);
+    Sql.push(`CALL ${siteName}deleteAppImage(?);`); Val.push(idUser, inObj.idApp);
   }
 
 
@@ -1088,12 +1088,12 @@ ReqBE.prototype.uploadImage=async function(inObj){
   
   var Sql=[], Val=[];
   if(this.kind=='u'){ 
-    //Sql.push("REPLACE INTO "+imageTab+" (idUser,data) VALUES (?,?);"); Val.push(idUser,data);
-    //Sql.push("UPDATE "+userTab+" SET imTag=imTag+1 WHERE idUser=?;");  Val.push(idUser);
-    Sql.push("CALL "+siteName+"setImage(?, ?)"); Val.push(idUser, data);
+    //Sql.push(`REPLACE INTO ${imageTab} (idUser,data) VALUES (?,?);`); Val.push(idUser,data);
+    //Sql.push(`UPDATE ${userTab} SET imTag=imTag+1 WHERE idUser=?;`);  Val.push(idUser);
+    Sql.push(`CALL ${siteName}setImage(?, ?)`); Val.push(idUser, data);
   }else{  
     var idApp=Number(this.kind.substr(1));
-    Sql.push("CALL "+siteName+"setAppImage(?, ?, ?)"); Val.push(idUser, idApp, data);
+    Sql.push(`CALL ${siteName}setAppImage(?, ?, ?)`); Val.push(idUser, idApp, data);
   }
 
   var sql=Sql.join('\n');
@@ -1130,10 +1130,10 @@ ReqBE.prototype.uploadImageB64=async function(inObj){
 
   var Sql=[], Val=[];
   if(kind=='u'){ 
-    Sql.push("CALL "+siteName+"setImage(?, ?)"); Val.push(idUser, data);
+    Sql.push(`CALL ${siteName}setImage(?, ?)`); Val.push(idUser, data);
   }else{  
     var idApp=Number(kind.substr(1));
-    Sql.push("CALL "+siteName+"setAppImage(?, ?, ?)"); Val.push(idUser, idApp, data);
+    Sql.push(`CALL ${siteName}setAppImage(?, ?, ?)`); Val.push(idUser, idApp, data);
   }
 
   var sql=Sql.join('\n');

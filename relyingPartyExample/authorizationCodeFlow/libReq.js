@@ -17,11 +17,11 @@ app.reqIndex=async function() {
 <meta name='viewport' id='viewportMy' content='initial-scale=1'/>
 <script type="module" src="client.js"></script>
 <script>
-var leafLoginBack=`+JSON.stringify(leafLoginBack)+`;
-var leafBE=`+JSON.stringify(leafBE)+`;
-var uRedir=`+JSON.stringify(uRedir)+`;
-var AppId=`+JSON.stringify(AppId)+`;
-var UrlOAuth=`+JSON.stringify(UrlOAuth)+`;
+var leafLoginBack=${JSON.stringify(leafLoginBack)};
+var leafBE=${JSON.stringify(leafBE)};
+var uRedir=${JSON.stringify(uRedir)};
+var AppId=${JSON.stringify(AppId)};
+var UrlOAuth=${JSON.stringify(UrlOAuth)};
 </script>
 </head>
 <body>

@@ -23,7 +23,7 @@ app.reqBE=async function() {
   var objForm={grant_type:'authorization_code', client_id:appCredIP.id, redirect_uri:uRedir, client_secret:appCredIP.secret, code:inObj.code};
   var uToGetToken=UrlCode2Token[strIP];
   
-  const params = new URLSearchParams(objForm);
+  var params = new URLSearchParams(objForm);
   var [err,response]=await fetch(uToGetToken, {method:'POST', body:params}).toNBP(); if(err) {res.out500(err); return; }
   var [err, objT]=await response.json().toNBP(); if(err) { res.out500(err);   debugger; return; }
 
@@ -41,11 +41,11 @@ app.reqBE=async function() {
   var arrT = Object.keys(objForm).map(function (key) { return key+'='+objForm[key]; }), strQuery=arrT.join('&'); 
   if(strQuery.length) uGraph+='?'+strQuery;
 
-  const params = new URLSearchParams(objForm);
+  var params = new URLSearchParams(objForm);
   var [err,response]=await fetch(uGraph, {method:'POST', body:params}).toNBP(); if(err) {res.out500(err); return; }
   var [err, objGraph]=await response.json().toNBP(); if(err) { res.out500(err);   debugger; return; }
   
-  if('error' in objGraph) {var tmp='Error accessing data from ID provider: '+objGraph.error.type+' '+objGraph.error.message+'<br>';  console.log(tmp);  res.out500(tmp); debugger; return; }
+  if('error' in objGraph) {var tmp=`Error accessing data from ID provider: ${objGraph.error.type} ${objGraph.error.message}<br>`;  console.log(tmp);  res.out500(tmp); debugger; return; }
   
   
   console.log("Result from data-extraction request:",objGraph);

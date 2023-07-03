@@ -15,10 +15,10 @@ strSalt='abcdefghij'; // Random letters to prevent that the hashed passwords loo
 strSaltID='klmnopqrstu'; // Random letters to prevent that the hashed IDs can be predicted.
 
 
-strFBVersion="v13.0"
-app.UrlOAuth={fb:"https://www.facebook.com/"+strFBVersion+"/dialog/oauth", google:"https://accounts.google.com/o/oauth2/v2/auth"}
-app.UrlToken={fb:"https://graph.facebook.com/"+strFBVersion+"/oauth/access_token", google:"https://accounts.google.com/o/oauth2/token"}
-app.UrlGraph={fb:"https://graph.facebook.com/"+strFBVersion+"/me", google:"https://www.googleapis.com/plus/v1/people/me"}; 
+strFBVersion="v19.0"
+app.UrlOAuth={fb:`https://www.facebook.com/${strFBVersion}/dialog/oauth`, google:"https://accounts.google.com/o/oauth2/v2/auth"}
+app.UrlToken={fb:`https://graph.facebook.com/${strFBVersion}/oauth/access_token`, google:"https://accounts.google.com/o/oauth2/token"}
+app.UrlGraph={fb:`https://graph.facebook.com/${strFBVersion}/me`, google:"https://www.googleapis.com/plus/v1/people/me"}; 
 app.response_type='token';  
 app.response_type='code';
 strIPPrim='fb';  strIPAlt='google';
@@ -49,7 +49,7 @@ if(process.env.strInfrastructure=='af'){
     var sqlHost = mysql_config["hostname"];
     var portTmp = mysql_config["port"];
     var sqlDBName = mysql_config["name"];
-    uriDB="mysql://"+sqlUserName+':'+sqlPassword+'@'+sqlHost+'/'+sqlDBName+"?reconnect=true";
+    uriDB=`mysql://${sqlUserName}:${sqlPassword}@${sqlHost}/${sqlDBName}?reconnect=true`;
   }
     // If you want to use some other urlDB then fill it in here
   //uriDB='mysql://user:password@localhost/database';

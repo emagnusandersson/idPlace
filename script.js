@@ -122,7 +122,7 @@ var strMd5Config=md5(strConfig);
 eval(strConfig);
 if(typeof strSalt=='undefined') {console.error("typeof strSalt=='undefined'"); process.exit(-1); }
 
-var redisVar='str'+ucfirst(strAppName)+'Md5Config';
+var redisVar=`str${ucfirst(strAppName)}Md5Config`;
 var [err,tmp] =await getRedis(redisVar); if(err) {console.error(err); process.exit(-1);}
 var boNewConfig=strMd5Config!==tmp; 
 if(boNewConfig) { var tmp=await setRedis(redisVar, strMd5Config);  }
@@ -142,7 +142,7 @@ app.SiteName=Object.keys(Site);
 await import('./variablesCommon.js');
 await import('./libReqBE.js');
 await import('./libReq.js'); 
-
+debugger
 app.mysqlPool=setUpMysqlPool();
 SiteExtend();
 
@@ -229,7 +229,7 @@ const handler=async function(req, res){
   req.cookies=cookies;
   // var StrCookieKeys=Object.keys(cookies);
   // if(req.url=='/') console.log('\nReferer: '+req.headers.referer);
-  // console.log(req.headers.host+' '+req.url+' '+ JSON.stringify(cookies));
+  // console.log(`${req.headers.host} ${req.url} ${JSON.stringify(cookies)}`);
 
   req.boCookieNormalOK=req.boCookieLaxOK=req.boCookieStrictOK=false;
   
@@ -260,7 +260,7 @@ const handler=async function(req, res){
     
     // If the counter is to high, then respond with 429
   if(intCount>intDDOSMax) {
-    var strMess="Too Many Requests ("+intCount+"), wait "+tDDOSBan+"s\n";
+    var strMess=`Too Many Requests (${intCount}), wait ${tDDOSBan}s\n`;
     if(pathName=='/'+leafBE){ var reqBE=new ReqBE({req, res}); reqBE.mesEO(strMess,429); }
     else res.outCode(429,strMess);
     return;

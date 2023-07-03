@@ -1,79 +1,95 @@
 
+
 /*Emp=emphasis*/
-@media (prefers-color-scheme:light) {
-  :root {
-      color-scheme:normal;
-      --bg-colorRoot:white;
-      --bg-color:#eee;
-      --bg-colorEmp:#ddd;
-      --bg-colorImg:lightblue;
-      --bg-green:lightgreen;
-      --bg-red:#ff7f7f;
-      --bg-blue:lightblue;
-      --bg-yellow:yellow;
-      --bg-orange:orange;
-      --text-color:#123;
-      --border-color:#123;
-      --link-external:#36b;
-      --link-external-visited:#636;
-      --bg-seller:lightblue;
-      --bg-buyer:pink;
-      --invert:0;
-  }
-  .boxShadowOn {box-shadow:0 0 0 0.2em lightgreen inset; background-color:#eee; color:limegreen}
-  .boxShadowOff {box-shadow:0 0 0 0.2em darkgrey inset; background-color:#ddd}
+/* @media (prefers-color-scheme:light) */ 
+:root {
+  --bg-colorRoot:white;
+  --bg-color:#eee;
+  --bg-colorEmp:#ddd;
+  --bg-colorImg:lightblue;
+  --bg-green:lightgreen;
+  --bg-red:#ff7f7f;
+  --bg-blue:lightblue;
+  --bg-yellow:yellow;
+  --bg-orange:orange;
+  --text-color:#123;
+  --border-color:#123;
+  --link-external:#36b;
+  --link-external-visited:#636;
+  --color-link:#0000ee;
+  --color-link-visited:#551a8b;
+  --bg-seller:lightblue;
+  --bg-buyer:pink;
+  --invert:0;
+  --border-shadow-color:#191919; --border-lit-color:#666;   /* To make ios buttons look like chrome. */
+
+  --bg-button:#efefef;
+  --bg-input:#fff
+
 }
-@media (prefers-color-scheme:dark) {
-  :root {
-      color-scheme:dark;
-      --bg-colorRoot:#202020;
-      --bg-color:#303030;
-      --bg-colorEmp:#3f3f3f;
-      --bg-colorImg:#005470;
-      --bg-green:#007300;
-      --bg-red:#c00020;
-      --bg-blue:#005470;
-      --bg-yellow:#707000;
-      --bg-orange:#b17300;
-      --text-color:#dddddd;
-      --border-color:#dddddd;
-      --link-external:#5487df;
-      --link-external-visited:#b477b4;
-      --bg-seller:#1e8aad;
-      --bg-buyer:#d8566b;
-      --invert:1;
-  }
-  a:link{color:#368cff}
-  a:visited{color:#de41ff}
-  .boxShadowOn {box-shadow:0 0 0 0.2em lightgreen inset; background-color:var(--bg-colorEmp); color:limegreen}
-  .boxShadowOff {box-shadow:0 0 0 0.2em #777 inset; background-color:var(--bg-color); color:darkgrey}
-  .invertOnDark {filter:invert(1)}
-  .invertOnDarkBright {filter:invert(1) brightness(1.4)}
-  
+
+/* @media (prefers-color-scheme:dark) */ 
+[data-theme="dark"] {
+  --bg-colorRoot:#303030;
+  --bg-color:#404040;
+  --bg-colorEmp:#505050; /*Emp=emphasis*/
+  --bg-colorImg:#005470;
+  --bg-green:#007300;
+  --bg-red:#c00020;
+  --bg-blue:#005470;
+  --bg-yellow:#707000;
+  --bg-orange:#b17300;
+  --text-color:#dddddd;
+  --border-color:#dddddd;
+  --link-external:#88b1f7;
+  --link-external-visited:#b477b4;
+  --color-link:#368cff;
+  --color-link-visited:#de41ff;
+  --bg-seller:#1e8aad;
+  --bg-buyer:#d8566b;
+  --invert:1;
+  --border-shadow-color:#191919; --border-lit-color:grey;
+
+  --bg-button:#6b6b6b;
+  --bg-input:#3b3b3b;
+  background:var(--bg-colorRoot);
+  color:var(--text-color)
 }
+
+.boxShadowOn {box-shadow:0 0 0 0.2em lightgreen inset; background-color:#eee; color:limegreen}
+.boxShadowOff {box-shadow:0 0 0 0.2em darkgrey inset; background-color:#ddd; color:#000}
+.boxShadowOn [data-theme="dark"] {box-shadow:0 0 0 0.2em lightgreen inset; background-color:var(--bg-colorEmp); color:limegreen}
+.boxShadowOff [data-theme="dark"] {box-shadow:0 0 0 0.2em #777 inset; background-color:var(--bg-color); color:darkgrey}
+
 :root {
   color-scheme:light dark;
-  background:var(--bg-colorRoot)
+  /* background:var(--bg-colorRoot); */
+  /* color:var(--text-color) */
 }
+
+a:link{color:var(--color-link)}
+a:visited{color:var(--color-link-visited)}
+.invertOnDark {filter:invert(var(--invert))}
+.invertOnDarkBright {filter:invert(var(--invert)) brightness(calc(1 + var(--invert) * 0.4))}
+
 
 
 * {box-sizing:border-box}
-html, body { -webkit-overflow-scrolling:touch; }
-body {overscroll-behavior:contain;}
+html, body {-webkit-overflow-scrolling:touch}
+body {overscroll-behavior:contain}
 
   /* Is there really a difference using this. Tested values "100%" and "none" (Used by Chrome, Edge. Not used by Safari, Firefox) */
-/* body { -webkit-text-size-adjust:none; } */
+/* body {-webkit-text-size-adjust:none} */
 
   /* -webkit-appearance:none is required to make disabled buttons have grey text on Safari. */
-html, body {-webkit-appearance:none}
-select, button, input  {color:inherit} /* Removing blue text in buttons ... on Safari */
+html, body {-webkit-appearance:none; appearance:none}
+select, button, input, input[type=file]::file-selector-button {color:inherit} /* Removing blue text in buttons ... on Safari */
 :disabled {color:grey}
-input, button, textarea, select { font:inherit; }  /* Preventing zoom, especially on Safari. */
-
+input, button, textarea, select {font:inherit}  /* Preventing zoom, especially on Safari. */
 
 
 button::-moz-focus-inner {padding:0; border:0} /*Making firefox buttons behave like other browsers (doesn't appear to do any difference)*/
-button {appearance:none; border:solid 1px; border-radius:2px; user-select:none; padding:0 3px}
+
 
 
 p {
@@ -82,46 +98,51 @@ p {
 }
 
 /* a {
-	text-decoration:none;
-	color:#0000ff;
-	background:none;
+  text-decoration:none;
+  color:#0000ff;
+  background:none;
 } */
-/* a:visited { color:#9a16b6; } */
-/* a:active {color:#faa700; } */
+/* a:visited {color:#9a16b6} */
+/* a:active {color:#faa700} */
 
 
-.fillScreen { height:100%;overflow:hidden}
-
-
-
-
-input[type='text'],input[type='number'],textarea {font-size:16px;}
-
- 
+.fillScreen {height:100%; overflow:hidden}
 
 
 
-td,th {border-width:inherit;border-style:inherit }
-tr {border-width:inherit;border-style:inherit }
-tbody,thead {border-width:inherit;border-style:inherit }
+
+input[type='text'],input[type='number'],textarea {font-size:16px}
+
+
+input[type=email]:not(:placeholder-shown):invalid {color:red; outline-color:red}
+
+
+td,th {border-width:inherit; border-style:inherit}
+tr {border-width:inherit; border-style:inherit}
+tbody,thead {border-width:inherit; border-style:inherit}
 thead {opacity:0.9}
 
-button.highStyle, select { height:2.5em; font-size:0.8em; margin:0.5 0.5; padding:0 0.2em; font-size:inherit;vertical-align:middle;border-radius:0.4em}
+button {appearance:none } /* ; border:solid 1px; */
+button, select, button-toggle, input[type=file]::file-selector-button {
+  height:2.5em; border-radius:0.4em; background-color:var(--bg-colorEmp); padding:0 0.2em; font-size:inherit; vertical-align:middle; user-select:none
+}
+input[type=file]::file-selector-button {border:revert; appearance:none; font-size:1rem}
 
+button.lowStyle {height:unset}
 
-.devAppList td, .userAppList td {background-color:var(--bg-colorEmp); }
-.devAppList thead, .userAppList thead {background-color:var(--bg-color); }
+.devAppList td, .userAppList td {background-color:var(--bg-colorEmp)}
+.devAppList thead, .userAppList thead {background-color:var(--bg-color)}
 
 
 .listHead {margin:.5em 0 0}
-.listHead span[name=siteName] { margin-left:1em}
-.listHead span[name=link] { margin-left:2em}
+.listHead span[name=siteName] {margin-left:1em}
+.listHead span[name=link] {margin-left:2em}
 .listHead span {cursor:pointer}
-.listHead img {transform:scale(1.5,1.5);margin:0.3em auto;display:block}
+.listHead img {transform:scale(1.5,1.5); margin:0.3em auto; display:block}
 
-.listHead span[name=version], .listHead span[name=boOther] { min-width:1.5em;}
-.listHead span[name=execute] { visibility:hidden}
-.listHead span[name=image] { visibility:hidden}
+.listHead span[name=version], .listHead span[name=boOther] {min-width:1.5em}
+.listHead span[name=execute] {visibility:hidden}
+.listHead span[name=image] {visibility:hidden}
 
 
 
@@ -152,7 +173,7 @@ button.highStyle, select { height:2.5em; font-size:0.8em; margin:0.5 0.5; paddin
   z-index:9001;
 }
 
-.Center-Container-Flex { position:fixed; left:0px; top:0px; width:100%; height:100%; display:flex; z-index:9001;}
+.Center-Container-Flex {position:fixed; left:0px; top:0px; width:100%; height:100%; display:flex; z-index:9001}
 .Center-Flex {
   max-width:95%;
   max-height:98%;
@@ -164,7 +185,7 @@ button.highStyle, select { height:2.5em; font-size:0.8em; margin:0.5 0.5; paddin
   z-index:9002;
 }
 
-dialog { padding:1.1em; max-width:95%; max-height:98%; background-color:var(--bg-color); border:1px solid}
+dialog {padding:1.1em; max-width:95%; max-height:98%; background-color:var(--bg-color); border:1px solid}
 
 *.unselectable {
   -webkit-user-select:none; /* Safari */

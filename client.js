@@ -4,6 +4,115 @@
 "use strict"
 app.funLoad=function(){
 
+
+
+//
+// Theme functions
+//
+
+  // themeOS ∈ ['dark','light']
+  // themeChoise ∈ ['dark','light','system']
+  // themeCalc ∈ ['dark','light']
+window.analysColorSchemeSettings=function(){
+  var themeOS=window.matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light"
+  var themeChoise=localStorage.getItem("themeChoise")??"system";
+  var arrThemeChoise=['dark','light','system'];
+  var ind=arrThemeChoise.indexOf(themeChoise);  if(ind==-1) ind=2;
+  var themeChoise=arrThemeChoise[ind]
+  var themeCalc=themeChoise=="system"?themeOS:themeChoise
+  return {themeOS, themeChoise, themeCalc}
+}
+
+var setThemeClass=function(theme){
+  if(theme=='dark') elHtml.setAttribute('data-theme', 'dark'); else elHtml.removeAttribute('data-theme');
+  var strT=theme; if(theme!='dark' && theme!='light') strT='light dark'
+  elHtml.css({'color-scheme':strT});
+}
+
+  // Initial setup of selectorOfTheme
+// var selectorOfTheme=createSelectorOfTheme()
+// elBody.myAppend(selectorOfTheme)
+
+// var {themeOS, themeChoise, themeCalc}=analysColorSchemeSettings();
+// console.log(`OS: ${themeOS}, choise: ${themeChoise}, calc: ${themeCalc}`)
+// setThemeClass(themeCalc)
+// selectorOfTheme.value=themeChoise
+
+  // Listen to prefered-color changes on the OS
+window.colorSchemeQueryListener = window.matchMedia('(prefers-color-scheme: dark)');
+colorSchemeQueryListener.addEventListener('change', function(e) {
+  var {themeOS, themeChoise, themeCalc}=analysColorSchemeSettings();
+  console.log(`OS: ${themeOS}, choise: ${themeChoise}, calc: ${themeCalc}`)
+  setThemeClass(themeCalc)
+});
+
+
+
+window.divThemeSelectorCreate=function(){
+  var el=createElement('div')
+  var butSystem=createElement('button').myText('Same as OS').prop({value:'system'})
+  var butLight=createElement('button').myText('Light').prop({value:'light'})
+  var butDark=createElement('button').myText('Dark').prop({value:'dark'})
+  var But=[butSystem, butLight, butDark]
+  var StrBut=['system', 'light', 'dark']
+  var objBut={};  But.forEach((ele,i)=>objBut[StrBut[i]]=ele);
+  el.setButStyling=function(strTheme){
+    //var but=(typeof arg=='string')?objBut(arg):arg
+    var but=objBut[strTheme]
+    But.forEach(elem=>elem.removeClass('boxShadowOn').addClass('boxShadowOff'))
+    but.removeClass('boxShadowOff').addClass('boxShadowOn')
+  }
+  But.forEach(ele=>ele.on('click',function(e){
+    localStorage.setItem('themeChoise', this.value);
+    var {themeOS, themeChoise, themeCalc}=analysColorSchemeSettings();
+    console.log(`OS: ${themeOS}, choise: ${themeChoise}, calc: ${themeCalc}`)
+    setThemeClass(themeCalc)
+    el.setButStyling(themeChoise)
+  }))
+  el.myAppend(...But).css({display:'flex', gap:'.4em', 'justify-content':'space-evenly', 'flex-wrap':'wrap'})
+  return el
+}
+var themePopExtend=function(el){
+  el.strName='themePop'
+  el.id=el.strName
+  el.toString=function(){return el.strName;}
+  el.setVis=function(){
+    if(boDialog) el.showModal(); else el.show();
+    return true;
+  }
+  el.addEventListener('cancel', (event) => {
+    event.preventDefault();
+    historyBack()
+  })
+
+  var h1=createElement('h3').myText("Theme (Background colors): ").css({'margin':'0'});
+  var divThemeSelector=divThemeSelectorCreate()
+  var {themeOS, themeChoise, themeCalc}=analysColorSchemeSettings();
+  console.log(`OS: ${themeOS}, choise: ${themeChoise}`)
+  setThemeClass(themeCalc)
+  divThemeSelector.setButStyling(themeChoise)
+
+  var buttonBack=createElement('button').on('click', historyBack).myText(charBack).css({'margin-left':'.8em'});
+  var divBottom=createElement('div').myAppend(buttonBack).css({display:'flex', gap:'0.4em', 'justify-content':'space-between'})
+
+  var El=[h1, divThemeSelector, divBottom];
+  var centerDiv=createElement('div').myAppend(...El);
+  if(boDialog){
+    el.myAppend(centerDiv);
+  } else{
+    var blanket=createElement('div').addClass("blanket");
+    centerDiv.addClass("Center-Flex")
+    centerDiv.css({height:'min(10em, 98%)', width:'min(21em,98%)'});
+    el.addClass("Center-Container-Flex").myAppend(centerDiv,blanket);
+  }
+  centerDiv.css({display:'flex', gap:'1em', 'flex-direction':'column', 'justify-content':'space-evenly'})
+
+  return el;
+}
+
+
+
+
 var popUpExtend=function(el){
   el.setVis=function(){
     if(boDialog) el.showModal(); else el.show();
@@ -119,7 +228,7 @@ var divLoginInfoExtend=function(el){
   }
   el.cb=null;
   var spanName=createElement('span'); 
-  var logoutButt=createElement('button').myText(langHtml.divLoginInfo.logoutButt).css({'margin-left':'auto'});
+  var logoutButt=createElement('button').myText(langHtml.divLoginInfo.logoutButt).addClass('lowStyle').css({'margin-left':'auto'});
   logoutButt.on('click',function(e){
     e.preventDefault();
     //userInfoFrDB={}; 
@@ -145,7 +254,9 @@ var divLoginInfoExtend=function(el){
  *******************************************************************************************************************/
 
 var mainDivExtend=function(el){
-  el.toString=function(){return 'mainDiv';}
+  el.strName='mainDiv'
+  el.id=el.strName
+  el.toString=function(){return el.strName;}
   el.setUp=function(){
     var boIn=Boolean(Object.keys(userInfoFrDB).length);
     loggedOutDiv.toggle(!boIn);
@@ -159,11 +270,11 @@ var mainDivExtend=function(el){
     // loggedOutDiv
     //
 
-  var butSignIn=createElement('button').addClass('highStyle').myText('Sign in').on('click',function(){
+  var butSignIn=createElement('button').myText('Sign in').on('click',function(){
     doHistPush({strView:'loginSelectorDiv'});
     loginSelectorDiv.setVis();
   });
-  var butCreateAccount=createElement('button').addClass('highStyle').myText('Create an account').on('click',function(){
+  var butCreateAccount=createElement('button').myText('Create an account').on('click',function(){
     doHistPush({strView:'createUserSelectorDiv'});
     createUserSelectorDiv.setVis();
   });
@@ -190,16 +301,16 @@ var mainDivExtend=function(el){
   var timeSpecialR=0, nSpecialReq=0;
 
 
-  var butUserSetting=createElement('button').addClass('highStyle').myText('Settings').on('click',function(){ //.css({display: 'block'})
+  var butUserSetting=createElement('button').myText('Settings').on('click',function(){ //.css({display: 'block'})
     doHistPush({strView:'userSettingDiv'});
     userSettingDiv.setVis();
     el.devStuffToggleEventF();
   });
-  var butUserAppList=createElement('button').addClass('highStyle').myText('Apps I use').on('click',function(){ //.css({display: 'block'})
+  var butUserAppList=createElement('button').myText('Apps I use').on('click',function(){ //.css({display: 'block'})
     doHistPush({strView:'userAppList'});
     userAppList.setVis();
   });
-  var butDevAppList=createElement('button').addClass('highStyle').myText('Apps I own').on('click',function(){ // .css({display: 'block'})
+  var butDevAppList=createElement('button').myText('Apps I own').on('click',function(){ // .css({display: 'block'})
     doHistPush({strView:'devAppList'});
     devAppList.setVis();
   });
@@ -214,9 +325,13 @@ var mainDivExtend=function(el){
   divDev.toggle(boShowDevStuff);
   //if(boShowDevStuff) divDev.show(); else   divDev.hide();
 
+  var butTheme=createElement('button').myText(charBlackWhite).on('click',function(){ 
+    doHistPush({strView:'themePop'});
+    themePop.setVis();
+  })
 
   var infoLink=createElement('a').prop({href:"http://emagnusandersson.com/idPlace"}).myText("More info");
-  var menuA=createElement('div').myAppend(infoLink).css({padding:'0 0.3em 0 0', overflow:'hidden', 'max-width':maxWidth, 'text-align':'center', margin:'.3em auto .4em'}); 
+  var menuA=createElement('div').myAppend(infoLink, butTheme).css({display:'flex', 'justify-content':'space-evenly', 'align-items':'center','max-width':maxWidth, margin:'0 auto'}) //.css({padding:'0 0.3em 0 0', overflow:'hidden', 'text-align':'center', margin:'.3em auto .4em'}); 
 
   //el.divCont.myAppend(loggedOutDiv, loggedInDiv);
 
@@ -327,7 +442,9 @@ var formLoginExtend=function(el){
 
 
 var loginSelectorDivExtend=function(el){
-  el.toString=function(){return 'loginSelectorDiv';}
+  el.strName='loginSelectorDiv'
+  el.id=el.strName
+  el.toString=function(){return el.strName;}
   el.myToggle=function(boOn){
     if(boOn) el.show();else el.hide(); if(boOn) formLogin.inpPass.focus();
   }
@@ -350,7 +467,7 @@ var loginSelectorDivExtend=function(el){
   var divCont=el.divCont=createElement('div').myAppend(h1, divRow);
   divCont.css({padding:'0 0.3em 0 0', overflow:'hidden', 'max-width':maxWidth, 'text-align':'left', margin:'1em auto 0'}); 
 
-  var butBack=createElement('button').myText(charBack).addClass('highStyle').on('click',historyBack).css({'margin-left':'1em'});
+  var butBack=createElement('button').myText(charBack).on('click',historyBack).css({'margin-left':'1em'});
   var spanLabel=createElement('span').myText('loginSelector').css({'margin-left':'auto'});
   var menuA=createElement('div').myAppend(butBack, spanLabel).css({margin:'.3em auto 0em', width:`min(${maxWidth}, 100%)`, display:'flex', gap:'1em'});
 
@@ -364,7 +481,9 @@ var loginSelectorDivExtend=function(el){
 
 
 var devAppSecretPopExtend=function(el){
-  el.toString=function(){return 'devAppSecretPop';}
+  el.strName='devAppSecretPop'
+  el.id=el.strName
+  el.toString=function(){return el.strName;}
   var ret=function(data){
     spanSecret.myText(data.secret); inpPass.value=''
   }
@@ -419,7 +538,7 @@ var devAppSecretPopExtend=function(el){
   
   var spanSecret=createElement('span');//.css({'font-weight': 'bold'});
   var p=createElement('div').myAppend(hSecret, spanSecret).css({margin:'0.5em 0',border:'solid 1px',background:'var(--bg-yellow)'});
-  var butClose=createElement('button').addClass('highStyle').myText(langHtml.Close).on('click',historyBack);
+  var butClose=createElement('button').myText(langHtml.Close).on('click',historyBack);
   var divBottom=createElement('div').myAppend(butClose)
 
 
@@ -439,10 +558,12 @@ var devAppSecretPopExtend=function(el){
 
 
 var createUserSelectorDivExtend=function(el){
-  el.toString=function(){return 'createUserSelectorDiv';}
+  el.strName='createUserSelectorDiv'
+  el.id=el.strName
+  el.toString=function(){return el.strName;}
   el.setUp=function(){ divRight.append(idPLoginDiv);   }
   var cssCol={display:'inline-block',padding:'1em',flex:1}; //width:'50%',
-  var butCreateAccount=createElement('button').addClass('highStyle').myText('Create an account').on('click',function(){
+  var butCreateAccount=createElement('button').myText('Create an account').on('click',function(){
     doHistPush({strView:'createUserDiv'});
     createUserDiv.setVis();
   });
@@ -458,7 +579,7 @@ var createUserSelectorDivExtend=function(el){
   el.divCont=createElement('div').myAppend(h1, divRow);
   el.divCont.css({padding:'0 0.3em 0 0', overflow:'hidden', 'max-width':maxWidth, 'text-align':'left', margin:'1em auto 0'})
 
-  var butBack=createElement('button').myText(charBack).addClass('highStyle').on('click',historyBack).css({'margin-left':'1em'});
+  var butBack=createElement('button').myText(charBack).on('click',historyBack).css({'margin-left':'1em'});
   var spanLabel=createElement('span').myText('createUserSelector').css({'margin-left':'auto'});
   var menuA=createElement('div').myAppend(butBack, spanLabel).css({margin:'.3em auto 0em', width:`min(${maxWidth}, 100%)`, display:'flex', gap:'1em'});
 
@@ -480,7 +601,7 @@ var divDisclaimerExtend=function(el){
     butTog.myText(boShowDisclaimer?'Hide':'Show');
   }
   var spanLable=createElement('span').myText(langHtml.disclaimerHead).css({'font-weight':'bold','margin':'0.5em 0 0.5em'});
-  var butTog=createElement('button').css({'float':'right','font-size':'60%'}).on('click',function(){el.setUp();});
+  var butTog=createElement('button').addClass('lowStyle').css({'float':'right','font-size':'60%'}).on('click',function(){el.setUp();});
   var divTop=createElement('div').myAppend(spanLable, butTog), divText=createElement('div');
   el.append(divTop, divText);
   el.setUp(1);
@@ -488,11 +609,13 @@ var divDisclaimerExtend=function(el){
 }
 
 var createUserDivExtend=function(el){
-  el.toString=function(){return 'createUserDiv';}
+  el.strName='createUserDiv'
+  el.id=el.strName
+  el.toString=function(){return el.strName;}
   var save=function(){ 
     resetMess();  
     if(inpPass.value.trim()!==inpPassB.value.trim()) { var tmp='Password-fields are not equal'; setMess(tmp); return; }
-    var lTmp=boDbg?2:6; if(inpPass.value.trim().length<lTmp) { var tmp='The password must be at least '+lTmp+' characters long'; setMess(tmp); return; }
+    var lTmp=boDbg?2:6; if(inpPass.value.trim().length<lTmp) { var tmp=`The password must be at least ${lTmp} characters long`; setMess(tmp); return; }
 
     var o={},boErr=0;
   /*  Inp.forEach(function(inp){
@@ -566,9 +689,9 @@ var createUserDivExtend=function(el){
   divCont.append(h1, el.divDisclaimerW, messDiv,   labPass, inpPass, labPassB, inpPassB);  //, obliDiv
   el.createInputs();
 
-  var butBack=createElement('button').myText(charBack).addClass('highStyle').on('click',historyBack).css({'margin-left':'1em'});
+  var butBack=createElement('button').myText(charBack).on('click',historyBack).css({'margin-left':'1em'});
   var spanLabel=createElement('span').myText(langHtml.CreateAccount).css({'margin-left':'auto'}); 
-  var butSave=createElement('button').addClass('highStyle').myText(langHtml.Create).on('click',save);
+  var butSave=createElement('button').myText(langHtml.Create).on('click',save);
   var menuA=createElement('div').myAppend(butBack, butSave, spanLabel)
   //menuA.css({padding:'0 0.3em 0 0', overflow:'hidden', 'max-width':maxWidth, 'text-align':'left', margin:'.3em auto .4em'}); 
   menuA.css({margin:'.3em auto 0em', width:`min(${maxWidth}, 100%)`, display:'flex', gap:'1em'});
@@ -590,16 +713,18 @@ var divReCaptchaExtend=function(el){
 }
 
 var deleteAccountPopExtend=function(el){
-  el.toString=function(){return 'deleteAccountPop';}
+  el.strName='deleteAccountPop'
+  el.id=el.strName
+  el.toString=function(){return el.strName;}
   //var el=popUpExtend(el);
-  var yes=createElement('button').addClass('highStyle').myText(langHtml.Yes).on('click',function(){
+  var yes=createElement('button').myText(langHtml.Yes).on('click',function(){
     //var vec=[['VDelete',{},function(data){historyBack();historyBack();}]];   majax(vec);
     userInfoFrDB={};
     var vec=[['UDelete',{}, function(data){
       history.fastBack('mainDiv',true);
     }]];   majax(vec);
   });
-  var butCancel=createElement('button').addClass('highStyle').myText(langHtml.Cancel).on('click',historyBack);
+  var butCancel=createElement('button').myText(langHtml.Cancel).on('click',historyBack);
   //el.myAppendHtml(langHtml.deleteBox.regret,'<br>',yes,cancel);
   //el.css({padding:'1.1em',border:'1px solid'});
   el.setVis=function(){
@@ -630,12 +755,14 @@ var deleteAccountPopExtend=function(el){
 }
 
 var changePWPopExtend=function(el){
-  el.toString=function(){return 'changePWPop';}
+  el.strName='changePWPop'
+  el.id=el.strName
+  el.toString=function(){return el.strName;}
   var save=function(){ 
     resetMess();
     messDiv.myText('');
     if(inpPass.value.trim()!==inpPassB.value.trim()) { setMess('The new password fields are not equal'); return; }
-    var lTmp=boDbg?2:6; if(inpPass.value.trim().length<lTmp) { setMess('The password must be at least '+lTmp+' characters long'); return; }
+    var lTmp=boDbg?2:6; if(inpPass.value.trim().length<lTmp) { setMess(`The password must be at least ${lTmp} characters long`); return; }
 
     var hashPWO=inpPassOld.value.trim()+strSalt; for(var i=0;i<nHash;i++) hashPWO=SHA1(hashPWO);
     var hashPWN=inpPass.value.trim()+strSalt; for(var i=0;i<nHash;i++) hashPWN=SHA1(hashPWN);
@@ -671,10 +798,10 @@ var changePWPopExtend=function(el){
   var secPass=createElement('section').myAppend(labPass, inpPass);
   var secPassB=createElement('section').myAppend(labPassB, inpPassB);
 
-  [inpPassOld, inpPass, inpPassB].forEach(ele=>ele.css({display:'block', width:'100%'}).on('keypress', function(e){ if(e.which==13) {okF();return false;}} )   ); //, 'margin-bottom':'0.5em'
+  [inpPassOld, inpPass, inpPassB].forEach(ele=>ele.css({display:'block', width:'100%'}).on('keypress', function(e){ if(e.which==13) {okF();return false;}} )   );
 
-  var butOk=createElement('button').myText(langHtml.OK).addClass('highStyle').on('click',save);
-  var butCancel=createElement('button').myText(langHtml.Cancel).addClass('highStyle').on('click',historyBack);
+  var butOk=createElement('button').myText(langHtml.OK).on('click',save);
+  var butCancel=createElement('button').myText(langHtml.Cancel).on('click',historyBack);
   var divBottom=createElement('div').myAppend(butCancel,butOk).css({display:'flex', gap:'0.4em', 'justify-content':'space-between'})
 
   var El=[h1, messDiv, secPassOld, secPass, secPassB, divBottom];
@@ -692,7 +819,9 @@ var changePWPopExtend=function(el){
   return el;
 }
 var verifyEmailPopExtend=function(el){
-  el.toString=function(){return 'verifyEmailPop';}
+  el.strName='verifyEmailPop'
+  el.id=el.strName
+  el.toString=function(){return el.strName;}
   var okF=function(){
     var vec=[['verifyEmail',{}, okRet]];   majax(vec); 
     //var vec=[['verifyEmail',{email:userInfoFrDB.email}, okRet]];   majax(vec);
@@ -720,8 +849,8 @@ var verifyEmailPopExtend=function(el){
   var pTxt=createElement('p').myText('Send a verification email to ').myAppend(spanEmail);
   var pBottom=createElement('p').myText('Note! The verification code sent will only be valid for 10 minutes.');
 
-  var butOk=createElement('button').myText(langHtml.OK).addClass('highStyle').on('click',okF);
-  var butCancel=createElement('button').myText(langHtml.Cancel).addClass('highStyle').on('click',historyBack);
+  var butOk=createElement('button').myText(langHtml.OK).on('click',okF);
+  var butCancel=createElement('button').myText(langHtml.Cancel).on('click',historyBack);
   var divBottom=createElement('div').myAppend(butCancel,butOk).css({display:'flex', gap:'0.4em', 'justify-content':'space-between'})
 
   var El=[h1, pTxt, pBottom, divBottom];
@@ -740,7 +869,9 @@ var verifyEmailPopExtend=function(el){
 }
 
 var forgottPWPopExtend=function(el){
-  el.toString=function(){return 'forgottPWPop';}
+  el.strName='forgottPWPop'
+  el.id=el.strName
+  el.toString=function(){return el.strName;}
   var okF=function(){
     var vec=[['verifyPWReset',{email:inpEmail.value.trim()}, okRet]];   majax(vec);
     
@@ -768,8 +899,8 @@ var forgottPWPopExtend=function(el){
   inpEmail.css({display:'block', 'margin-bottom':'0.5em', width:'100%'});
   var secEmail=createElement('section').myAppend(labEmail, inpEmail)
 
-  var butOk=createElement('button').myText(langHtml.OK).addClass('highStyle').on('click',okF);
-  var butCancel=createElement('button').myText(langHtml.Cancel).addClass('highStyle').on('click',historyBack);
+  var butOk=createElement('button').myText(langHtml.OK).on('click',okF);
+  var butCancel=createElement('button').myText(langHtml.Cancel).on('click',historyBack);
   var divBottom=createElement('div').myAppend(butCancel,butOk).css({display:'flex', gap:'0.4em', 'justify-content':'space-between'});
 
   var El=[h1, secEmail, divBottom];
@@ -787,8 +918,9 @@ var forgottPWPopExtend=function(el){
   return el;
 }
 var consentDivExtend=function(el){
-  el.toString=function(){return 'consentDiv';}
-
+  el.strName='consentDiv'
+  el.id=el.strName
+  el.toString=function(){return el.strName;}
   el.setUp=function(){
     spanApp.myText(objApp.name);
     var StrPerm=scopeAsked?scopeAsked.split(','):[];
@@ -807,10 +939,10 @@ var consentDivExtend=function(el){
   var pA=createElement('p').myAppend('The app: ', spanApp, ", would like to be able to read these data: ", listPerm);
   var pOldPerm=createElement('p').myAppend('(Old permission: ', spanPermOld, ')');
   var pB=createElement('p').myText('(You can withdraw this right later.)').css({'font-size':'85%'});
-  var butCancel=createElement('button').addClass('highStyle').myText(langHtml.Cancel).on('click',function(){
+  var butCancel=createElement('button').myText(langHtml.Cancel).on('click',function(){
     el.cb(false);
   });
-  var butAllow=createElement('button').addClass('highStyle').myText('Allow').on('click',function(){
+  var butAllow=createElement('button').myText('Allow').on('click',function(){
     //var vec=[['userAppSet',{scope:scopeAsked, idApp, maxUnactivityToken}], ['setupById',{idApp},el.cb]];   majax(vec);
     var maxUnactivityToken=objQS.response_type=='code'?60*24*3600:2*3600;
     var vec=[['setConsent',{scope:scopeAsked, idApp, maxUnactivityToken}], ['setupById',{idApp},function(data){el.cb(true);}]];   majax(vec); 
@@ -822,7 +954,9 @@ var consentDivExtend=function(el){
 
 
 var uploadImagePopExtend=function(el){
-  el.toString=function(){return 'uploadImagePop';}
+  el.strName='uploadImagePop'
+  el.id=el.strName
+  el.toString=function(){return el.strName;}
   //var progressHandlingFunction=function(e){      if(e.lengthComputable){   progress.attr({value:e.loaded,max:e.total});      }      }
 
   var setMess=function(str) {divMess.myText(str);}
@@ -919,16 +1053,16 @@ var uploadImagePopExtend=function(el){
   var formFile=createElement('form'); //enctype="multipart/form-data"
   var inpFile=createElement('input').prop({type:'file', name:'file', id:'file', accept:"image/*"}).css({background:'var(--bg-colorEmp)', 'font-size':"0.95em"});
   //var inpUploadButton=createElement('input').prop({type:"button", value:"Upload"});
-  var uploadButton=createElement('button').myText('Upload').addClass('highStyle').prop("disabled",true); //.css({'margin-right':'0.5em'});
+  var uploadButton=createElement('button').myText('Upload').prop("disabled",true);
   //var progress=createElement('progress').prop({max:100, value:0}).css({'display':'block','margin-top':'1em'}).invisible();
-  var divMess=createElement('div').css({'min-height':'1em'}); //'margin-top':'1.2em', 
+  var divMess=createElement('div').css({'min-height':'1em'}); 
   
   var objFile;
   inpFile.on('change',verifyFun).on('click',function(){uploadButton.prop("disabled",true);});
   formFile.append(inpFile);   formFile.css({display:'inline'});
    
 
-  var butClose=createElement('button').myText(langHtml.Close).addClass('highStyle').on('click',historyBack);
+  var butClose=createElement('button').myText(langHtml.Close).on('click',historyBack);
   var divBottom=createElement('div').myAppend(butClose, uploadButton).css({display:'flex', gap:'0.4em', 'justify-content':'space-between'})
 
   uploadButton.on('click',sendFun);
@@ -950,7 +1084,9 @@ var uploadImagePopExtend=function(el){
 
 
 var userSettingDivExtend=function(el){
-  el.toString=function(){return 'userSettingDiv';}
+  el.strName='userSettingDiv'
+  el.id=el.strName
+  el.toString=function(){return el.strName;}
   var save=function(){ 
     resetMess();  
     var o={},boErr=0;
@@ -996,7 +1132,7 @@ var userSettingDivExtend=function(el){
 
   el.StrProp=['name', 'password', 'image', 'email', 'boEmailVerified', 'telephone',   'country', 'federatedState', 'county', 'city', 'zip', 'address',     'idFB', 'idNational', 'birthdate', 'motherTongue', 'gender']; //'idFB', 'idGoogle', 
 
-  var butDelete=createElement('button').myText('Delete account').addClass('highStyle').on('click',function(){ 
+  var butDelete=createElement('button').myText('Delete account').on('click',function(){ 
     doHistPush({strView:'deleteAccountPop'});
     deleteAccountPop.setVis();
   }).css({margin:'0.2em 0 0 0'});
@@ -1006,8 +1142,8 @@ var userSettingDivExtend=function(el){
   var divCont=el.divCont=createElement('div').myAppend(divCreated,el.divDisclaimerW).css({padding:'0 0.3em 0 0', overflow:'hidden', 'max-width':maxWidth, 'text-align':'left', margin:'1em auto 0'}); 
   el.createInputs();
 
-  var butBack=createElement('button').myText(charBack).addClass('highStyle').on('click',historyBack).css({'margin-left':'1em'});
-  var butSave=createElement('button').myText(langHtml.Save).addClass('highStyle').on('click',save);
+  var butBack=createElement('button').myText(charBack).on('click',historyBack).css({'margin-left':'1em'});
+  var butSave=createElement('button').myText(langHtml.Save).on('click',save);
   var spanLabel=createElement('span').myText(langHtml.Settings).css({'margin-left':'auto'});
   var menuA=createElement('div').myAppend(butBack, butSave, spanLabel).css({margin:'.3em auto 0em', width:`min(${maxWidth}, 100%)`, display:'flex', gap:'1em'});
 
@@ -1023,7 +1159,7 @@ var headExtend=function(el, tableDiv, StrName, BoAscDefault, Label, strTR='tr', 
     boAsc=dir==1;
     arrImgSort.forEach(function(ele){ele.prop({src:uUnsorted}) });
     var tmp=boAsc?uIncreasing:uDecreasing;
-    el.querySelector(strTH+'[name='+strName+']').querySelector('img[data-type=sort]').prop({src:tmp});
+    el.querySelector(`${strTH}[name=${strName}]`).querySelector('img[data-type=sort]').prop({src:tmp});
   }
   el.clearArrow=function(){
     thSorted=null, boAsc=false;
@@ -1079,12 +1215,16 @@ var headExtend=function(el, tableDiv, StrName, BoAscDefault, Label, strTR='tr', 
  *******************************************************************************************************************/
 
 var userAppSetPopExtend=function(el){
-  el.toString=function(){return 'userAppSetPop';}
+  el.strName='userAppSetPop'
+  el.id=el.strName
+  el.toString=function(){return el.strName;}
   return el;
 }
 var userAppDeletePopExtend=function(el){
-  el.toString=function(){return 'userAppDeletePop';}
-  var butOk=createElement('button').myText('OK').addClass('highStyle').on('click',function(){    
+  el.strName='userAppDeletePop'
+  el.id=el.strName
+  el.toString=function(){return el.strName;}
+  var butOk=createElement('button').myText('OK').on('click',function(){    
     var idApp=elR.attr('idApp'), vec=[['userAppDelete',{idApp},okRet]];   majax(vec);    
   });
   var okRet=function(data){
@@ -1111,7 +1251,7 @@ var userAppDeletePopExtend=function(el){
   var spanApp=createElement('span');//.css({'font-weight': 'bold'});
   var p=createElement('div').myAppend(spanApp);
 
-  var butCancel=createElement('button').myText(langHtml.Cancel).addClass('highStyle').on('click',historyBack);
+  var butCancel=createElement('button').myText(langHtml.Cancel).on('click',historyBack);
   var divBottom=createElement('div').myAppend(butCancel, butOk).css({display:'flex', gap:'0.4em', 'justify-content':'space-between'})
 
   var El=[head, p, divBottom];
@@ -1129,7 +1269,9 @@ var userAppDeletePopExtend=function(el){
   return el;
 }
 var userAppListExtend=function(el){
-  el.toString=function(){return 'userAppList';}
+  el.strName='userAppList'
+  el.id=el.strName
+  el.toString=function(){return el.strName;}
   //el.setUp=function(){};
   var TDProt={
     tAccess:{
@@ -1153,10 +1295,10 @@ var userAppListExtend=function(el){
       //if('mySetVal' in td) { td.mySetVal(val);}   else td.myAppend(val);
       //if('mySetSortVal' in td) { td.mySetSortVal(val);}   else td.valSort=val;
     }
-    var butEdit=createElement('button').attr('name','buttonEdit').myText('Edit').addClass('highStyle').on('click',function(){
+    var butEdit=createElement('button').attr('name','buttonEdit').myText('Edit').on('click',function(){
       userAppSetPop.openFunc.call(this,1);
     });
-    var butDelete=createElement('button').attr('name','buttonDelete').addClass('highStyle').css({'margin-right':'0.2em'}).myAppend(imgDelete.cloneNode()).on('click',userAppDeletePop.openFunc);
+    var butDelete=createElement('button').attr('name','buttonDelete').css({'margin-right':'0.2em'}).myAppend(imgDelete.cloneNode()).on('click',userAppDeletePop.openFunc);
     var tEdit=createElement('td').myAppend(butEdit), tDelete=createElement('td').myAppend(butDelete); 
     var elR=createElement('tr').myAppend(...Td, tDelete); elR.attr({idApp:r.idApp,appName:r.appName}).prop('r',r);  //, tEdit
     for(var i=0;i<StrCol.length;i++) { 
@@ -1173,9 +1315,9 @@ var userAppListExtend=function(el){
     el.nRowVisible=tBody.children.length;
   }
   el.myEdit=function(r){
-    var elR=tBody.querySelector('[idApp="'+r.idApp+'"]');
+    var elR=tBody.querySelector(`[idApp="${r.idApp}"]`);
     elR.attr({idApp:r.idApp});
-    //for(var i=0;i<StrCol.length;i++) { var name=StrCol[i], val=r[name], td=elR.children('td:eq('+i+')'); if(td.mySetVal) td.mySetVal(val); else td.empty().myAppend(val); }
+    //for(var i=0;i<StrCol.length;i++) { var name=StrCol[i], val=r[name], td=elR.children(`td:eq(${i})`); if(td.mySetVal) td.mySetVal(val); else td.empty().myAppend(val); }
     for(var i=0;i<StrCol.length;i++) { var name=StrCol[i], val=r[name], td=elR.children[i]; if(td.mySetVal) td.mySetVal(val); else td.empty().myAppend(val); }
     return el;
   }
@@ -1211,7 +1353,7 @@ var userAppListExtend=function(el){
 
   var imgDelete=imgProt.cloneNode().prop({src:uDelete, alt:"delete"});
       // menuA
-  var butBack=createElement('button').myText(charBack).addClass('highStyle').on('click',historyBack).css({'margin-left':'1em'});
+  var butBack=createElement('button').myText(charBack).on('click',historyBack).css({'margin-left':'1em'});
   var spanLabel=createElement('span').myText('userAppList').css({'margin-left':'auto'});  
   var menuA=createElement('div').myAppend(butBack, spanLabel);
   //menuA.css({padding:'0 0.3em 0 0',overflow:'hidden','max-width':maxWidth,'text-align':'left',margin:'.3em auto .4em'}); 
@@ -1226,7 +1368,9 @@ var userAppListExtend=function(el){
 
 
 var devAppSetPopExtend=function(el){
-  el.toString=function(){return 'devAppSetPop';}
+  el.strName='devAppSetPop'
+  el.id=el.strName
+  el.toString=function(){return el.strName;}
   var save=function(){
     r.appName=inpAppName.value.trim(); if(r.appName.length==0){ setMess('empty app name',2);  return;}
     var uri=inpURL.value.trim();  if(uri.length==0){ setMess('empty redir_uri',2);  return;}
@@ -1278,13 +1422,12 @@ var devAppSetPopExtend=function(el){
   var inpURL=createElement('input').prop({type:'text'});
   var secInpURL=createElement('section').myAppend(labURL, inpURL)
 
-  //var Lab=[labAppName, labURL]; Lab.forEach(ele=>ele.css({'margin-right':'0.5em'}));
   var Inp=[inpAppName, inpURL]; Inp.forEach(ele=>ele.css({display:'block',width:'100%'}).on('keypress', function(e){ if(e.which==13) {save();return false;}} )  );
   //var InpNLab=[labAppName, inpAppName, labURL, inpURL];
   var Sec=[secAppName, secInpURL];
 
-  var butCancel=createElement('button').myText(langHtml.Cancel).addClass('highStyle').on('click',historyBack);
-  var butSave=createElement('button').myText(langHtml.Save).addClass('highStyle').on('click',save);
+  var butCancel=createElement('button').myText(langHtml.Cancel).on('click',historyBack);
+  var butSave=createElement('button').myText(langHtml.Save).on('click',save);
   var divBottom=createElement('div').myAppend(butCancel, butSave).css({display:'flex', gap:'0.4em', 'justify-content':'space-between'})
 
   var El=[...Sec, divBottom];
@@ -1304,7 +1447,9 @@ var devAppSetPopExtend=function(el){
 
 
 var devAppDeletePopExtend=function(el){
-  el.toString=function(){return 'devAppDeletePop';}
+  el.strName='devAppDeletePop'
+  el.id=el.strName
+  el.toString=function(){return el.strName;}
   var okcb=function(){    
     var idApp=elR.attr('idApp'), vec=[['devAppDelete',{idApp},okRet]];   majax(vec);    
   }
@@ -1332,8 +1477,8 @@ var devAppDeletePopExtend=function(el){
   var spanApp=createElement('span');//.css({'font-weight': 'bold'});
   var p=createElement('div').myAppend(spanApp);
   
-  var butOk=createElement('button').myText('OK').addClass('highStyle').on('click',okcb);
-  var butCancel=createElement('button').myText(langHtml.Cancel).addClass('highStyle').on('click',historyBack);
+  var butOk=createElement('button').myText('OK').on('click',okcb);
+  var butCancel=createElement('button').myText(langHtml.Cancel).on('click',historyBack);
   var divBottom=createElement('div').myAppend(butCancel, butOk).css({display:'flex', gap:'0.4em', 'justify-content':'space-between'})
 
   var El=[head, p, divBottom]
@@ -1354,7 +1499,9 @@ var devAppDeletePopExtend=function(el){
 
 //idApp, name, redir_uri, imageHash, created
 var devAppListExtend=function(el){
-  el.toString=function(){return 'devAppList';}
+  el.strName='devAppList'
+  el.id=el.strName
+  el.toString=function(){return el.strName;}
   var TDProt={
     created:{
       mySetVal:function(tCreated){ var strT=getSuitableTimeUnitStr(unixNow()-tCreated);  this.myText(strT);  }
@@ -1389,13 +1536,13 @@ var devAppListExtend=function(el){
       //if('mySetVal' in td) { td.mySetVal(val);}   else td.append(val);
       //if('mySetSortVal' in td) { td.mySetSortVal(val);}   else td.valSort=val;
     }
-    var butEdit=createElement('button').attr('name','buttonEdit').myText('Edit').addClass('highStyle').on('click',function(){
+    var butEdit=createElement('button').attr('name','buttonEdit').myText('Edit').on('click',function(){
       devAppSetPop.openFunc.call(this,1);
     });
-    var butSecret=createElement('button').attr('name','buttonSecret').myText('Secret').addClass('highStyle').on('click',function(){
+    var butSecret=createElement('button').attr('name','buttonSecret').myText('Secret').on('click',function(){
       devAppSecretPop.openFunc.call(this);
     });
-    var butDelete=createElement('button').attr('name','buttonDelete').addClass('highStyle').css({'margin-right':'0.2em'}).myAppend(imgDelete.cloneNode()).on('click',devAppDeletePop.openFunc);
+    var butDelete=createElement('button').attr('name','buttonDelete').css({'margin-right':'0.2em'}).myAppend(imgDelete.cloneNode()).on('click',devAppDeletePop.openFunc);
     var tEdit=createElement('td').myAppend(butEdit), tSecret=createElement('td').myAppend(butSecret), tDelete=createElement('td').myAppend(butDelete); 
     var elR=createElement('tr').myAppend(...Td, tSecret, tEdit, tDelete); elR.attr({idApp:r.idApp,appName:r.appName}).prop('r',r);
     for(var i=0;i<StrCol.length;i++) { 
@@ -1412,9 +1559,9 @@ var devAppListExtend=function(el){
     el.nRowVisible=tBody.children.length;
   }
   el.myEdit=function(r){
-    var elR=tBody.querySelector('[idApp="'+r.idApp+'"]');
+    var elR=tBody.querySelector(`[idApp="${r.idApp}"]`);
     elR.attr({idApp:r.idApp});
-    //for(var i=0;i<StrCol.length;i++) { var name=StrCol[i], val=r[name], td=elR.children('td:eq('+i+')'); if(td.mySetVal) td.mySetVal(val); else td.empty().myAppend(val); }
+    //for(var i=0;i<StrCol.length;i++) { var name=StrCol[i], val=r[name], td=elR.children(`td:eq(${i})`); if(td.mySetVal) td.mySetVal(val); else td.empty().myAppend(val); }
     for(var i=0;i<StrCol.length;i++) { var name=StrCol[i], val=r[name], td=elR.children[i]; if(td.mySetVal) td.mySetVal(val); else td.empty().myAppend(val); }
     return el;
   }
@@ -1450,8 +1597,8 @@ var devAppListExtend=function(el){
 
   var imgDelete=imgProt.cloneNode().prop({src:uDelete, alt:"delete"});
       // menuA
-  var butBack=createElement('button').myText(charBack).addClass('highStyle').on('click',historyBack).css({'margin-left':'1em'});
-  var butAdd=createElement('button').myText('Add').addClass('highStyle', 'fixWidth').css({}).on('click',function(){
+  var butBack=createElement('button').myText(charBack).on('click',historyBack).css({'margin-left':'1em'});
+  var butAdd=createElement('button').myText('Add').addClass('fixWidth').css({}).on('click',function(){
     devAppSetPop.openFunc.call(null,0);
   });
   var spanLabel=createElement('span').myText('devAppList').css({'margin-left':'auto'});  
@@ -1551,8 +1698,8 @@ var PropExtend=function(){
     var strTName='t'+ucfirst(span.attr('name')), strT=getSuitableTimeUnitStr(unixNow()-userInfoFrDB[strTName]);
     //var spanTChange=span.querySelector('span[name=lastChange]'); spanTChange.myText(strT); spanTChange.parentNode.toggle(nChange); 
     if(nChange==0) span.myHtml('Changed <b>0</b> times');
-    else if(nChange==1) span.myHtml('Changed <b>1</b> time, <b>'+strT+'</b> ago');
-    else if(nChange==2) span.myHtml('Changed <b>'+nChange+'</b> times, <b>'+strT+'</b> ago');
+    else if(nChange==1) span.myHtml(`Changed <b>1</b> time, <b>${strT}</b> ago`);
+    else if(nChange==2) span.myHtml(`Changed <b>${nChange}</b> times, <b>${strT}</b> ago`);
   }
 
 
@@ -1566,7 +1713,7 @@ var PropExtend=function(){
     });
   }
 
-  var tmpCrF=function(){return createElement('button').addClass('highStyle').myText('Fetch');};
+  var tmpCrF=function(){return createElement('button').myText('Fetch');};
   var tmpSetF=function(){};
 
 
@@ -1578,7 +1725,7 @@ var PropExtend=function(){
   extend(Prop.password, {
     strType:'password',
     inpW:9,
-    crInp:function(){return createElement('button').addClass('highStyle').myText('Change').on('click',function(){
+    crInp:function(){return createElement('button').myText('Change').on('click',function(){
       changePWPop.openFunc();
     });},
     crStatisticSpan:function(){return createElement('span'); },
@@ -1597,10 +1744,10 @@ var PropExtend=function(){
   var tmpCrInp=function(){
     var c=createElement('span');
     c.nr=createElement('span');
-    c.butDelete=createElement('button').addClass('highStyle').myText('Clear').on('click',function(){
+    c.butDelete=createElement('button').myText('Clear').on('click',function(){
       var vec=[['deleteExtId', {kind:'fb'}], ['setupById',{}, userSettingDiv.setUp]];   majax(vec); 
     });
-    c.butFetch=createElement('button').addClass('highStyle').myText('Fetch').on('click',async function(){
+    c.butFetch=createElement('button').myText('Fetch').on('click',async function(){
         var [err, code]=await getOAuthCode(); if(err) {setMess(err); return;}
         var timeZone=new Date().toString().match(/([A-Z]+[\+-][0-9]+.*)/)[1];
         var oT={IP:strIPPrim, fun:'fetchFun', caller:'index', code, timeZone};
@@ -1631,7 +1778,7 @@ var PropExtend=function(){
     var c=createElement('span');
     c.spanYes=createElement('span').css({'color':'green', 'margin-right':'1em'}).myText('Yes');
     c.spanNo=createElement('span').css({'color':'red', 'margin-right':'1em'}).myText('No');
-    c.butVerify=createElement('button').addClass('highStyle').myText(langHtml.emailVerificationOfEmail).on('click',function(){
+    c.butVerify=createElement('button').myText(langHtml.emailVerificationOfEmail).on('click',function(){
       //var vec=[['verifyEmail',{}]];   majax(vec); 
       verifyEmailPop.openFunc();
     });
@@ -1658,7 +1805,7 @@ var PropExtend=function(){
 
     // gender
   var crInpFunc=function(){
-    var c=createElement('select').addClass('highStyle'), arrTmp=['male','female'];
+    var c=createElement('select'), arrTmp=['male','female'];
     for(var i=0;i<arrTmp.length;i++){  var opt=createElement('option').myText(arrTmp[i]).prop('value',arrTmp[i]);   c.append(opt);    } 
     c.value='male';
     return c;
@@ -1669,7 +1816,7 @@ var PropExtend=function(){
   var tmpCrInp=function(){
     var c=createElement('span');
     c.thumb=createElement('img').prop({alt:"user"}).css({'vertical-align':'middle'});
-    c.butDeleteImg=createElement('button').addClass('highStyle').myText('Clear').on('click',function(){
+    c.butDeleteImg=createElement('button').myText('Clear').on('click',function(){
       var vec=[['deleteImage', {kind:'u'}], ['setupById',{}, userSettingDiv.setUp]];   majax(vec); 
     });
     var uploadCallback=function(){
@@ -1678,7 +1825,7 @@ var PropExtend=function(){
       };
       var vec=[ ['setupById',{},tmpF]];   majax(vec);
     }
-    var butUploadImage=createElement('button').addClass('highStyle').myText(langHtml.uploadNewImg).on('click',function(){uploadImagePop.openFunc('u',uploadCallback);});
+    var butUploadImage=createElement('button').myText(langHtml.uploadNewImg).on('click',function(){uploadImagePop.openFunc('u',uploadCallback);});
     c.append(c.thumb, c.butDeleteImg, butUploadImage);  //langHtml.YourImage+': ',
     return c;
   };
@@ -1733,7 +1880,7 @@ app.langHtml={
     help:"As long as you haven't made any payments, you can delete the account"
   },
   disclaimerHead:'Disclamer etc.',
-  disclaimer:`<p>The site might be taken down at any moment simply because the developer feels like it. The software is still free (to use and change) (<a href="https://github.com/emagnusandersson/idPlace">link</a>)\n
+  disclaimer:`<p>The site might be taken down at any moment simply because the developer feels like it. The software is still publicly available: (<a href="https://github.com/emagnusandersson/idPlace">link</a>)\n
   <h5>Your account might be deleted...</h5>
   <p>... in attempts to keep the register free of fake accounts. (<a href="https://emagnusandersson.com/idPlace">Why is it important to get rid of fake accounts</a>)
   <h5>Best practices to keep your account from being deleted</h5>
@@ -1845,7 +1992,7 @@ var uCanonical=uSite;
 var uUserImage=uSite+'/image/u';
 var uAppImage=uSite+'/image/a';
 
-var wcseLibImageFolder='/'+flLibImageFolder+'/';
+var wcseLibImageFolder=`/${flLibImageFolder}/`;
 var uLibImageFolder=uSite+wcseLibImageFolder;
 
 var uHelpFile=uLibImageFolder+'help.png';
@@ -1946,11 +2093,12 @@ window.on('pagehide', function(){
 if(boFF){ window.on('beforeunload', function(){   }); } 
 
 app.errorFunc=function(jqXHR, textStatus, errorThrown){
-  setMess('responseText: '+jqXHR.responseText+', textStatus: '+' '+textStatus+', errorThrown: '+errorThrown);     throw 'bla';
+  setMess(`responseText: ${jqXHR.responseText}, textStatus: ${textStatus}, errorThrown: ${errorThrown}`);     throw 'bla';
 }
 
 
 var charBack='◄';
+var charBlackWhite='◩'
 
 var imgBusy=createElement('img').prop({src:uBusy});
 //messageText=messExtend(createElement('span'));  window.setMess=messageText.setMess;  window.resetMess=messageText.resetMess;   elBody.myText(messageText); 
@@ -1986,6 +2134,8 @@ window.boDialog=true
 var strPopElementType='div';
 var strPopElementType='dialog'
 var strPopElementType=boDialog?'dialog':'div'
+
+var themePop=themePopExtend(createElement(strPopElementType));
 var deleteAccountPop=deleteAccountPopExtend(createElement(strPopElementType));
 var changePWPop=changePWPopExtend(createElement(strPopElementType));
 var verifyEmailPop=verifyEmailPopExtend(createElement(strPopElementType));
@@ -2012,7 +2162,7 @@ var consentDiv=consentDivExtend(createElement('div'));
 
 
 var MainDivFull=[mainDiv, loginSelectorDiv, devAppList, userAppList, createUserDiv, createUserSelectorDiv, userSettingDiv, consentDiv]; 
-var MainDivPop=[deleteAccountPop, verifyEmailPop, forgottPWPop, changePWPop, uploadImagePop, devAppSetPop, devAppDeletePop, devAppSecretPop, userAppSetPop, userAppDeletePop];
+var MainDivPop=[themePop, deleteAccountPop, verifyEmailPop, forgottPWPop, changePWPop, uploadImagePop, devAppSetPop, devAppDeletePop, devAppSecretPop, userAppSetPop, userAppDeletePop];
 var MainDiv=[].concat(MainDivFull, MainDivPop)
 
 var StrMainDiv=MainDiv.map(obj=>obj.toString());

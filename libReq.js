@@ -12,6 +12,19 @@
 
 // Alert popup, that nChanged will increase when changing things and disconnecting/connecting fb.
 
+// When logging in with alternative way fb or email are accounts "merged" when email is the same. Or are a second account created.
+
+// implicitFlow(idplaceImplicitFlow) should be renamed OAuth2_ImplicitFlow_tester
+
+//["'] *\+ *([a-zA-Z0-9-\.\(\)\[\]_/\+ ]+) *\+ *['"]      ${$1}
+//[`] *\+ *([a-zA-Z0-9-\.\(\)\[\]_/\+]+) *\+ *[`]        ${$1}
+//` *\+ *([a-zA-Z0-9-\.\[\]_/\+]+)               ${$1}`
+//` *\+ *([a-zA-Z0-9-\.\(\)\[\]_/\+]+)           ${$1}`
+//([a-zA-Z0-9-\.\[\]_/\+]+) *\+ *[`]             `${$1}
+//([a-zA-Z0-9-\.\(\)\[\]_/\+]+) *\+ *[`]         `${$1}
+
+// \$\{([^\+\}]+)\+                 }${
+
 
 /******************************************************************************
  * reqIndex
@@ -33,7 +46,7 @@ app.reqIndex=async function() {
   if(boAuthReq){
     var StrNeeded=['response_type', 'client_id', 'redirect_uri', 'scope'];
     for(var i=0;i<StrNeeded.length;i++){
-      var tmp=StrNeeded[i]; if(!(tmp in objQS)) { res.out200('The parameter '+tmp+' is required'); return;}
+      var tmp=StrNeeded[i]; if(!(tmp in objQS)) { res.out200(`The parameter ${tmp} is required`); return;}
     }
     if(!isNumber(objQS.client_id)) { debugger; res.out200('client_id must be a number'); return;}
     var idApp=Number(objQS.client_id);
@@ -48,7 +61,7 @@ app.reqIndex=async function() {
   var idUser=req.sessionCache.idUser;
 
   var Sql=[], Val=[];
-  Sql.push("CALL "+siteName+"getUserAppInfo(?,?);"); Val.push(idUser, idApp);
+  Sql.push(`CALL ${siteName}getUserAppInfo(?,?);`); Val.push(idUser, idApp);
 
   var sql=Sql.join('\n');
   var [err, results]=await this.myMySql.query(sql, Val); if(err) {  res.out500(err); return; }
@@ -76,7 +89,7 @@ app.reqIndex=async function() {
     var urlT=decodeURIComponent(objQS.redirect_uri);
     var regUrlCompare=RegExp("^[^#]+"), Match=regUrlCompare.exec(urlT), urlIn=Match[0];
     var boRedirURIOK=objApp.redir_uri==urlIn;
-    if(!boRedirURIOK) { res.out200('The redir_uri you asked for: '+urlIn+', The registered redir_uri: '+objApp.redir_uri); return; }
+    if(!boRedirURIOK) { res.out200(`The redir_uri you asked for: ${urlIn}, The registered redir_uri: ${objApp.redir_uri}`); return; }
 
     if(objUApp){
       if(objQS.response_type=='token') {
@@ -124,15 +137,15 @@ app.reqIndex=async function() {
   
   var srcIcon16=site.SrcIcon[IntSizeIconFlip[16]];
   var srcIcon114=site.SrcIcon[IntSizeIconFlip[114]];
-  Str.push('<link rel="icon" type="image/png" href="'+srcIcon16+'" />');
-  Str.push('<link rel="apple-touch-icon" href="'+srcIcon114+'"/>');
+  Str.push(`<link rel="icon" type="image/png" href="${srcIcon16}" />`);
+  Str.push(`<link rel="apple-touch-icon" href="${srcIcon114}"/>`);
 
   Str.push("<meta name='viewport' id='viewportMy' content='width=device-width, initial-scale=1, minimum-scale=1'/>"); //, interactive-widget=resizes-content
   //Str.push('<meta name="theme-color" content="#ff0"/>');
 
   if(boAuthReq){ Str.push('<meta name="robots" content="noindex">\n'); }
 
-  Str.push('<link rel="canonical" href="'+uSite+'"/>\n');
+  Str.push(`<link rel="canonical" href="${uSite}"/>\n`);
 
   var strTitle='idPlace - an ID provider using OAuth';
   var strH1='idPlace - an ID provider using OAuth';
@@ -142,21 +155,21 @@ app.reqIndex=async function() {
 
 
   Str.push(`
-<meta name="description" content="`+strDescription+`"/>
-<meta name="keywords" content="`+strKeywords+`"/>
-<link rel="canonical" href="`+uSite+`"/>`);
+<meta name="description" content="${strDescription}"/>
+<meta name="keywords" content="${strKeywords}"/>
+<link rel="canonical" href="${uSite}"/>`);
 
   
   var uIcon200=uSite+site.SrcIcon[IntSizeIconFlip[200]];
   var tmp=`
-<meta property="og:title" content="`+wwwSite+`"/>
+<meta property="og:title" content="${wwwSite}"/>
 <meta property="og:type" content="website" />
-<meta property="og:url" content="`+uSite+`"/>
-<meta property="og:image" content="`+uIcon200+`"/>
-<meta property="og:site_name" content="`+wwwSite+`"/>
+<meta property="og:url" content="${uSite}"/>
+<meta property="og:image" content="${uIcon200}"/>
+<meta property="og:site_name" content="${wwwSite}"/>
 <meta property="fb:admins" content="100002646477985"/>
-<meta property="fb:app_id" content="`+req.rootDomain.fb.id+`"/>
-<meta property="og:description" content="`+strDescription+`"/>
+<meta property="fb:app_id" content="${req.rootDomain.fb.id}"/>
+<meta property="og:description" content="${strDescription}"/>
 <meta property="og:locale:alternate" content="sv_se" />
 <meta property="og:locale:alternate" content="en_US" />`;
   if(!boDbg) Str.push(tmp);
@@ -168,7 +181,7 @@ app.reqIndex=async function() {
 <script>
   window.fbAsyncInit = function() {
     FB.init({
-      appId      : '`+req.rootDomain.fb.id+`',
+      appId      : '${req.rootDomain.fb.id}',
       cookie     : true,
       xfbml      : true,
       version    : 'v4.0'
@@ -196,12 +209,12 @@ app.reqIndex=async function() {
   (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
   m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
   })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
-  ga('create', '`+tmpID+`', { 'storage': 'none' });
+  ga('create', '${tmpID}', { 'storage': 'none' });
   ga('send', 'pageview');
 </script>`;
   }
   Str.push(strTracker);
-  //ga('create', '`+tmpID+`', 'auto');
+  //ga('create', '${tmpID}', 'auto');
 
   //Str.push("<script src='https://www.google.com/recaptcha/api.js?render=explicit'></script>");
   Str.push('<script src="https://www.google.com/recaptcha/api.js?render=explicit" defer></script>');
@@ -216,17 +229,17 @@ h1.mainH1 { box-sizing:border-box; margin:0em auto; width:100%; max-width:var(--
 </style>`);
 
 
-  //Str.push('<script type="module" src="'+uSite+'/lib/foundOnTheInternet/md5.js"></script>');
+  //Str.push(`<script type="module" src="${uSite}/lib/foundOnTheInternet/md5.js"></script>`);
 
     // If boDbg then set vTmp=0 so that the url is the same, this way the debugger can reopen the file between changes
 
     // Use normal vTmp on iOS (since I don't have any method of disabling cache on iOS devices (nor any debugging interface))
   var boDbgT=boDbg; if(boIOS) boDbgT=0;
   
-  var keyTmp=siteName+'/'+leafManifest, vTmp=boDbgT?0:CacheUri[keyTmp].eTag;     Str.push(`<link rel="manifest" href="`+uSite+`/`+leafManifest+`?v=`+vTmp+`"/>`);
+  var keyTmp=siteName+'/'+leafManifest, vTmp=boDbgT?0:CacheUri[keyTmp].eTag;     Str.push(`<link rel="manifest" href="${uSite}/${leafManifest}?v=${vTmp}"/>`);
   
     // Include stylesheets
-  var pathTmp='/stylesheets/style.css', vTmp=boDbgT?0:CacheUri[pathTmp].eTag;    Str.push('<link rel="stylesheet" href="'+uSite+pathTmp+'?v='+vTmp+'" type="text/css">');
+  var pathTmp='/stylesheets/style.css', vTmp=boDbgT?0:CacheUri[pathTmp].eTag;    Str.push(`<link rel="stylesheet" href="${uSite}${pathTmp}?v=${vTmp}" type="text/css">`);
 
 
   //var objOut=copySome({}, app, ['wwwSite', 'CSRFCode', 'Prop', 'strSalt', 'boDbg', 'site', 'leafBE', 'flLibImageFolder', 'UrlOAuth', 'leafLoginBack', 'userInfoFrDB', 'objApp', 'objUApp', 'strReCaptchaSiteKey', 'strIPPrim', 'nHash']);
@@ -236,7 +249,7 @@ h1.mainH1 { box-sizing:border-box; margin:0em auto; width:100%; max-width:var(--
 
   Str.push(`<script>
 window.app=window;
-var tmp=`+serialize(objOut)+`;
+var tmp=${serialize(objOut)};
 Object.assign(window, tmp);
 function indexAssign(){
   setItem('CSRFCode',CSRFCode);
@@ -247,11 +260,11 @@ function indexAssign(){
     // Include JS-files
   var StrTmp=['lib.js', 'libClient.js'];
   for(var i=0;i<StrTmp.length;i++){
-    var pathTmp='/'+StrTmp[i], vTmp=boDbgT?0:CacheUri[pathTmp].eTag;    Str.push('<script type="module" src="'+uSite+pathTmp+'?v='+vTmp+'"></script>');
+    var pathTmp='/'+StrTmp[i], vTmp=boDbgT?0:CacheUri[pathTmp].eTag;    Str.push(`<script type="module" src="${uSite}${pathTmp}?v=${vTmp}"></script>`);
   }
 
 
-  Str.push('<script type="module" src="'+uSite+'/lib/foundOnTheInternet/sha1.js" async></script>');
+  Str.push(`<script type="module" src="${uSite}/lib/foundOnTheInternet/sha1.js" async></script>`);
 
 
 
@@ -259,19 +272,19 @@ function indexAssign(){
     // Include JS-files
   var StrTmp=['client.js'];
   for(var i=0;i<StrTmp.length;i++){
-    var pathTmp='/'+StrTmp[i], vTmp=boDbgT?0:CacheUri[pathTmp].eTag;    Str.push('<script type="module" src="'+uSite+pathTmp+'?v='+vTmp+'"></script>');
+    var pathTmp='/'+StrTmp[i], vTmp=boDbgT?0:CacheUri[pathTmp].eTag;    Str.push(`<script type="module" src="${uSite}${pathTmp}?v=${vTmp}"></script>`);
   }
 
   Str.push("</head>");
   Str.push(`<body>
-<title>`+strTitle+`</title>
+<title>${strTitle}</title>
 <div id=divLoginInfo class="mainDivR" style="min-height:2rem; visibility:hidden;" ></div>
-<h1 class=mainH1>`+strH1+`</h1>
+<h1 class=mainH1>${strH1}</h1>
 <noscript><div style="text-align:center">Javascript is disabled, so this app won't work.</div></noscript>
 <form id=formLogin style="display:none">
 <label name=email>Email</label><input type=email name=email>
 <label name=password>Password</label><input type=password name=password>
-<button type=submit name=submit class=highStyle value="Sign in">Sign in</button>
+<button type=submit name=submit value="Sign in">Sign in</button>
 </form>
 </body></html>`);
 
@@ -308,7 +321,7 @@ app.reqMe=async function() {
   }
 
 
-  var tmp='access_token'; if(!(tmp in objQS)) {  res.outCode(400, serialize({error:{type:'invalid_request', message:'The parameter '+tmp+' is required'}}));  return;}
+  var tmp='access_token'; if(!(tmp in objQS)) {  res.outCode(400, serialize({error:{type:'invalid_request', message:`The parameter ${tmp} is required`}}));  return;}
 
   var Sql=[], Val=[]; 
   Sql.push(`SELECT name, image, eTagImage, sizeImage, imageHash, LENGTH(idFB)>0 AS boFB, LENGTH(idGoogle)>0 AS boGoogle, address, zip, city, county, federatedState, country, timeZone, email, boEmailVerified, telephone, idNational, birthdate,  motherTongue, gender,
@@ -332,7 +345,7 @@ UNIX_TIMESTAMP(tGender) AS tGender,
 UNIX_TIMESTAMP(tAccess) AS tAccess,
 nName, nImage, nEmail, nTelephone, nCountry, nFederatedState, nCounty, nCity, nZip, nAddress, nIdFB, nIdGoogle, nIdNational, nBirthdate, nMotherTongue, nGender,
 scope, maxUnactivityToken, id
-FROM `+user2AppTab+` ua JOIN `+userTab+` u ON ua.idUser=u.idUser WHERE access_token=?;`);  // u.idUser AS idUser,
+FROM ${user2AppTab} ua JOIN ${userTab} u ON ua.idUser=u.idUser WHERE access_token=?;`);  // u.idUser AS idUser,
   Val.push(objQS.access_token);
 
 
@@ -425,7 +438,7 @@ app.reqToken=async function() {
     var [err,body]=await new Promise(resolve=>{
       var body = '';
       req.on('data', function(data){
-        body+=data;  if(body.length > 1000)  { req.connection.destroy();  var err=new Error('Aborting when '+body.length+' bytes data was received!!'); resolve([err]); }
+        body+=data;  if(body.length > 1000)  { req.connection.destroy();  var err=new Error(`Aborting when ${body.length} bytes data was received!!`); resolve([err]); }
       });
       req.on('end', function(){ resolve([null,body]);  });
     });
@@ -437,7 +450,7 @@ app.reqToken=async function() {
 
   var StrNeeded=['grant_type', 'client_id', 'redirect_uri', 'client_secret', 'code'];
   for(var i=0;i<StrNeeded.length;i++){
-    var tmp=StrNeeded[i]; if(!(tmp in objQS)) { res.outCode(400, serialize({error:{type:'invalid_request', message:'The parameter '+tmp+' is required'}})); return;}
+    var tmp=StrNeeded[i]; if(!(tmp in objQS)) { res.outCode(400, serialize({error:{type:'invalid_request', message:`The parameter ${tmp} is required`}})); return;}
   }
   
 
@@ -463,7 +476,7 @@ UNIX_TIMESTAMP(tGender) AS tGender,
 UNIX_TIMESTAMP(tAccess) AS tAccess,
 nName, nImage, nEmail, nTelephone, nCountry, nFederatedState, nCounty, nCity, nZip, nAddress, nIdFB, nIdGoogle, nIdNational, nBirthdate, nMotherTongue, nGender,
 scope, maxUnactivityToken, access_token, secret, id
-FROM `+user2AppTab+` ua JOIN `+userTab+` u ON ua.idUser=u.idUser JOIN `+appTab+` a ON ua.idApp=a.idApp WHERE code=?;`);
+FROM ${user2AppTab} ua JOIN ${userTab} u ON ua.idUser=u.idUser JOIN ${appTab} a ON ua.idApp=a.idApp WHERE code=?;`);
   Val.push(objQS.code);
 
   
@@ -512,7 +525,7 @@ app.reqLoginBack=async function(){
   var Str=[];
   Str.push(`
 <html lang="en"><head><meta name='robots' content='noindex'>
-<link rel='canonical' href='`+uSite+`'/>
+<link rel='canonical' href='${uSite}'/>
 </head>
 <body>
 <script>
@@ -535,7 +548,7 @@ window.close();
 </body>
 </html>
 `);
-//var wwwLoginScope=`+serialize(wwwLoginScopeTmp)+`;
+//var wwwLoginScope=${serialize(wwwLoginScopeTmp)};
 //if(wwwLoginScope) document.domain = wwwLoginScope;
   res.setHeader('Content-Type', MimeType.html);
   var str=Str.join('\n');  res.end(str);
@@ -552,14 +565,14 @@ app.reqVerifyEmailReturn=async function() {
   
   //if(!req.boCookieLaxOK) {res.outCode(401, "Lax cookie not set");  return;  }  // Don't check for lax-cookie since the user may click the link in an other browser
   
-  var tmp='code'; if(!(tmp in objQS)) { res.out200('The parameter '+tmp+' is required'); return;}
+  var tmp='code'; if(!(tmp in objQS)) { res.out200(`The parameter ${tmp} is required`); return;}
   var codeIn=objQS.code;
   var [err, idUser]=await getRedis(codeIn+'_verifyEmail'); if(err) {  res.out500(err); return; }
   
   if(idUser===null) { res.out200('No such code'); return;}
 
   var Sql=[], Val=[];
-  Sql.push("UPDATE "+userTab+" SET boEmailVerified=1 WHERE idUser=?;");
+  Sql.push(`UPDATE ${userTab} SET boEmailVerified=1 WHERE idUser=?;`);
   Val.push(idUser);
 
   var sql=Sql.join('\n');
@@ -581,7 +594,7 @@ app.reqVerifyPWResetReturn=async function() {
   
   //if(!req.boCookieLaxOK) {res.outCode(401, "Lax cookie not set");  return;  } // Don't check for lax-cookie since the user may click the link in an other browser
   
-  var tmp='code'; if(!(tmp in objQS)) { res.out200('The parameter '+tmp+' is required'); return;}
+  var tmp='code'; if(!(tmp in objQS)) { res.out200(`The parameter ${tmp} is required`); return;}
   var codeIn=objQS.code;
   var [err, email]=await getRedis(codeIn+'_verifyPWReset'); if(err) {  res.out500(err); return; }
   
@@ -591,18 +604,18 @@ app.reqVerifyPWResetReturn=async function() {
   var hashPW=password+strSalt; for(var i=0;i<nHash;i++) hashPW=SHA1(hashPW);
 
   var Sql=[], Val=[];
-  Sql.push("UPDATE "+userTab+" SET password=? WHERE email=?;");
+  Sql.push(`UPDATE ${userTab} SET password=? WHERE email=?;`);
   Val.push(hashPW, email);
 
   var sql=Sql.join('\n');
   var [err, results]=await this.myMySql.query(sql, Val); if(err) {  res.out500(err); return; }
 
   var c=results.affectedRows, mestmp; 
-  if(c!=1) { res.out500("Error ("+c+" affectedRows)"); return; }
+  if(c!=1) { res.out500(`Error (${c} affectedRows)`); return; }
 
 
   var wwwSite=req.wwwSite;
-  var strTxt='<h3>New password on '+wwwSite+'</h3><p>Your new password on '+wwwSite+' is '+password+'</p>';
+  var strTxt=`<h3>New password on ${wwwSite}</h3><p>Your new password on ${wwwSite} is ${password}</p>`;
   
   const msg = { to:email, from:emailRegisterdUser, subject:'Password reset', html:strTxt };
 
@@ -612,7 +625,7 @@ app.reqVerifyPWResetReturn=async function() {
   //res.end(sendResult.response);
   
   res.setHeader('Content-Type', MimeType.html);
-  res.end("A new password has been generated and sent to your email address.<br>Response: "+sendResult.response+"<br>Close this tab and login with your new password in the orignal tab.");
+  res.end(`A new password has been generated and sent to your email address.<br>Response: ${sendResult.response}<br>Close this tab and login with your new password in the orignal tab.`);
 }
 
 
@@ -631,7 +644,7 @@ function parseSignedRequest(signedRequest, secret) {
   var b64ExpectedMac = myCrypto.createHmac('sha256', secret).update(b64UrlPayload).digest('base64');
   var b64UrlExpectedMac=b64ExpectedMac.replace(/\+/g, '-').replace(/\//g, '_').replace('=', '');
   if (b64UrlMac !== b64UrlExpectedMac) {
-    return [Error('Invalid mac: ' + b64UrlMac + '. Expected ' + b64UrlExpectedMac)];
+    return [Error(`Invalid mac: ${b64UrlMac}. Expected ${b64UrlExpectedMac}`)];
   }
   return [null,data];
 }
@@ -641,8 +654,8 @@ app.deleteOne=async function(user_id){ //
   var Ou={};
 
   var Sql=[], Val=[];
-  Sql.push("DELETE FROM "+userTab+" WHERE idFB=?;"); Val.push(user_id);
-  Sql.push("SELECT count(*) AS n FROM "+userTab+";");
+  Sql.push(`DELETE FROM ${userTab} WHERE idFB=?;`); Val.push(user_id);
+  Sql.push(`SELECT count(*) AS n FROM ${userTab};`);
   var sql=Sql.join('\n');
   var [err, results]=await this.myMySql.query(sql, Val); if(err) return [err];
   var c=results[0].affectedRows;
@@ -672,14 +685,14 @@ app.reqDataDelete=async function(){  //
 
   var [err,c]=await deleteOne.call(this, user_id);
   var strEntry=c==1?'entry':'entries'
-  var mess='User: '+user_id+': '+c+' '+strEntry+' deleted';
+  var mess=`User: ${user_id}: ${c} ${strEntry} deleted`;
   
   console.log('reqDataDelete: '+mess);
   var confirmation_code=genRandomString(32);
   await setRedis(confirmation_code+'_DeleteRequest', mess, timeOutDeleteStatusInfo); //3600*24*30
 
   res.setHeader('Content-Type', MimeType.json); 
-  res.end(JSON.stringify({ url: uSite+'/'+leafDataDeleteStatus+'?confirmation_code='+confirmation_code, confirmation_code }));
+  res.end(JSON.stringify({ url: `${uSite}/${leafDataDeleteStatus}?confirmation_code=${confirmation_code}`, confirmation_code }));
 }
 
 app.reqDataDeleteStatus=async function(){
@@ -690,8 +703,8 @@ app.reqDataDeleteStatus=async function(){
   if(err) {var mess=err.message;}
   else if(mess==null) {
     var [t,u]=getSuitableTimeUnit(timeOutDeleteStatusInfo);
-    //var mess="The delete status info is only available for "+t+u+".\nAll delete requests are handled immediately. So if you pressed delete, you are deleted.";
-    var mess="No info of deletion status found, (any info is deleted "+t+u+" after the deletion request).";
+    //var mess=`The delete status info is only available for ${t}${u}.\nAll delete requests are handled immediately. So if you pressed delete, you are deleted.`;
+    var mess=`No info of deletion status found, (any info is deleted ${t}${u} after the deletion request).`;
   }
   res.end(mess);
 }
@@ -728,10 +741,10 @@ app.reqImage=async function() {
   }
   
   if(kind=='u'){
-    var sql = "SELECT data FROM "+TableName.imageTab+" i JOIN "+TableName.userTab+" u ON i.idUser=u.idUser WHERE imageHash=?", Val=[imageHash];
+    var sql = `SELECT data FROM ${TableName.imageTab} i JOIN ${TableName.userTab} u ON i.idUser=u.idUser WHERE imageHash=?`, Val=[imageHash];
   }
   else {
-    var sql = "SELECT data FROM "+TableName.imageAppTab+" i JOIN "+TableName.appTab+" a ON i.idApp=a.idApp WHERE imageHash=?", Val=[imageHash];
+    var sql = `SELECT data FROM ${TableName.imageAppTab} i JOIN ${TableName.appTab} a ON i.idApp=a.idApp WHERE imageHash=?`, Val=[imageHash];
   }
   var [err, results]=await this.myMySql.query(sql, Val); if(err) {  res.out500(err); return; }
   
@@ -771,7 +784,7 @@ app.reqStatic=async function() {
     var [err]=await readFileToCache(filename);
     if(err) {
       if(err.code=='ENOENT') {res.out404(); return;}
-      if('host' in req.headers) console.error('Faulty request to '+req.headers.host+" ("+pathName+")");
+      if('host' in req.headers) console.error(`Faulty request to ${req.headers.host} (${pathName})`);
       if('Referer' in req.headers) console.error('Referer:'+req.headers.Referer);
       res.out500(err); return;
     }
@@ -779,7 +792,7 @@ app.reqStatic=async function() {
   var {buf, type, eTag, boZip, boUglify}=CacheUri[keyCache];
   if(eTag===eTagIn){ res.out304(); return; }
   var mimeType=MimeType[type];
-  if(typeof mimeType!='string') console.log('type: '+type+', mimeType: ', mimeType);
+  if(typeof mimeType!='string') console.log(`type: ${type}, mimeType: `, mimeType);
   if(typeof buf!='object' || !('length' in buf)) console.log('typeof buf: '+typeof buf);
   if(typeof eTag!='string') console.log('typeof eTag: '+eTag);
   var objHead={"Content-Type": mimeType, "Content-Length":buf.length, ETag: eTag, "Cache-Control":"public, max-age=31536000"};
@@ -803,11 +816,11 @@ app.reqMonitor=async function() {
   
   if(!objOthersActivity){  //  && boPageBUNeeded===null && boImageBUNeeded===null
     var Sql=[];
-    Sql.push("SELECT SQL_CALC_FOUND_ROWS imageName, created FROM "+imageTab+" WHERE boOther=1  LIMIT 1;");
+    Sql.push(`SELECT SQL_CALC_FOUND_ROWS imageName, created FROM ${imageTab} WHERE boOther=1  LIMIT 1;`);
     Sql.push("SELECT FOUND_ROWS() AS n;");
-    //Sql.push("SELECT key, value FROM "+settingTab+" WHERE key='tPageBU' OR key 'tImageBU';");
-    //Sql.push("SELECT max(tMod) AS tMax FROM "+versionTab+";");
-    //Sql.push("SELECT max(created) AS tMax FROM "+imageTab+";");
+    //Sql.push(`SELECT key, value FROM ${settingTab} WHERE key='tPageBU' OR key 'tImageBU';`);
+    //Sql.push(`SELECT max(tMod) AS tMax FROM ${versionTab};`);
+    //Sql.push(`SELECT max(created) AS tMax FROM ${imageTab};`);
 
 
     var sql=Sql.join('\n'), Val=[];
@@ -829,11 +842,11 @@ app.reqMonitor=async function() {
   var colImg='';  //if(boImageBUNeeded) colImg='orange';
   var n=objOthersActivity.nImage,  strImg=n==1?objOthersActivity.imageName:n;   if(n) colImg='red';   
 
-  if(colPage) strPage="<span style=\"background-color:"+colPage+"\">"+strPage+"</span>";
-  if(colImg) strImg="<span style=\"background-color:"+colImg+"\">"+strImg+"</span>";
+  if(colPage) strPage=`<span style="background-color:${colPage}">${strPage}</span>`;
+  if(colImg) strImg=`<span style="background-color:${colImg}">${strImg}</span>`;
   
   res.setHeader('Content-Type', MimeType.html);
-  res.end("<body style=\"margin: 0px;padding: 0px\">"+strPage+" / "+strImg+"</body>");
+  res.end(`<body style="margin: 0px;padding: 0px">${strPage} / ${strImg}</body>`);
 
 }
 
@@ -847,17 +860,17 @@ app.reqStat=async function() {
   if(!req.boCookieLaxOK) {res.outCode(401, "Lax cookie not set");  return;  }
 
   var Sql=[]; 
-  Sql.push("SELECT count(*) AS n FROM "+versionTab+";"); 
-  Sql.push("SELECT count(*) AS n FROM "+imageTab+";"); 
-  Sql.push("SELECT count(*) AS n FROM "+thumbTab+";");
-  Sql.push("SELECT count(*) AS n FROM "+videoTab+";"); 
-  Sql.push("SELECT count(*) AS n FROM "+fileTab+";");
-  Sql.push(`SELECT f.idFile AS file, v.idPage AS page, vc.idPage AS cache, i.idImage AS image, t.idImage AS thumb, vid.idVideo AS video FROM `+fileTab+` f
-   LEFT JOIN `+versionTab+` v ON f.idFile=v.idFile
-   LEFT JOIN `+versionTab+` vc ON f.idFile=vc.idFileCache
-   LEFT JOIN `+imageTab+` i ON f.idFile=i.idFile
-   LEFT JOIN `+thumbTab+` t ON f.idFile=t.idFile
-   LEFT JOIN `+videoTab+` vid ON f.idFile=vid.idFile`);
+  Sql.push(`SELECT count(*) AS n FROM ${versionTab};`); 
+  Sql.push(`SELECT count(*) AS n FROM ${imageTab};`); 
+  Sql.push(`SELECT count(*) AS n FROM ${thumbTab};`);
+  Sql.push(`SELECT count(*) AS n FROM ${videoTab};`); 
+  Sql.push(`SELECT count(*) AS n FROM ${fileTab};`);
+  Sql.push(`SELECT f.idFile AS file, v.idPage AS page, vc.idPage AS cache, i.idImage AS image, t.idImage AS thumb, vid.idVideo AS video FROM ${fileTab} f
+   LEFT JOIN ${versionTab} v ON f.idFile=v.idFile
+   LEFT JOIN ${versionTab} vc ON f.idFile=vc.idFileCache
+   LEFT JOIN ${imageTab} i ON f.idFile=i.idFile
+   LEFT JOIN ${thumbTab} t ON f.idFile=t.idFile
+   LEFT JOIN ${videoTab} vid ON f.idFile=vid.idFile`);
 
   var sql=Sql.join('\n'), Val=[];
   var [err, results]=await this.myMySql.query(sql, Val); if(err) {  res.out500(err); return; }
@@ -879,16 +892,16 @@ app.reqStat=async function() {
     // If boDbg then set vTmp=0 so that the url is the same, this way the debugger can reopen the file between changes
 
     // Include stylesheets
-  var pathTmp='/stylesheets/style.css', vTmp=CacheUri[pathTmp].eTag; if(boDbg) vTmp=0;    Str.push('<link rel="stylesheet" href="'+uSite+pathTmp+'?v='+vTmp+'" type="text/css">');
+  var pathTmp='/stylesheets/style.css', vTmp=CacheUri[pathTmp].eTag; if(boDbg) vTmp=0;     Str.push(`<link rel="stylesheet" href="${uSite}${pathTmp}?v=${vTmp}" type="text/css">`);
 
     // Include site specific JS-files
   //var uSite=req.strSchemeLong+req.wwwSite;
-  //var keyCache=req.strSite+'/'+leafSiteSpecific, vTmp=CacheUri[keyCache].eTag; if(boDbg) vTmp=0;  Str.push('<script type="module" src="'+uSite+'/'+leafSiteSpecific+'?v='+vTmp+'"></script>');
+  //var keyCache=req.strSite+'/'+leafSiteSpecific, vTmp=CacheUri[keyCache].eTag; if(boDbg) vTmp=0;  Str.push(`<script type="module" src="${uSite}/${leafSiteSpecific}?v=${vTmp}"></script>`);
 
     // Include JS-files
   var StrTmp=['lib.js', 'libClient.js'];
   for(var i=0;i<StrTmp.length;i++){
-    var pathTmp='/'+StrTmp[i], vTmp=CacheUri[pathTmp].eTag; if(boDbg) vTmp=0;    Str.push('<script type="module" src="'+uSite+pathTmp+'?v='+vTmp+'"></script>');
+    var pathTmp='/'+StrTmp[i], vTmp=CacheUri[pathTmp].eTag; if(boDbg) vTmp=0;    Str.push(`<script type="module" src="${uSite}${pathTmp}?v=${vTmp}"></script>`);
   }
 
 
@@ -898,16 +911,16 @@ app.reqStat=async function() {
   Str.push('<h3>Comparing tables</h3>');
 
 
-  Str.push("<p>nFile: <b>"+nFile+"</b>");
+  Str.push(`<p>nFile: <b>${nFile}</b>`);
   Str.push("<br><br>");
 
   Str.push("<p>nImage:"+nImage);
-  Str.push("<p>nVersion:"+nVersion+" (*2) (each creates 2 files)");
+  Str.push(`<p>nVersion:${nVersion} (*2) (each creates 2 files)`);
   Str.push("<p>nThumb:"+nThumb);
   Str.push("<p>nVideo:"+nVideo);
   Str.push("<p>---------------");
-  var sum=2*nVersion+nImage+nThumb+nVideo;  Str.push("<p>Sum: <b>"+sum+'</b>, ');
-  var diff=nFile-nVersion*2-nImage-nThumb-nVideo;  Str.push("(diff="+diff+")");
+  var sum=2*nVersion+nImage+nThumb+nVideo;  Str.push(`<p>Sum: <b>${sum}</b>, `);
+  var diff=nFile-nVersion*2-nImage-nThumb-nVideo;  Str.push(`(diff=${diff})`);
 
   var tmp="<br>";    if(diff<0) tmp=" (fileTab contains too few entries)<br>";    else if(diff>0) tmp=" (fileTab contains too many entries)<br>";
   Str.push(tmp);
@@ -923,12 +936,12 @@ app.reqStat=async function() {
   for(var i=0;i<resT.length;i++){
     var r=resT[i];
              // 'file' will be on each row. Other than that, each row should have one other entry. (that is 2 entries per row), (rows with a single entry are marked red) 
-    var strD='', col='red'; for(var name in r){var d=r[name]; if(d==null) d=''; strD+="<td>"+d+"</td>"; if(d && name!='file') col='';} 
-    if(col.length) col="style=\"background-color:"+col+"\"";
-    arrR.push("<tr "+col+">"+strD+"</tr>\n");
+    var strD='', col='red'; for(var name in r){var d=r[name]; if(d==null) d=''; strD+=`<td>${d}</td>`; if(d && name!='file') col='';} 
+    if(col.length) col=`style="background-color:${col}"`;
+    arrR.push(`<tr ${col}>${strD}</tr>\n`);
   }
   var strR=arrR.join('');
-  Str.push("<table style=\"  border: solid 1px;border-collapse:collapse\">\n"+strR+"</table>");
+  Str.push(`<table style="border:solid 1px; border-collapse:collapse">\n${strR}</table>`);
 
   res.setHeader('Content-Type', MimeType.html);
   var str=Str.join('\n');  // res.writeHead(200, "OK", {'Content-Type': MimeType.html}); 
@@ -957,7 +970,7 @@ app.SetupSql.prototype.createTable=async function(siteName,boDropOnly){
   var tmp=StrTabName.join(', ');
   SqlTabDrop.push("DROP TABLE IF EXISTS "+tmp);     
   SqlTabDrop.push('DROP TABLE IF EXISTS '+userTab);     
-  //var tmp=object_values(ViewName).join(', ');   if(tmp.length) SqlTabDrop.push("DROP VIEW IF EXISTS "+tmp+"");
+  //var tmp=object_values(ViewName).join(', ');   if(tmp.length) SqlTabDrop.push(`DROP VIEW IF EXISTS ${tmp}`);
 
 
   var collate="utf8_general_ci";
@@ -968,11 +981,11 @@ app.SetupSql.prototype.createTable=async function(siteName,boDropOnly){
   var strEnumGender="ENUM('male','female')";
   var strEnumImageSource="ENUM('db','url')";
   //boImageOwn tinyint(1) NOT NULL DEFAULT 0,
-  //enumImageSource "+strEnumImageSource+" NOT NULL DEFAULT 'db',
+  //enumImageSource ${strEnumImageSource} NOT NULL DEFAULT 'db',
   //imTag int(4) NOT NULL DEFAULT 0,
 
     // Create users
-  SqlTab.push(`CREATE TABLE `+userTab+` (
+  SqlTab.push(`CREATE TABLE ${userTab} (
   idUser int(4) NOT NULL auto_increment,
   name varchar(128) NOT NULL DEFAULT '',
   password char(40) NOT NULL DEFAULT '',
@@ -995,7 +1008,7 @@ app.SetupSql.prototype.createTable=async function(siteName,boDropOnly){
   idNational varchar(128) CHARSET utf8 NOT NULL DEFAULT '',
   birthdate DATE NOT NULL,
   motherTongue varchar(32) NOT NULL DEFAULT '',
-  gender `+strEnumGender+` NOT NULL DEFAULT 'male',
+  gender ${strEnumGender} NOT NULL DEFAULT 'male',
   tCreated TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   tName TIMESTAMP NOT NULL,
   tImage TIMESTAMP NOT NULL,
@@ -1034,37 +1047,37 @@ app.SetupSql.prototype.createTable=async function(siteName,boDropOnly){
   UNIQUE KEY (imageHash),
   UNIQUE KEY (idFB),
   UNIQUE KEY (idGoogle)
-  ) AUTO_INCREMENT = `+auto_increment+`, ENGINE=`+engine+` COLLATE `+collate); 
-  SqlTab.push("ALTER TABLE "+userTab+" AUTO_INCREMENT=100000");
+  ) AUTO_INCREMENT = ${auto_increment}, ENGINE=${engine} COLLATE ${collate}`); 
+  SqlTab.push(`ALTER TABLE ${userTab} AUTO_INCREMENT=100000`);
 
        // Columns allowd to be null: imageHash, timeZone, idFB, idGoogle, tCreated
 
 
-  SqlTab.push(`CREATE TABLE `+imageTab+` (
+  SqlTab.push(`CREATE TABLE ${imageTab} (
   idUser int(4) NOT NULL,
   data BLOB NOT NULL,
   UNIQUE KEY (idUser),
-  FOREIGN KEY (idUser) REFERENCES `+userTab+`(idUser) ON DELETE CASCADE
-  ) ENGINE=`+engine+` COLLATE `+collate); 
+  FOREIGN KEY (idUser) REFERENCES ${userTab}(idUser) ON DELETE CASCADE
+  ) ENGINE=${engine} COLLATE ${collate}`); 
 
-  SqlTab.push(`CREATE TABLE `+settingTab+` (
+  SqlTab.push(`CREATE TABLE ${settingTab} (
   name varchar(65) CHARSET utf8 NOT NULL,
   value TEXT CHARSET utf8 NOT NULL,
   UNIQUE KEY (name)
-  ) ENGINE=`+engine+` COLLATE `+collate);
+  ) ENGINE=${engine} COLLATE ${collate}`);
 
 	  // Create admin
-  SqlTab.push(`CREATE TABLE `+adminTab+` (
+  SqlTab.push(`CREATE TABLE ${adminTab} (
   idUser int(4) NOT NULL,
   boApproved tinyint(1) NOT NULL DEFAULT 0,
   created TIMESTAMP default CURRENT_TIMESTAMP,
-  FOREIGN KEY (idUser) REFERENCES `+userTab+`(idUser) ON DELETE CASCADE,
+  FOREIGN KEY (idUser) REFERENCES ${userTab}(idUser) ON DELETE CASCADE,
   UNIQUE KEY (idUser)
-  ) ENGINE=`+engine+` COLLATE `+collate);
+  ) ENGINE=${engine} COLLATE ${collate}`);
 
   //imTag int(4) NOT NULL DEFAULT 0,
 	  // Create app
-  SqlTab.push(`CREATE TABLE `+appTab+` (
+  SqlTab.push(`CREATE TABLE ${appTab} (
   idApp int(4) NOT NULL auto_increment,
   name varchar(32) NOT NULL DEFAULT '',
   idOwner int(4) NOT NULL,
@@ -1075,35 +1088,35 @@ app.SetupSql.prototype.createTable=async function(siteName,boDropOnly){
   PRIMARY KEY (idApp),
   UNIQUE KEY (name),
   UNIQUE KEY (imageHash),
-  FOREIGN KEY (idOwner) REFERENCES `+userTab+`(idUser) ON DELETE CASCADE
-  ) ENGINE=`+engine+` COLLATE `+collate);
-  SqlTab.push("ALTER TABLE "+appTab+" AUTO_INCREMENT=11000");
+  FOREIGN KEY (idOwner) REFERENCES ${userTab}(idUser) ON DELETE CASCADE
+  ) ENGINE=${engine} COLLATE ${collate}`);
+  SqlTab.push(`ALTER TABLE ${appTab} AUTO_INCREMENT=11000`);
 
-  SqlTab.push(`CREATE TABLE `+imageAppTab+` (
+  SqlTab.push(`CREATE TABLE ${imageAppTab} (
   idApp int(4) NOT NULL,
   data BLOB NOT NULL,
   UNIQUE KEY (idApp),
-  FOREIGN KEY (idApp) REFERENCES `+appTab+`(idApp) ON DELETE CASCADE
-  ) ENGINE=`+engine+` COLLATE `+collate); 
+  FOREIGN KEY (idApp) REFERENCES ${appTab}(idApp) ON DELETE CASCADE
+  ) ENGINE=${engine} COLLATE ${collate}`); 
 
 
     // Create user2App
-  SqlTab.push(`CREATE TABLE `+user2AppTab+` (
+  SqlTab.push(`CREATE TABLE ${user2AppTab} (
   idUser int(4) NOT NULL,
   idApp int(4) NOT NULL,
-  scope `+this.strSETScope+`,
+  scope ${this.strSETScope},
   tAccess TIMESTAMP default CURRENT_TIMESTAMP,
   access_token char(128) NOT NULL DEFAULT '',
   code char(128) NOT NULL DEFAULT '',
   id char(56) NOT NULL DEFAULT '',
   maxUnactivityToken int(4) NOT NULL DEFAULT 0,
-  FOREIGN KEY (idUser) REFERENCES `+userTab+`(idUser) ON DELETE CASCADE,
-  FOREIGN KEY (idApp) REFERENCES `+appTab+`(idApp) ON DELETE CASCADE,
+  FOREIGN KEY (idUser) REFERENCES ${userTab}(idUser) ON DELETE CASCADE,
+  FOREIGN KEY (idApp) REFERENCES ${appTab}(idApp) ON DELETE CASCADE,
   UNIQUE KEY (idUser, idApp),
   UNIQUE KEY (access_token),
   UNIQUE KEY (code),
   UNIQUE KEY (id)
-  ) ENGINE=`+engine+` COLLATE `+collate);
+  ) ENGINE=${engine} COLLATE ${collate}`);
 
   // scope="PECA" //Public, Email, Contact, All
   //scope varchar(128) NOT NULL DEFAULT '',
@@ -1130,10 +1143,10 @@ app.SetupSql.prototype.createFunction=async function(siteName,boDropOnly){
   
   
 
-  //SELECT imageHash FROM "+imageTab+" WHERE idUser=IidUser;
+  //SELECT imageHash FROM ${imageTab} WHERE idUser=IidUser;
 
-  SqlFunctionDrop.push("DROP PROCEDURE IF EXISTS "+siteName+"getUserAppInfo");
-  SqlFunction.push(`CREATE PROCEDURE `+siteName+`getUserAppInfo(IidUser int(4), IidApp int(4))
+  SqlFunctionDrop.push(`DROP PROCEDURE IF EXISTS ${siteName}getUserAppInfo`);
+  SqlFunction.push(`CREATE PROCEDURE ${siteName}getUserAppInfo(IidUser int(4), IidApp int(4))
     proc_label:BEGIN
       SELECT idUser, name, image, eTagImage, sizeImage, imageHash, email, boEmailVerified, telephone, country, federatedState, county, city, zip, address, timeZone, idFB, idGoogle, idNational, birthdate, motherTongue, gender,
 UNIX_TIMESTAMP(tCreated) AS tCreated,
@@ -1154,30 +1167,30 @@ UNIX_TIMESTAMP(tBirthdate) AS tBirthdate,
 UNIX_TIMESTAMP(tMotherTongue) AS tMotherTongue,
 UNIX_TIMESTAMP(tGender) AS tGender,
 nName, nImage, nEmail, nTelephone, nCountry, nFederatedState, nCounty, nCity, nZip, nAddress, nIdFB, nIdGoogle, nIdNational, nBirthdate, nMotherTongue, nGender
- FROM `+userTab+` WHERE idUser=IidUser;
+ FROM ${userTab} WHERE idUser=IidUser;
 
          # Note on the below query: If row doesn't exist, then nothing is done
-      UPDATE `+user2AppTab+` SET access_token=CONCAT(MD5(RAND()),MD5(RAND())), tAccess=now(), code=CONCAT(MD5(RAND()),MD5(RAND())) WHERE idUser=IidUser AND idApp=IidApp;
-      SELECT idApp, name, UNIX_TIMESTAMP(created) AS created, redir_uri, imageHash FROM `+appTab+` WHERE idApp=IidApp;
-      SELECT scope, UNIX_TIMESTAMP(tAccess) AS tAccess, access_token, maxUnactivityToken, code, id FROM `+user2AppTab+` ua JOIN `+appTab+` a ON ua.idApp=a.idApp WHERE idUser=IidUser AND a.idApp=IidApp;
+      UPDATE ${user2AppTab} SET access_token=CONCAT(MD5(RAND()),MD5(RAND())), tAccess=now(), code=CONCAT(MD5(RAND()),MD5(RAND())) WHERE idUser=IidUser AND idApp=IidApp;
+      SELECT idApp, name, UNIX_TIMESTAMP(created) AS created, redir_uri, imageHash FROM ${appTab} WHERE idApp=IidApp;
+      SELECT scope, UNIX_TIMESTAMP(tAccess) AS tAccess, access_token, maxUnactivityToken, code, id FROM ${user2AppTab} ua JOIN ${appTab} a ON ua.idApp=a.idApp WHERE idUser=IidUser AND a.idApp=IidApp;
     END`);  //, password
 
 
-  SqlFunctionDrop.push("DROP PROCEDURE IF EXISTS "+siteName+"setConsent");
-  SqlFunction.push(`CREATE PROCEDURE `+siteName+`setConsent(IidUser int(4), IidApp int(4), Iscope `+this.strSETScope+`, ImaxUnactivityToken int(4))
+  SqlFunctionDrop.push(`DROP PROCEDURE IF EXISTS ${siteName}setConsent`);
+  SqlFunction.push(`CREATE PROCEDURE ${siteName}setConsent(IidUser int(4), IidApp int(4), Iscope ${this.strSETScope}, ImaxUnactivityToken int(4))
     proc_label:BEGIN
       DECLARE Vc INT(4);
       DECLARE Vid char(56);
       DECLARE Vaccess_token, Vcode char(128);
-      SELECT SQL_CALC_FOUND_ROWS id INTO Vid FROM `+user2AppTab+` WHERE idUser=IidUser AND idApp=IidApp;
+      SELECT SQL_CALC_FOUND_ROWS id INTO Vid FROM ${user2AppTab} WHERE idUser=IidUser AND idApp=IidApp;
       SELECT FOUND_ROWS() INTO Vc;
       SET Vaccess_token=CONCAT(MD5(RAND()),MD5(RAND()));
       SET Vcode=CONCAT(MD5(RAND()),MD5(RAND()));
       IF Vc=0 THEN
-        SET Vid=SHA2(CONCAT(IidUser,IidApp,'`+strSaltID+`'),224);
-        INSERT INTO `+user2AppTab+` (idUser, idApp, scope, tAccess, access_token, code, maxUnactivityToken, id) VALUES (IidUser, IidApp, Iscope, now(), Vaccess_token, Vcode, ImaxUnactivityToken, Vid);
+        SET Vid=SHA2(CONCAT(IidUser,IidApp,'${strSaltID}'),224);
+        INSERT INTO ${user2AppTab} (idUser, idApp, scope, tAccess, access_token, code, maxUnactivityToken, id) VALUES (IidUser, IidApp, Iscope, now(), Vaccess_token, Vcode, ImaxUnactivityToken, Vid);
       ELSE
-        UPDATE `+user2AppTab+` SET scope=Iscope, tAccess=now(), access_token=Vaccess_token, code=Vcode, maxUnactivityToken=ImaxUnactivityToken WHERE idUser=IidUser AND idApp=IidApp;
+        UPDATE ${user2AppTab} SET scope=Iscope, tAccess=now(), access_token=Vaccess_token, code=Vcode, maxUnactivityToken=ImaxUnactivityToken WHERE idUser=IidUser AND idApp=IidApp;
       END IF;
     END`);  //, password
 
@@ -1189,66 +1202,66 @@ nName, nImage, nEmail, nTelephone, nCountry, nFederatedState, nCounty, nCity, nZ
 /*
   var access_token=randomHash();
   var code=randomHash();
-  var sql="INSERT INTO "+user2AppTab+" (idUser, idApp, scope, tAccess, access_token, maxUnactivityToken, code) VALUES (?,?,?,now(),?,?,?) ON DUPLICATE KEY UPDATE scope=?, access_token=?, maxUnactivityToken=?, code=?;";
+  var sql=`INSERT INTO ${user2AppTab} (idUser, idApp, scope, tAccess, access_token, maxUnactivityToken, code) VALUES (?,?,?,now(),?,?,?) ON DUPLICATE KEY UPDATE scope=?, access_token=?, maxUnactivityToken=?, code=?;`;
   var Val=[idUser, inObj.idApp, inObj.scope, access_token, inObj.maxUnactivityToken, code,    inObj.scope, access_token, inObj.maxUnactivityToken, code ];
 */
 
 
-  SqlFunctionDrop.push("DROP PROCEDURE IF EXISTS "+siteName+"setPassword");
-  SqlFunction.push(`CREATE PROCEDURE `+siteName+`setPassword(IidUser int(4), IpwOld VARCHAR(40), IpwNew VARCHAR(40))
+  SqlFunctionDrop.push(`DROP PROCEDURE IF EXISTS ${siteName}setPassword`);
+  SqlFunction.push(`CREATE PROCEDURE ${siteName}setPassword(IidUser int(4), IpwOld VARCHAR(40), IpwNew VARCHAR(40))
     proc_label:BEGIN
       DECLARE VpwOld VARCHAR(40);
-      SELECT password INTO VpwOld FROM `+userTab+` WHERE idUser=IidUser;
+      SELECT password INTO VpwOld FROM ${userTab} WHERE idUser=IidUser;
       IF FOUND_ROWS()!=1 THEN SELECT CONCAT('Found ', FOUND_ROWS(), ' users') AS mess; LEAVE proc_label; END IF;
       IF VpwOld!=IpwOld THEN SELECT 'Old password does not match' AS mess; LEAVE proc_label; END IF;
-      UPDATE `+userTab+` SET password=IpwNew WHERE idUser=IidUser;
+      UPDATE ${userTab} SET password=IpwNew WHERE idUser=IidUser;
       SELECT 'Password changed' AS mess;
     END`);  
 
 
-  SqlFunctionDrop.push("DROP PROCEDURE IF EXISTS "+siteName+"setImage");
-  SqlFunction.push(`CREATE PROCEDURE `+siteName+`setImage(IidUser int(4), Idata BLOB)
+  SqlFunctionDrop.push(`DROP PROCEDURE IF EXISTS ${siteName}setImage`);
+  SqlFunction.push(`CREATE PROCEDURE ${siteName}setImage(IidUser int(4), Idata BLOB)
     proc_label:BEGIN
       DECLARE VimageHash char(56);
       SET VimageHash=sha2(Idata,224);
-      REPLACE INTO `+imageTab+` (idUser,data) VALUES (IidUser,Idata);
-      UPDATE `+userTab+` SET tImage=IF(imageHash IS NULL OR imageHash!=VimageHash, now(), tImage), nImage=nImage+(imageHash IS NULL OR imageHash!=VimageHash), imageHash=VimageHash WHERE idUser=IidUser;
+      REPLACE INTO ${imageTab} (idUser,data) VALUES (IidUser,Idata);
+      UPDATE ${userTab} SET tImage=IF(imageHash IS NULL OR imageHash!=VimageHash, now(), tImage), nImage=nImage+(imageHash IS NULL OR imageHash!=VimageHash), imageHash=VimageHash WHERE idUser=IidUser;
       SELECT VimageHash AS imageHash;
     END`); 
 
-  SqlFunctionDrop.push("DROP PROCEDURE IF EXISTS "+siteName+"deleteImage");
-  SqlFunction.push(`CREATE PROCEDURE `+siteName+`deleteImage(IidUser int(4))
+  SqlFunctionDrop.push(`DROP PROCEDURE IF EXISTS ${siteName}deleteImage`);
+  SqlFunction.push(`CREATE PROCEDURE ${siteName}deleteImage(IidUser int(4))
     proc_label:BEGIN
-      DELETE FROM `+imageTab+` WHERE idUser=IidUser;
-      UPDATE `+userTab+` SET tImage=IF(imageHash IS NULL, tImage, now()), imageHash=NULL WHERE idUser=IidUser;
+      DELETE FROM ${imageTab} WHERE idUser=IidUser;
+      UPDATE ${userTab} SET tImage=IF(imageHash IS NULL, tImage, now()), imageHash=NULL WHERE idUser=IidUser;
       SELECT NULL AS imageHash;
     END`); 
 
-  SqlFunctionDrop.push("DROP PROCEDURE IF EXISTS "+siteName+"setAppImage");
-  SqlFunction.push(`CREATE PROCEDURE `+siteName+`setAppImage(IidUser int(4), IidApp int(4), Idata BLOB)
+  SqlFunctionDrop.push(`DROP PROCEDURE IF EXISTS ${siteName}setAppImage`);
+  SqlFunction.push(`CREATE PROCEDURE ${siteName}setAppImage(IidUser int(4), IidApp int(4), Idata BLOB)
     proc_label:BEGIN
       DECLARE Vtrash int(4);
       DECLARE VimageHash char(56);
-      SELECT idApp INTO Vtrash FROM `+appTab+` WHERE idOwner=IidUser AND idApp=IidApp;
+      SELECT idApp INTO Vtrash FROM ${appTab} WHERE idOwner=IidUser AND idApp=IidApp;
       IF FOUND_ROWS()!=1 THEN SELECT CONCAT('Found ', FOUND_ROWS(), ' apps') AS mess; LEAVE proc_label;
       ELSE SELECT 'ok' AS mess;
       END IF;
       SET VimageHash=sha2(Idata,224);
-      REPLACE INTO `+imageAppTab+` (idApp,data) VALUES (IidApp,Idata);
-      UPDATE `+appTab+` SET imageHash=VimageHash WHERE idApp=IidApp;
+      REPLACE INTO ${imageAppTab} (idApp,data) VALUES (IidApp,Idata);
+      UPDATE ${appTab} SET imageHash=VimageHash WHERE idApp=IidApp;
       SELECT VimageHash AS imageHash;
     END`);  
  
-  SqlFunctionDrop.push("DROP PROCEDURE IF EXISTS "+siteName+"deleteAppImage");
-  SqlFunction.push(`CREATE PROCEDURE `+siteName+`deleteAppImage(IidUser int(4), IidApp int(4))
+  SqlFunctionDrop.push(`DROP PROCEDURE IF EXISTS ${siteName}deleteAppImage`);
+  SqlFunction.push(`CREATE PROCEDURE ${siteName}deleteAppImage(IidUser int(4), IidApp int(4))
     proc_label:BEGIN
       DECLARE Vtrash int(4);
-      SELECT idApp INTO Vtrash FROM `+appTab+` WHERE idOwner=IidUser AND idApp=IidApp;
+      SELECT idApp INTO Vtrash FROM ${appTab} WHERE idOwner=IidUser AND idApp=IidApp;
       IF FOUND_ROWS()!=1 THEN SELECT CONCAT('Found ', FOUND_ROWS(), ' apps') AS mess; LEAVE proc_label;
       ELSE SELECT 'ok' AS mess;
       END IF;
-      DELETE FROM `+imageAppTab+` WHERE idApp=IidApp;
-      UPDATE `+appTab+` SET imageHash=NULL WHERE idApp=IidApp;
+      DELETE FROM ${imageAppTab} WHERE idApp=IidApp;
+      UPDATE ${appTab} SET imageHash=NULL WHERE idApp=IidApp;
       SELECT NULL AS imageHash;
     END`);  
 
@@ -1257,12 +1270,12 @@ nName, nImage, nEmail, nTelephone, nCountry, nFederatedState, nCounty, nCity, nZ
      // COMMIT
 
 
-  SqlFunctionDrop.push("DROP PROCEDURE IF EXISTS "+siteName+"loginWExternalIP");
-  SqlFunction.push(`CREATE PROCEDURE `+siteName+`loginWExternalIP(IidIP varchar(128), InameIP varchar(128), Iimage varchar(512), Iemail varchar(128), ItimeZone varchar(16))
+  SqlFunctionDrop.push(`DROP PROCEDURE IF EXISTS ${siteName}loginWExternalIP`);
+  SqlFunction.push(`CREATE PROCEDURE ${siteName}loginWExternalIP(IidIP varchar(128), InameIP varchar(128), Iimage varchar(512), Iemail varchar(128), ItimeZone varchar(16))
     proc_label:BEGIN
       DECLARE VidUser, VidUserIP, VidUserE int(4);
-      SELECT idUser INTO VidUserIP FROM `+userTab+` WHERE idFB=IidIP;
-      SELECT idUser INTO VidUserE  FROM `+userTab+` WHERE email=Iemail;
+      SELECT idUser INTO VidUserIP FROM ${userTab} WHERE idFB=IidIP;
+      SELECT idUser INTO VidUserE  FROM ${userTab} WHERE email=Iemail;
 
           # Check that VidUserIP and VidUserE are the same
       IF VidUserIP IS NOT NULL AND VidUserE IS NOT NULL AND VidUserIP!=VidUserE THEN SELECT 'Email used for another account' AS mess; LEAVE proc_label;
@@ -1271,11 +1284,11 @@ nName, nImage, nEmail, nTelephone, nCountry, nFederatedState, nCounty, nCity, nZ
       SET VidUser=COALESCE(VidUserIP,VidUserE);
 
       IF VidUser IS NULL THEN
-        INSERT INTO `+userTab+` SET idFB=IidIP, name=InameIP, password=MD5(RAND()), image=Iimage, email=Iemail, timeZone=ItimeZone, birthdate='2000-01-01',
+        INSERT INTO ${userTab} SET idFB=IidIP, name=InameIP, password=MD5(RAND()), image=Iimage, email=Iemail, timeZone=ItimeZone, birthdate='2000-01-01',
    tCreated=now(), tName=now(), tImage=now(), tEmail=now(), tTelephone=now(), tCountry=now(), tFederatedState=now(), tCounty=now(), tCity=now(), tZip=now(), tAddress=now(), tIdFB=now(), tIdGoogle=now(), tIdNational=now(), tBirthdate=now(), tMotherTongue=now(), tGender=now();
         SELECT LAST_INSERT_ID() INTO VidUser;
       ELSE
-        UPDATE `+userTab+` SET
+        UPDATE ${userTab} SET
 tIdFB=IF(idFB<=>IidIP, tIdFB, now()),
 tName=IF(name<=>InameIP, tName, now()),
 tImage=IF(!(image<=>Iimage) AND imageHash IS NULL, now(), tImage),
@@ -1293,15 +1306,15 @@ idFB=IidIP, name=InameIP, image=Iimage, email=Iemail, timeZone=ItimeZone WHERE i
 
 
 /*
-  SqlFunctionDrop.push("DROP PROCEDURE IF EXISTS "+siteName+"setUser");
-  SqlFunction.push(`CREATE PROCEDURE `+siteName+`setUser(IIP `+strIPEnum+`, IidIP varchar(128), InameIP varchar(128), Iimage varchar(512), OUT OboInserted INT, OUT OidUser INT)
+  SqlFunctionDrop.push(`DROP PROCEDURE IF EXISTS ${siteName}setUser`);
+  SqlFunction.push(`CREATE PROCEDURE ${siteName}setUser(IIP ${strIPEnum}, IidIP varchar(128), InameIP varchar(128), Iimage varchar(512), OUT OboInserted INT, OUT OidUser INT)
     BEGIN
       DECLARE Vc INT;
       START TRANSACTION;
-      INSERT INTO `+userTab+` (IP, idIP, nameIP, image) VALUES (IIP, IidIP, InameIP, Iimage ) ON DUPLICATE KEY UPDATE idUser=LAST_INSERT_ID(idUser), nameIP=InameIP, image=Iimage;
+      INSERT INTO ${userTab} (IP, idIP, nameIP, image) VALUES (IIP, IidIP, InameIP, Iimage ) ON DUPLICATE KEY UPDATE idUser=LAST_INSERT_ID(idUser), nameIP=InameIP, image=Iimage;
       SET OidUser=LAST_INSERT_ID();
 
-      INSERT INTO `+vendorTab+` (idUser,created, lastPriceChange, posTime, tLastWriteOfTA, histActive) VALUES (OidUser, now(), now(), now(), now(), 1 )
+      INSERT INTO ${vendorTab} (idUser,created, lastPriceChange, posTime, tLastWriteOfTA, histActive) VALUES (OidUser, now(), now(), now(), now(), 1 )
         ON DUPLICATE KEY UPDATE idUser=idUser;
 
       SET OboInserted=(ROW_COUNT()=1);
@@ -1309,57 +1322,57 @@ idFB=IidIP, name=InameIP, image=Iimage, email=Iemail, timeZone=ItimeZone WHERE i
       COMMIT;
     END;`);
   var id='100002646477985';
-  SqlFunction.push("CALL "+siteName+"vendorSetup('fb', "+id+", 'Minnie the Moocher', 'http://example.com/abc.jpg', @boInserted, @idUser)");
+  SqlFunction.push(`CALL ${siteName}vendorSetup('fb', ${id}, 'Minnie the Moocher', 'http://example.com/abc.jpg', @boInserted, @idUser)`);
 */
 
-  SqlFunctionDrop.push("DROP PROCEDURE IF EXISTS "+siteName+"dupMake");
-  SqlFunction.push(`CREATE PROCEDURE `+siteName+`dupMake()
+  SqlFunctionDrop.push(`DROP PROCEDURE IF EXISTS ${siteName}dupMake`);
+  SqlFunction.push(`CREATE PROCEDURE ${siteName}dupMake()
       BEGIN
-        CALL copyTable('`+userTab+`_dup','`+userTab+`');
-        CALL copyTable('`+imageTab+`_dup','`+imageTab+`');
-        CALL copyTable('`+settingTab+`_dup','`+settingTab+`');
-        CALL copyTable('`+adminTab+`_dup','`+adminTab+`');
-        CALL copyTable('`+appTab+`_dup','`+appTab+`');
-        CALL copyTable('`+user2AppTab+`_dup','`+user2AppTab+`');
+        CALL copyTable('${userTab}_dup','${userTab}');
+        CALL copyTable('${imageTab}_dup','${imageTab}');
+        CALL copyTable('${settingTab}_dup','${settingTab}');
+        CALL copyTable('${adminTab}_dup','${adminTab}');
+        CALL copyTable('${appTab}_dup','${appTab}');
+        CALL copyTable('${user2AppTab}_dup','${user2AppTab}');
       END`);
 
-  SqlFunctionDrop.push("DROP PROCEDURE IF EXISTS "+siteName+"dupRename");
- /* SqlFunction.push(`CREATE PROCEDURE `+siteName+`dupRename()
+  SqlFunctionDrop.push(`DROP PROCEDURE IF EXISTS ${siteName}dupRename`);
+ /* SqlFunction.push(`CREATE PROCEDURE ${siteName}dupRename()
       BEGIN
-RENAME TABLE `+userTab+` TO `+userTab+`_dup,
-             `+imageTab+` TO `+imageTab+`_dup,
-             `+settingTab+` TO `+settingTab+`_dup,
-             `+adminTab+` TO `+adminTab+`_dup,
-             `+appTab+` TO `+appTab+`_dup,
-             `+user2AppTab+` TO `+user2AppTab+`_dup;
+RENAME TABLE ${userTab} TO ${userTab}_dup,
+             ${imageTab} TO ${imageTab}_dup,
+             ${settingTab} TO ${settingTab}_dup,
+             ${adminTab} TO ${adminTab}_dup,
+             ${appTab} TO ${appTab}_dup,
+             ${user2AppTab} TO ${user2AppTab}_dup;
       END`);*/
 
-  SqlFunctionDrop.push("DROP PROCEDURE IF EXISTS "+siteName+"dupTrunkOrgNCopyBack");
-  SqlFunction.push(`CREATE PROCEDURE `+siteName+`dupTrunkOrgNCopyBack()
+  SqlFunctionDrop.push(`DROP PROCEDURE IF EXISTS ${siteName}dupTrunkOrgNCopyBack`);
+  SqlFunction.push(`CREATE PROCEDURE ${siteName}dupTrunkOrgNCopyBack()
       BEGIN
-        DELETE FROM `+user2AppTab+` WHERE 1;
-        DELETE FROM `+appTab+` WHERE 1;
-        DELETE FROM `+adminTab+` WHERE 1;
-        DELETE FROM `+settingTab+` WHERE 1;
-        DELETE FROM `+imageTab+` WHERE 1;
-        DELETE FROM `+userTab+` WHERE 1;
-        INSERT INTO `+userTab+` SELECT * FROM `+userTab+`_dup;
-        INSERT INTO `+imageTab+` SELECT * FROM `+imageTab+`_dup;
-        INSERT INTO `+settingTab+` SELECT * FROM `+settingTab+`_dup;
-        INSERT INTO `+adminTab+` SELECT * FROM `+adminTab+`_dup;
-        INSERT INTO `+appTab+` SELECT * FROM `+appTab+`_dup;
-        INSERT INTO `+user2AppTab+` SELECT * FROM `+user2AppTab+`_dup;
+        DELETE FROM ${user2AppTab} WHERE 1;
+        DELETE FROM ${appTab} WHERE 1;
+        DELETE FROM ${adminTab} WHERE 1;
+        DELETE FROM ${settingTab} WHERE 1;
+        DELETE FROM ${imageTab} WHERE 1;
+        DELETE FROM ${userTab} WHERE 1;
+        INSERT INTO ${userTab} SELECT * FROM ${userTab}_dup;
+        INSERT INTO ${imageTab} SELECT * FROM ${imageTab}_dup;
+        INSERT INTO ${settingTab} SELECT * FROM ${settingTab}_dup;
+        INSERT INTO ${adminTab} SELECT * FROM ${adminTab}_dup;
+        INSERT INTO ${appTab} SELECT * FROM ${appTab}_dup;
+        INSERT INTO ${user2AppTab} SELECT * FROM ${user2AppTab}_dup;
       END`);
 
-  SqlFunctionDrop.push("DROP PROCEDURE IF EXISTS "+siteName+"dupDrop");
-  SqlFunction.push(`CREATE PROCEDURE `+siteName+`dupDrop()
+  SqlFunctionDrop.push(`DROP PROCEDURE IF EXISTS ${siteName}dupDrop`);
+  SqlFunction.push(`CREATE PROCEDURE ${siteName}dupDrop()
       BEGIN
-        DROP TABLE IF EXISTS `+user2AppTab+`_dup;
-        DROP TABLE IF EXISTS `+appTab+`_dup;
-        DROP TABLE IF EXISTS `+adminTab+`_dup;
-        DROP TABLE IF EXISTS `+settingTab+`_dup;
-        DROP TABLE IF EXISTS `+imageTab+`_dup;
-        DROP TABLE IF EXISTS `+userTab+`_dup;
+        DROP TABLE IF EXISTS ${user2AppTab}_dup;
+        DROP TABLE IF EXISTS ${appTab}_dup;
+        DROP TABLE IF EXISTS ${adminTab}_dup;
+        DROP TABLE IF EXISTS ${settingTab}_dup;
+        DROP TABLE IF EXISTS ${imageTab}_dup;
+        DROP TABLE IF EXISTS ${userTab}_dup;
       END`);
 
   
@@ -1418,7 +1431,7 @@ app.SetupSql.prototype.truncate=async function(siteName){
   Sql.push(tmp);
   for(var i=0;i<StrTabName.length;i++){
     Sql.push("DELETE FROM "+StrTabName[i]);
-    Sql.push("ALTER TABLE "+StrTabName[i]+" AUTO_INCREMENT = 1");
+    Sql.push(`ALTER TABLE ${StrTabName[i]} AUTO_INCREMENT = 1`);
   }
   Sql.push('UNLOCK TABLES');
   Sql.push('SET FOREIGN_KEY_CHECKS=1');
@@ -1453,10 +1466,10 @@ app.SetupSql.prototype.doQuery=async function(strCreateSql){
 
 var writeMessTextOfMultQuery=function(Sql, err, results){
   var nSql=Sql.length, nResults='(single query)'; if(results instanceof Array) nResults=results.length;
-  console.log('nSql='+nSql+', nResults='+nResults);
+  console.log(`nSql=${nSql}, nResults=${nResults}`);
   var StrMess=[];
   if(err){
-    StrMess.push('err.index: '+err.index+', err: '+err);
+    StrMess.push(`err.index: ${err.index}, err: ${err}`);
     if(nSql==nResults){
       var tmp=Sql.slice(bound(err.index-1,0,nSql), bound(err.index+2,0,nSql)),  sql=tmp.join('\n');
       StrMess.push('Since "Sql" and "results" seem correctly aligned (has the same size), then 3 queries are printed (the preceding, the indexed, and following query (to get a context)):\n'+sql); 
@@ -1481,7 +1494,7 @@ app.ReqSql.prototype.toBrowser=function(objSetupSql){
   //var objTmp=Object.getPrototypeOf(objSetupSql);
   if(StrValidMeth.indexOf(strMeth)!=-1){
     var SqlA=objSetupSql[strMeth](SiteNameT, boDropOnly); 
-    var strDelim=';;', sql='-- DELIMITER '+strDelim+'\n'      +SqlA.join(strDelim+'\n')+strDelim      +'\n-- DELIMITER ;\n';
+    var strDelim=';;', sql=`-- DELIMITER ${strDelim}\n${SqlA.join(strDelim+'\n')}${strDelim}\n-- DELIMITER ;\n`;
     res.out200(sql);
   }else{ var tmp=req.pathNameWOPrefix+' is not valid input, try: '+this.StrType; console.log(tmp); res.out404(tmp); }
 }  
@@ -1497,7 +1510,7 @@ app.createDumpCommand=function(){
     }
     strCommand+='          '+StrTab.join(' ');
   }
-  strCommand="mysqldump mmm --user=root -p --no-create-info --hex-blob"+strCommand+'          >idplace.sql';
+  strCommand=`mysqldump mmm --user=root -p --no-create-info --hex-blob${strCommand}          >idplace.sql`;
 
   return strCommand;
 }
@@ -1507,8 +1520,8 @@ app.createDumpCommand=function(){
 
 
 // When reinstalling, to keep the table content, run these mysql queries in for example phpmyadmin:
-// CALL "+siteName+"dupMake(); // After this, verify that the duplicate tables have the same number of rows
+// CALL ${siteName}dupMake(); // After this, verify that the duplicate tables have the same number of rows
 // (then do the install (run createTable.php))
-// CALL "+siteName+"dupTrunkOrgNCopyBack();    // After this, verify that the tables have the same number of rows as the duplicates
-// CALL "+siteName+"dupDrop();
+// CALL ${siteName}dupTrunkOrgNCopyBack();    // After this, verify that the tables have the same number of rows as the duplicates
+// CALL ${siteName}dupDrop();
 
