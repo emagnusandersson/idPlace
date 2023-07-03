@@ -64,10 +64,10 @@ app.AppId={};   for(var k in AppCred){   AppId[k]=AppCred[k].id;    } // Create 
 
 
 var strFBVersion="13.0"
-app.UrlOAuth={fb:"https://www.facebook.com/"+strFBVersion+"/dialog/oauth", google: "https://accounts.google.com/o/oauth2/v2/auth", idplace:'https://idplace.org', idL:'http://localhost:5000', id192:'http://192.168.0.4:5000'};
-app.UrlGraph={fb:"https://graph.facebook.com/"+strFBVersion+"/me", google: "https://www.googleapis.com/plus/v1/people/me", idplace:'https://idplace.org/me', idL:'http://localhost:5000/me', id192:'http://192.168.0.4:5000/me'};
+app.UrlOAuth={fb:`https://www.facebook.com/${strFBVersion}/dialog/oauth`, google: "https://accounts.google.com/o/oauth2/v2/auth", idplace:'https://idplace.org', idL:'http://localhost:5000', id192:'http://192.168.0.4:5000'};
+app.UrlGraph={fb:`https://graph.facebook.com/${strFBVersion}/me`, google: "https://www.googleapis.com/plus/v1/people/me", idplace:'https://idplace.org/me', idL:'http://localhost:5000/me', id192:'http://192.168.0.4:5000/me'};
 
-UrlCode2Token={fb:"https://graph.facebook.com/"+strFBVersion+"/oauth/access_token", google: "https://accounts.google.com/o/oauth2/token", idplace:'https://idplace.org/access_token', idL:'http://localhost:5000/access_token', id192:'http://192.168.0.4:5000/access_token'};
+UrlCode2Token={fb:`https://graph.facebook.com/${strFBVersion}/oauth/access_token`, google: "https://accounts.google.com/o/oauth2/token", idplace:'https://idplace.org/access_token', idL:'http://localhost:5000/access_token', id192:'http://192.168.0.4:5000/access_token'};
 
 
 var handler=async function(req, res){

@@ -28,7 +28,7 @@ app.urldecode=function(url) {
 
 
 //extractLoc=function(obj,strObjName){   // Ex: eval(extractLoc(objMy,'objMy'));
-  //var Str=[];  for(var key in obj) Str.push(key+'='+strObjName+'.'+key);
+  //var Str=[];  for(var key in obj) Str.push(`${key}=${strObjName}.${key}`);
   //var str=''; if(Str.length) str='var '+Str.join(', ')+';';  return str;
 //}
 ////extract=function(obj){  for(var key in obj){  window[key]=obj[key];  }  }
@@ -39,7 +39,7 @@ app.urldecode=function(url) {
 //}
 //extractLocSome=function(strObjName,arrSome){  // Ex: eval(extractLocSome('objMy',['a','b']));
   //if(typeof arrSome=='string') arrSome=[arrSome];
-  //var len=arrSome.length, Str=Array(len);  for(var i=0;i<len;i++) { var key=arrSome[i]; Str[i]=key+'='+strObjName+'.'+key; }
+  //var len=arrSome.length, Str=Array(len);  for(var i=0;i<len;i++) { var key=arrSome[i]; Str[i]=`${key}=${strObjName}.${key}`; }
   //return 'var '+Str.join(', ')+';';
 //}
 
@@ -129,8 +129,8 @@ app.mySwedDate=function(tmp){
   //if(diff>3600) return Math.floor(diff/3600)+'h ago'; // After 1 hour, use Hours
   //return Math.floor(diff/60)+'min';  // Else use Minutes
 }
-app.swedDate=function(tmp){ if(tmp){tmp=UTC2JS(tmp);  tmp=tmp.getFullYear()+'-'+pad2(tmp.getMonth()+1)+'-'+pad2(tmp.getDate());}  return tmp;}
-app.swedTime=function(tmp){ if(tmp){tmp=UTC2JS(tmp);  tmp=tmp.getFullYear()+'-'+pad2(tmp.getMonth()+1)+'-'+pad2(tmp.getDate())+' '+pad2(tmp.getHours())+':'+pad2(tmp.getMinutes());}  return tmp;}
+app.swedDate=function(tmp){ if(tmp){tmp=UTC2JS(tmp);  tmp=`${tmp.getFullYear()}-${pad2(tmp.getMonth()+1)}-${pad2(tmp.getDate())}`;}  return tmp;}
+app.swedTime=function(tmp){ if(tmp){tmp=UTC2JS(tmp);  tmp=`${tmp.getFullYear()}-${pad2(tmp.getMonth()+1)}-${pad2(tmp.getDate())} ${pad2(tmp.getHours())}:${pad2(tmp.getMinutes())}`;}  return tmp;}
 app.UTC2JS=function(utcTime){ var tmp=new Date(Number(utcTime)*1000);  return tmp;  }
 app.UTC2Readable=function(utcTime){ var tmp=new Date(Number(utcTime)*1000);   return tmp.toLocaleString();  }
 //myISODATE=function(d){ return d.toISOString().substr(0,19);}
@@ -255,7 +255,7 @@ app.tabNStrCol2ArrObj=function(tabNStrCol){  //Ex: {tab:[[0,1],[2,3]],StrCol:['a
 }
 
 app.deserialize=function(serializedJavascript){
-  return eval('(' + serializedJavascript + ')');
+  return eval(`(${serializedJavascript})`);
 }
 
 
