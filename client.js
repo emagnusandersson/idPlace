@@ -13,103 +13,60 @@ app.funLoad=function(){
   // themeOS ∈ ['dark','light']
   // themeChoise ∈ ['dark','light','system']
   // themeCalc ∈ ['dark','light']
-window.analysColorSchemeSettings=function(){
-  var themeOS=window.matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light"
-  var themeChoise=localStorage.getItem("themeChoise")??"system";
+globalThis.analysColorSchemeSettings=function(){
+  var themeOS=globalThis.matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light"
+  //var themeChoise=localStorage.getItem("themeChoise")??"system";
+  var themeChoise=localStorage.getItem("themeChoise")||"system";  // Safari 12 can't handle Nullish coalescing operator (??)
   var arrThemeChoise=['dark','light','system'];
   var ind=arrThemeChoise.indexOf(themeChoise);  if(ind==-1) ind=2;
   var themeChoise=arrThemeChoise[ind]
   var themeCalc=themeChoise=="system"?themeOS:themeChoise
+  console.log(`OS: ${themeOS}, choise: ${themeChoise}, calc: ${themeCalc}`)
   return {themeOS, themeChoise, themeCalc}
 }
 
 var setThemeClass=function(theme){
+  if(typeof theme=='undefined'){ var {themeOS, themeChoise, themeCalc}=analysColorSchemeSettings(); theme=themeCalc; }
   if(theme=='dark') elHtml.setAttribute('data-theme', 'dark'); else elHtml.removeAttribute('data-theme');
   var strT=theme; if(theme!='dark' && theme!='light') strT='light dark'
   elHtml.css({'color-scheme':strT});
 }
 
-  // Initial setup of selectorOfTheme
-// var selectorOfTheme=createSelectorOfTheme()
-// elBody.myAppend(selectorOfTheme)
-
-// var {themeOS, themeChoise, themeCalc}=analysColorSchemeSettings();
-// console.log(`OS: ${themeOS}, choise: ${themeChoise}, calc: ${themeCalc}`)
-// setThemeClass(themeCalc)
-// selectorOfTheme.value=themeChoise
-
   // Listen to prefered-color changes on the OS
-window.colorSchemeQueryListener = window.matchMedia('(prefers-color-scheme: dark)');
-colorSchemeQueryListener.addEventListener('change', function(e) {
-  var {themeOS, themeChoise, themeCalc}=analysColorSchemeSettings();
-  console.log(`OS: ${themeOS}, choise: ${themeChoise}, calc: ${themeCalc}`)
-  setThemeClass(themeCalc)
-});
+globalThis.colorSchemeQueryListener = globalThis.matchMedia('(prefers-color-scheme: dark)');
+if(colorSchemeQueryListener.addEventListener){ // Safari 12 does not support addEventlistner
+  colorSchemeQueryListener.addEventListener('change', function(e) {
+    setThemeClass()
+  });
+}
 
-
-
-window.divThemeSelectorCreate=function(){
-  var el=createElement('div')
-  var butSystem=createElement('button').myText('Same as OS').prop({value:'system'})
-  var butLight=createElement('button').myText('Light').prop({value:'light'})
-  var butDark=createElement('button').myText('Dark').prop({value:'dark'})
-  var But=[butSystem, butLight, butDark]
-  var StrBut=['system', 'light', 'dark']
-  var objBut={};  But.forEach((ele,i)=>objBut[StrBut[i]]=ele);
-  el.setButStyling=function(strTheme){
-    //var but=(typeof arg=='string')?objBut(arg):arg
-    var but=objBut[strTheme]
-    But.forEach(elem=>elem.removeClass('boxShadowOn').addClass('boxShadowOff'))
-    but.removeClass('boxShadowOff').addClass('boxShadowOn')
-  }
-  But.forEach(ele=>ele.on('click',function(e){
-    localStorage.setItem('themeChoise', this.value);
+globalThis.SelThemeCreate={
+  setValue:function(){ 
     var {themeOS, themeChoise, themeCalc}=analysColorSchemeSettings();
-    console.log(`OS: ${themeOS}, choise: ${themeChoise}, calc: ${themeCalc}`)
-    setThemeClass(themeCalc)
-    el.setButStyling(themeChoise)
-  }))
-  el.myAppend(...But).css({display:'flex', gap:'.4em', 'justify-content':'space-evenly', 'flex-wrap':'wrap'})
-  return el
-}
-var themePopExtend=function(el){
-  el.strName='themePop'
-  el.id=el.strName
-  el.toString=function(){return el.strName;}
-  el.setVis=function(){
-    if(boDialog) el.showModal(); else el.show();
-    return true;
+    this.value=themeChoise
+    //var [optSystem, optLight, optDark]=this.querySelectorAll('option');
+    //var charLight=themeCalc=='light'?'◻':'◼', charDark=themeCalc=='light'?'◼':'◻'
+    //optLight.myText(charLight+' '+SelThemeCreate.strLight)
+    //optDark.myText(charDark+' '+SelThemeCreate.strDark)
+  },
+  strOS:'Same theme as OS', strLight:'Light theme', strDark:'Dark theme',
+  factory:function(){
+    var {strOS, strLight, strDark}=SelThemeCreate
+    var optSystem=createElement('option').myHtml('◩ &nbsp;'+strOS).prop({value:'system'})  //⛅
+    var optLight=createElement('option').myHtml('☼ &nbsp;'+strLight).prop({value:'light'})  //☼☀☀️◻◨
+    var optDark=createElement('option').myHtml('☾ &nbsp;&nbsp;'+strDark).prop({value:'dark'})  //◼☁️
+    var Opt=SelThemeCreate.Opt=[optSystem, optLight, optDark]
+    var el=createElement('select').myAppend(...Opt).on('change',function(e){
+      localStorage.setItem('themeChoise', this.value);
+      setThemeClass();
+      this.setValue()
+    })
+    el.prop({title:"Change color theme"})
+
+    var Key=Object.keys(SelThemeCreate); Key=AMinusB(Key, ['extendClass', 'factory']); copySome(el, SelThemeCreate, Key);
+    return el;
   }
-  el.addEventListener('cancel', (event) => {
-    event.preventDefault();
-    historyBack()
-  })
-
-  var h1=createElement('h3').myText("Theme (Background colors): ").css({'margin':'0'});
-  var divThemeSelector=divThemeSelectorCreate()
-  var {themeOS, themeChoise, themeCalc}=analysColorSchemeSettings();
-  console.log(`OS: ${themeOS}, choise: ${themeChoise}`)
-  setThemeClass(themeCalc)
-  divThemeSelector.setButStyling(themeChoise)
-
-  var buttonBack=createElement('button').on('click', historyBack).myText(charBack).css({'margin-left':'.8em'});
-  var divBottom=createElement('div').myAppend(buttonBack).css({display:'flex', gap:'0.4em', 'justify-content':'space-between'})
-
-  var El=[h1, divThemeSelector, divBottom];
-  var centerDiv=createElement('div').myAppend(...El);
-  if(boDialog){
-    el.myAppend(centerDiv);
-  } else{
-    var blanket=createElement('div').addClass("blanket");
-    centerDiv.addClass("Center-Flex")
-    centerDiv.css({height:'min(10em, 98%)', width:'min(21em,98%)'});
-    el.addClass("Center-Container-Flex").myAppend(centerDiv,blanket);
-  }
-  centerDiv.css({display:'flex', gap:'1em', 'flex-direction':'column', 'justify-content':'space-evenly'})
-
-  return el;
 }
-
 
 
 
@@ -124,8 +81,6 @@ var popUpExtend=function(el){
   })
   return el;
 }
-
-
 
 
 
@@ -329,9 +284,12 @@ var mainDivExtend=function(el){
     doHistPush({strView:'themePop'});
     themePop.setVis();
   })
+  //var selectorOfTheme=selThemeCreate().css({color:'black', background:'lightgrey'});  initialSetupOfSelectorOfTheme(selectorOfTheme)
+  var selectorOfTheme=SelThemeCreate.factory();  setThemeClass(); selectorOfTheme.setValue();
+  selectorOfTheme.css({width: "3em"});
 
   var infoLink=createElement('a').prop({href:"http://emagnusandersson.com/idPlace"}).myText("More info");
-  var menuA=createElement('div').myAppend(infoLink, butTheme).css({display:'flex', 'justify-content':'space-evenly', 'align-items':'center','max-width':maxWidth, margin:'0 auto'}) //.css({padding:'0 0.3em 0 0', overflow:'hidden', 'text-align':'center', margin:'.3em auto .4em'}); 
+  var menuA=createElement('div').myAppend(infoLink, selectorOfTheme).css({display:'flex', 'justify-content':'space-evenly', 'align-items':'center','max-width':maxWidth, margin:'0 auto'}) //.css({padding:'0 0.3em 0 0', overflow:'hidden', 'text-align':'center', margin:'.3em auto .4em'}); 
 
   //el.divCont.myAppend(loggedOutDiv, loggedInDiv);
 
@@ -378,20 +336,32 @@ var getOAuthCode=async function(boReauthenticate=false){
   var strCookie=objToQueryArr(objCookie).join(';');
   document.cookie=strCookie
 
-  extend(sessionStorage, {strBroadcastChannel});
+  //extend(sessionStorage, {strBroadcastChannel});
 
   window.open(uPop); //, '_blank', 'popup', 'width=580,height=400'  , '_blank', 'width=580,height=400'
   // var strQS=await new Promise(resolve=>{
   //   window.loginReturn=function(strQST){ resolve(strQST); }
   // });
 
-  var broadcastChannel=new BroadcastChannel(strBroadcastChannel);
+
+  // var broadcastChannel=new BroadcastChannel(strBroadcastChannel);
+  // var strQS=await new Promise(resolve=>{
+  //   broadcastChannel.on('message', function(e){
+  //     var strQS=e.data; resolve(strQS)
+  //   })
+  // });
+  // broadcastChannel.close()
+
+
   var strQS=await new Promise(resolve=>{
-    broadcastChannel.on('message', function(e){
-      resolve(e.data)
-    })
+    var cbStorageEv=function(ev){
+      window.removeEventListener("storage", cbStorageEv);
+      var strQS=ev.newValue; resolve(strQS)
+    }
+    window.addEventListener("storage", cbStorageEv);
   });
-  broadcastChannel.close()
+  localStorage.removeItem('jsonMyLoginReturn')
+
   var strParams=response_type=='code'?strQS:strHash;
   
   var params=parseQS(strParams.substring(1));
@@ -2079,7 +2049,8 @@ var setMyState=function(state){
   view.setVis();  // state.arg
   if(history.funOverRule) {history.funOverRule(); history.funOverRule=null;}
   else if(state.fun) {state.fun(state); }
-  else{ view.funPopped?.(state); }
+  //else{ view.funPopped?.(state); }  
+  else{ if(view.funPopped) view.funPopped(state); } // Safari 12 can't handle Optional chaining (?.)
 }
 
 window.on('pagehide', function(){ 
@@ -2130,12 +2101,10 @@ var formLogin=formLoginExtend(elBody.querySelector('#formLogin'));
 var loginSelectorDiv=loginSelectorDivExtend(createElement('div'));
 //loginForSecretDiv=loginForSecretDivExtend(createElement('div'));
 
-window.boDialog=true
-var strPopElementType='div';
-var strPopElementType='dialog'
+window.boDialog=false; // Dialog not supported by safari 12
 var strPopElementType=boDialog?'dialog':'div'
 
-var themePop=themePopExtend(createElement(strPopElementType));
+//var themePop=themePopExtend(createElement(strPopElementType));
 var deleteAccountPop=deleteAccountPopExtend(createElement(strPopElementType));
 var changePWPop=changePWPopExtend(createElement(strPopElementType));
 var verifyEmailPop=verifyEmailPopExtend(createElement(strPopElementType));
@@ -2162,7 +2131,7 @@ var consentDiv=consentDivExtend(createElement('div'));
 
 
 var MainDivFull=[mainDiv, loginSelectorDiv, devAppList, userAppList, createUserDiv, createUserSelectorDiv, userSettingDiv, consentDiv]; 
-var MainDivPop=[themePop, deleteAccountPop, verifyEmailPop, forgottPWPop, changePWPop, uploadImagePop, devAppSetPop, devAppDeletePop, devAppSecretPop, userAppSetPop, userAppDeletePop];
+var MainDivPop=[deleteAccountPop, verifyEmailPop, forgottPWPop, changePWPop, uploadImagePop, devAppSetPop, devAppDeletePop, devAppSecretPop, userAppSetPop, userAppDeletePop];  //themePop, 
 var MainDiv=[].concat(MainDivFull, MainDivPop)
 
 var StrMainDiv=MainDiv.map(obj=>obj.toString());

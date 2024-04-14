@@ -140,7 +140,7 @@ app.reqIndex=async function() {
   Str.push(`<link rel="icon" type="image/png" href="${srcIcon16}" />`);
   Str.push(`<link rel="apple-touch-icon" href="${srcIcon114}"/>`);
 
-  Str.push("<meta name='viewport' id='viewportMy' content='width=device-width, initial-scale=1, minimum-scale=1'/>"); //, interactive-widget=resizes-content
+  Str.push("<meta name='viewport' id='viewportMy' content='width=device-width, initial-scale=1, minimum-scale=1, interactive-widget=resizes-content'/>"); //, interactive-widget=resizes-content
   //Str.push('<meta name="theme-color" content="#ff0"/>');
 
   if(boAuthReq){ Str.push('<meta name="robots" content="noindex">\n'); }
@@ -529,20 +529,21 @@ app.reqLoginBack=async function(){
 </head>
 <body>
 <script>
-const getCookie=(c_name)=>{
-  var arr=document.cookie.split(";");
-  for (var i=0;i<arr.length;i++){
-    var [k,v]=arr[i].split("=");
-    if (k.trim()==c_name){return unescape(v);}   
-  }
-}
-var strBroadcastChannel=getCookie('strBroadcastChannel');
-
 var {search:strQS, hash:strHash}=location;
-debugger
 //window.opener.loginReturn(strQS,strHash);
 
-new BroadcastChannel(strBroadcastChannel).postMessage(strQS);
+// const getCookie=(c_name)=>{
+//   var arr=document.cookie.split(";");
+//   for (var i=0;i<arr.length;i++){
+//     var [k,v]=arr[i].split("=");
+//     if (k.trim()==c_name){return unescape(v);}   
+//   }
+// }
+// var strBroadcastChannel=getCookie('strBroadcastChannel');
+// new BroadcastChannel(strBroadcastChannel).postMessage(strQS);
+
+localStorage.jsonMyLoginReturn=strQS
+
 window.close();
 </script>
 </body>
@@ -884,7 +885,7 @@ app.reqStat=async function() {
   <html lang="en"><head>
   <meta name="robots" content="noindex">
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8" >
-  <meta name="viewport" id="viewportMy" content="initial-scale=1" />`);
+  <meta name="viewport" id="viewportMy" content="width=device-width, initial-scale=1, minimum-scale=1, interactive-widget=resizes-content" />`);
 
 
   var uSite=req.strSchemeLong+wwwSite;

@@ -142,7 +142,7 @@ app.SiteName=Object.keys(Site);
 await import('./variablesCommon.js');
 await import('./libReqBE.js');
 await import('./libReq.js'); 
-debugger
+
 app.mysqlPool=setUpMysqlPool();
 SiteExtend();
 

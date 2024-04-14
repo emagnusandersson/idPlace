@@ -5,7 +5,8 @@
 :root {
   --bg-colorRoot:white;
   --bg-color:#eee;
-  --bg-colorEmp:#ddd;
+  --bg-colorEmp:#ccc;
+  --bg-colorEmp2:#a0a0a0;
   --bg-colorImg:lightblue;
   --bg-green:lightgreen;
   --bg-red:#ff7f7f;
@@ -24,15 +25,19 @@
   --border-shadow-color:#191919; --border-lit-color:#666;   /* To make ios buttons look like chrome. */
 
   --bg-button:#efefef;
-  --bg-input:#fff
+  --bg-input:#fff;
+  --text-red:red;
+  --text-green:green;
+  --text-grey:grey
 
 }
 
 /* @media (prefers-color-scheme:dark) */ 
 [data-theme="dark"] {
-  --bg-colorRoot:#303030;
-  --bg-color:#404040;
-  --bg-colorEmp:#505050; /*Emp=emphasis*/
+  --bg-colorRoot:#222;
+  --bg-color:#333;
+  --bg-colorEmp:#555; /*Emp=emphasis*/
+  --bg-colorEmp2:#606060;
   --bg-colorImg:#005470;
   --bg-green:#007300;
   --bg-red:#c00020;
@@ -53,7 +58,10 @@
   --bg-button:#6b6b6b;
   --bg-input:#3b3b3b;
   background:var(--bg-colorRoot);
-  color:var(--text-color)
+  color:var(--text-color);
+  --text-red:#ff7f7f;
+  --text-green:green;
+  --text-grey:#a0a0a0
 }
 
 .boxShadowOn {box-shadow:0 0 0 0.2em lightgreen inset; background-color:#eee; color:limegreen}
@@ -75,7 +83,7 @@ a:visited{color:var(--color-link-visited)}
 
 
 * {box-sizing:border-box}
-html, body {-webkit-overflow-scrolling:touch}
+html, body {-webkit-overflow-scrolling:touch} /* "Invalid property value" in chrome webtools. "Invalid property name" firefox webtools */
 body {overscroll-behavior:contain}
 
   /* Is there really a difference using this. Tested values "100%" and "none" (Used by Chrome, Edge. Not used by Safari, Firefox) */
@@ -83,12 +91,37 @@ body {overscroll-behavior:contain}
 
   /* -webkit-appearance:none is required to make disabled buttons have grey text on Safari. */
 html, body {-webkit-appearance:none; appearance:none}
-select, button, input, input[type=file]::file-selector-button {color:inherit} /* Removing blue text in buttons ... on Safari */
-:disabled {color:grey}
-input, button, textarea, select {font:inherit}  /* Preventing zoom, especially on Safari. */
+button, select, input, textarea{color:inherit; font:inherit} 
+/* color:inherit: Removes blue text in buttons on Safari 
+   font:inherit:  Preventing zoom, especially?!?! on Safari. */
+:disabled {color:var(--text-grey)}
+button, select, input, textarea {font:inherit}  /* Preventing zoom, especially?!?! on Safari. */
 
 
-button::-moz-focus-inner {padding:0; border:0} /*Making firefox buttons behave like other browsers (doesn't appear to do any difference)*/
+button, select, button-toggle {
+  background-color:var(--bg-colorEmp); padding:0.0em 0.2em; font-size:inherit; vertical-align:middle; user-select:none;
+  border-bottom-color:var(--border-shadow-color); border-right-color:var(--border-shadow-color);
+  border-top-color:var(--border-lit-color); border-left-color:var(--border-lit-color);
+  border-width:2px; border-radius:0.4em; height:2.5rem;
+}
+input[type=file]::file-selector-button { /* file-selector-button: must be handled separatly (as it is not supported on safari 12)*/
+  background-color:var(--bg-colorEmp); padding:0.0em 0.2em; font-size:inherit; vertical-align:middle; user-select:none;
+  border-bottom-color:var(--border-shadow-color); border-right-color:var(--border-shadow-color);
+  border-top-color:var(--border-lit-color); border-left-color:var(--border-lit-color);
+  border-width:2px; border-radius:0.4em; height:2.5rem;color:inherit
+}
+
+input, input[type='text'], input[type='number'], input[type='password'], textarea {font-size:16px; background-color:var(--bg-input)}
+
+input[type=file]::file-selector-button {border:revert;-webkit-appearance:none;  appearance:none}
+button-toggle {display:inline-flex; align-items:center; justify-content:center}
+/* input, textarea {background:var(--bg-input)} */
+
+
+button.lowStyle {height:unset}
+
+
+input[type='text'], input[type='number'], input[type='password'], textarea {font-size:16px}
 
 
 
@@ -111,7 +144,6 @@ p {
 
 
 
-input[type='text'],input[type='number'],textarea {font-size:16px}
 
 
 input[type=email]:not(:placeholder-shown):invalid {color:red; outline-color:red}
@@ -122,13 +154,7 @@ tr {border-width:inherit; border-style:inherit}
 tbody,thead {border-width:inherit; border-style:inherit}
 thead {opacity:0.9}
 
-button {appearance:none } /* ; border:solid 1px; */
-button, select, button-toggle, input[type=file]::file-selector-button {
-  height:2.5em; border-radius:0.4em; background-color:var(--bg-colorEmp); padding:0 0.2em; font-size:inherit; vertical-align:middle; user-select:none
-}
-input[type=file]::file-selector-button {border:revert; appearance:none; font-size:1rem}
 
-button.lowStyle {height:unset}
 
 .devAppList td, .userAppList td {background-color:var(--bg-colorEmp)}
 .devAppList thead, .userAppList thead {background-color:var(--bg-color)}

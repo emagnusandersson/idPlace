@@ -14,7 +14,7 @@ app.reqIndex=async function() {
 <html lang="en">
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
-<meta name='viewport' id='viewportMy' content='initial-scale=1'/>
+<meta name='viewport' id='viewportMy' content='width=device-width, initial-scale=1, minimum-scale=1, interactive-widget=resizes-content'/>
 <script type="module" src="client.js"></script>
 <script>
 var leafLoginBack=${JSON.stringify(leafLoginBack)};
