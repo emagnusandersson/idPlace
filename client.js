@@ -52,9 +52,9 @@ globalThis.SelThemeCreate={
   strOS:'Same theme as OS', strLight:'Light theme', strDark:'Dark theme',
   factory:function(){
     var {strOS, strLight, strDark}=SelThemeCreate
-    var optSystem=createElement('option').myHtml('◩ &nbsp;'+strOS).prop({value:'system'})  //⛅
-    var optLight=createElement('option').myHtml('☼ &nbsp;'+strLight).prop({value:'light'})  //☼☀☀️◻◨
-    var optDark=createElement('option').myHtml('☾ &nbsp;&nbsp;'+strDark).prop({value:'dark'})  //◼☁️
+    var optSystem=createElement('option').myHtml('◩&nbsp;&nbsp;&nbsp;'+strOS).prop({value:'system'})  //⛅
+    var optLight=createElement('option').myHtml('☼&nbsp;&nbsp;&nbsp;'+strLight).prop({value:'light'})  //☼☀☀️◻◨
+    var optDark=createElement('option').myHtml('☽&nbsp;&nbsp;&nbsp;'+strDark).prop({value:'dark'})  //☾☽◼☁️🌙🌒 🌒
     var Opt=SelThemeCreate.Opt=[optSystem, optLight, optDark]
     var el=createElement('select').myAppend(...Opt).on('change',function(e){
       localStorage.setItem('themeChoise', this.value);
@@ -334,7 +334,7 @@ var getOAuthCode=async function(boReauthenticate=false){
   //   var ind=hostname.indexOf('.');  if(ind!=-1) objCookie.domain=hostname.substr(ind+1);  
   // }
   var strCookie=objToQueryArr(objCookie).join(';');
-  document.cookie=strCookie
+  //document.cookie=strCookie
 
   //extend(sessionStorage, {strBroadcastChannel});
 
@@ -360,7 +360,7 @@ var getOAuthCode=async function(boReauthenticate=false){
     }
     window.addEventListener("storage", cbStorageEv);
   });
-  localStorage.removeItem('jsonMyLoginReturn')
+  localStorage.removeItem('strMyLoginReturn')
 
   var strParams=response_type=='code'?strQS:strHash;
   
@@ -611,7 +611,7 @@ var createUserDivExtend=function(el){
   el.createInputs=function(){
     for(var i=0;i<el.StrProp.length;i++){
       var strName=el.StrProp[i];
-      var imgH=''; if(strName in helpBub ) {    var imgH=imgHelp.cloneNode(1);   popupHover(imgH,helpBub[strName]);         }
+      var imgH=''; if(strName in helpBub ) {    var imgH=hovHelp.cloneNode(1);   popupHover(imgH,helpBub[strName]);         }
 
       var lab=createElement('label').myText(calcLabel(langHtml.label, strName));
       var inp=Prop[strName].crInp().attr('name',strName);
@@ -1073,7 +1073,7 @@ var userSettingDivExtend=function(el){
   el.createInputs=function(){
     for(var i=0;i<el.StrProp.length;i++){      
       var strName=el.StrProp[i];
-      var imgH=''; if(strName in helpBub ) {    var imgH=imgHelp.cloneNode(1);   popupHover(imgH,helpBub[strName]);         }
+      var imgH=''; if(strName in helpBub ) {    var imgH=hovHelp.cloneNode(1);   popupHover(imgH,helpBub[strName]);         }
 
       var lab=createElement('label').myText(calcLabel(langHtml.label, strName));
       var spanLastChange=Prop[strName].crStatisticSpan().attr('name',strName);
@@ -1587,6 +1587,7 @@ var devAppListExtend=function(el){
 var majax=function(vecIn){  // Each argument of vecIn is an array: [serverSideFunc, serverSideFuncArg, returnFunc]
   var xhr = new XMLHttpRequest();
   xhr.open('POST', uBE, true);
+  xhr.setRequestHeader('X-Requested-With','XMLHttpRequest'); 
   var arrRet=[]; vecIn.forEach(function(el,i){var f=null; if(el.length==3) f=el.pop(); arrRet[i]=f;}); // Put return functions in a separate array
   //vecIn.push(['CSRFCode',CSRFCode]);
   vecIn.push(['CSRFCode',getItem('CSRFCode')]);
@@ -1988,9 +1989,8 @@ var uDelete1=uLibImageFolder+'delete1.png';
 var uIdPlaceCompare=uLibImageFolder+'idPlaceCompare.png';
 
 
-var imgHelp=createElement('img').prop({src:uHelpFile, alt:"help"}).css({'vertical-align':'-0.4em'});
-var hovHelpMy=createElement('span').myText('❓').addClass('btn-round', 'helpButton').css({color:'transparent', 'text-shadow':'0 0 0 #5780a8'});
-imgHelp=hovHelpMy;
+//var imgHelp=createElement('img').prop({src:uHelpFile, alt:"help"}).css({'vertical-align':'-0.4em'});
+var hovHelp=createElement('span').myText('❓').addClass('btn-round', 'helpButton').css({color:'transparent', 'text-shadow':'0 0 0 #5780a8'});
 
 var sizeIcon=1.5, strSizeIcon=sizeIcon+'em';
 var imgProt=createElement('img').css({height:strSizeIcon,width:strSizeIcon,'vertical-align':'text-bottom'}); 

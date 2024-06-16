@@ -23,10 +23,10 @@
     "ioredis": "5.4.1",
     "serialize-javascript": "6.0.2",
     "streamify-string": "1.0.1",
-    "uglify-js": "3.17.4",
+    "uglify-js": "3.18.0",
     "validator": "13.12.0",
     "node-fetch": "^3.3.2",
-    "nodemailer": "^6.9.13"
+    "nodemailer": "^6.9.14"
   },
   "devDependencies": {},
   "private": true,

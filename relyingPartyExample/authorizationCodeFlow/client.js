@@ -48,6 +48,7 @@ window.onload=function(){
 
     var xhr = new XMLHttpRequest();
     xhr.open('POST', leafBE);  // I'm using "POST" but with this little data one could have used "GET" 
+    xhr.setRequestHeader('X-Requested-With','XMLHttpRequest'); 
     xhr.setRequestHeader('Content-Type', 'application/json');
     var [err]=await new Promise(resolve=>{
       xhr.onload = function() {

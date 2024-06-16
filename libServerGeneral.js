@@ -97,6 +97,33 @@ tmp.out501=function(){ this.outCode(501, "Not implemented\n");   }
 
 
 
+tmp.setHeaderMy=function(o){
+  for(var k in o) {this.setHeader(k,o[k]);}
+}
+// tmp.addCookie=function(str){
+//   var arr=this.getHeader("Set-Cookie");
+//   if(!arr) {this.setHeader("Set-Cookie",str); return;}
+//   var boStr=typeof arr==='string'
+//   if(boStr) arr=[arr];
+//   arr.push(str);
+//   if(boStr) this.setHeader("Set-Cookie",arr);
+// }
+tmp.replaceCookie=function(strNew){
+  var arr=this.getHeader("Set-Cookie");
+  if(!arr) {this.setHeader("Set-Cookie",strNew); return;}
+  var boStr=typeof arr==='string'
+  if(boStr) arr=[arr];
+  var l=strNew.indexOf("="), strName=strNew.substr(0,l), boWritten=false;
+  for(var i=0;i<arr.length;i++){
+    var strNameCur=arr[i].substr(0,l);
+    if(strName===strNameCur) {arr[i]=strNew; boWritten=true; break;}
+  }
+  if(!boWritten) arr.push(strNew);
+  if(boStr) this.setHeader("Set-Cookie",arr);
+}
+
+
+
 
 app.checkIfLangIsValid=function(langShort){
   for(var i=0; i<arrLang.length; i++){ var langRow=arrLang[i]; if(langShort==langRow[0]){return true;} }  return false;
@@ -201,19 +228,6 @@ app.delRedis=async function(arr){
 app.existsRedis=async function(strVar){  return await redis.exists(strVar).toNBP();  }
   
 
-    // closebymarket
-  //var StrSuffix=['_Main', '_LoginIdP', '_LoginIdUser', '_UserInfoFrDB', '_Counter'];  var StrCaller=['index'], for(var i=0;i<StrCaller.length;i++){  StrSuffix.push('_CSRFCode'+ucfirst(StrCaller[i])); }
-  //var err=await changeSessionId.call(this, sessionIDNew, StrSuffix);
-app.changeSessionId=async function(sessionIDNew, StrSuffix){
-  for(var i=0;i<StrSuffix.length;i++){
-    var strSuffix=StrSuffix[i];
-    var redisVarO=this.req.sessionID+strSuffix, redisVarN=sessionIDNew+strSuffix; 
-    var [err,value]=await cmdRedis('rename', [redisVarO, redisVarN]); //if(err) return err;
-  }
-  this.req.sessionID=sessionIDNew;
-  return null;
-}
-
 
 app.getIP=function(req){
   var ipClient='', Match;
@@ -317,3 +331,15 @@ app.setAccessControlAllowOrigin=function(req, res, RegAllowed){
 //RegAllowedOriginOfStaticFile=[RegExp("^https\:\/\/(control\.closeby\.market|controlclosebymarket\.herokuapp\.com|emagnusandersson\.github\.io)")];
 //if(boDbg) RegAllowedOriginOfStaticFile.push(RegExp("^http\:\/\/(localhost|192\.168\.0)"));
 //setAccessControlAllowOrigin(res, req, RegAllowedOriginOfStaticFile);
+
+
+
+app.arrayifyCookiePropObj=function(obj){  // Ex: {a:1, b:2} => ["a=1", "b=2"]
+  var K=Object.keys(obj);
+  var O=K.map(k=>{
+    var v=obj[k];
+    if((k=="HttpOnly" || k=="Secure") && v) return k;
+    return k+"="+v;
+  });
+  return O;
+}
