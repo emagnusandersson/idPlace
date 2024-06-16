@@ -334,7 +334,7 @@ var getOAuthCode=async function(boReauthenticate=false){
   //   var ind=hostname.indexOf('.');  if(ind!=-1) objCookie.domain=hostname.substr(ind+1);  
   // }
   var strCookie=objToQueryArr(objCookie).join(';');
-  document.cookie=strCookie
+  //document.cookie=strCookie
 
   //extend(sessionStorage, {strBroadcastChannel});
 
@@ -360,7 +360,7 @@ var getOAuthCode=async function(boReauthenticate=false){
     }
     window.addEventListener("storage", cbStorageEv);
   });
-  localStorage.removeItem('jsonMyLoginReturn')
+  localStorage.removeItem('strMyLoginReturn')
 
   var strParams=response_type=='code'?strQS:strHash;
   
@@ -1587,6 +1587,7 @@ var devAppListExtend=function(el){
 var majax=function(vecIn){  // Each argument of vecIn is an array: [serverSideFunc, serverSideFuncArg, returnFunc]
   var xhr = new XMLHttpRequest();
   xhr.open('POST', uBE, true);
+  xhr.setRequestHeader('X-Requested-With','XMLHttpRequest'); 
   var arrRet=[]; vecIn.forEach(function(el,i){var f=null; if(el.length==3) f=el.pop(); arrRet[i]=f;}); // Put return functions in a separate array
   //vecIn.push(['CSRFCode',CSRFCode]);
   vecIn.push(['CSRFCode',getItem('CSRFCode')]);
