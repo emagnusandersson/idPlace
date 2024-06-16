@@ -42,7 +42,9 @@ app.reqLoginBack=async function() {
 <body>
 <script>
 var {search:strQS, hash:strHash}=location;
-window.opener.loginReturn(strQS,strHash);
+//window.opener.loginReturn(strQS,strHash);
+//localStorage.strMyLoginReturn=strQS
+localStorage.strMyLoginReturn=JSON.stringify({strQS,strHash})
 window.close();
 </script>
 </body>

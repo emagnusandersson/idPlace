@@ -32,12 +32,26 @@
 app.reqIndex=async function() {
   var {req, res}=this, {sessionID, objQS, site, siteName, wwwSite}=req;
 
-  //var redisVar=req.sessionID+'_Cache';
-  //this.sessionCache=await getRedis(redisVar, true);
-  //if(!this.sessionCache || typeof this.sessionCache!='object') { 
-      //this.sessionCache={};   await delRedis(redisVar);
+
+  var boSecFetch='sec-fetch-site' in req.headers
+  if(boSecFetch){
+    var strT=req.headers['sec-fetch-mode'];
+    if(!(strT=='navigate' || strT=='same-origin')) { res.outCode(400, `sec-fetch-mode header not allowed (${strT})`); return;}
+  }
+  
+
+    // Set sessionIDStrict
+  var sessionIDStrict=randomHash();
+  var [err,tmp]=await setRedis(sessionIDStrict+'_Strict', 1, maxUnactivity);
+  //reqMy.outCookies.sessionIDStrict=sessionIDStrict+strCookiePropStrict
+  res.replaceCookie("sessionIDStrict="+sessionIDStrict+strCookiePropLax);
+
+  //var keyR=req.sessionID+'_Main';
+  //req.sessionCache=await getRedis(keyR, true);
+  //if(!req.sessionCache || typeof req.sessionCache!='object') { 
+      //req.sessionCache={};   await delRedis(keyR);
   //}  
-  //var tmp=await expireRedis(redisVar, maxUnactivity);
+  //var tmp=await expireRedis(keyR, maxUnactivity);
    
 
   var boAuthReq=Boolean(Object.keys(objQS).length);
@@ -57,7 +71,7 @@ app.reqIndex=async function() {
 
   
   
-  //var idUser=null; if(typeof this.sessionCache=='object' && 'idUser' in this.sessionCache) idUser=this.sessionCache.idUser;
+  //var idUser=null; if(typeof req.sessionCache=='object' && 'idUser' in req.sessionCache) idUser=req.sessionCache.idUser;
   var idUser=req.sessionCache.idUser;
 
   var Sql=[], Val=[];
@@ -73,8 +87,8 @@ app.reqIndex=async function() {
     //if(results[1].length) userInfoFrDB.imageHash=results[1][0].imageHash;
   } else{
     if(idUser) { 
-      req.sessionCache={}; //await delRedis(req.sessionID+'_Cache');
-      await setRedis(req.sessionID+'_Cache', req.sessionCache, maxUnactivity);
+      req.sessionCache={}; //await delRedis(req.sessionID+'_Main');
+      await setRedis(req.sessionID+'_Main', req.sessionCache, maxUnactivity);
       idUser=null;
     }
     //res.out500("User not found (try reload)");  return;
@@ -245,7 +259,7 @@ h1.mainH1 { box-sizing:border-box; margin:0em auto; width:100%; max-width:var(--
   //var objOut=copySome({}, app, ['wwwSite', 'CSRFCode', 'Prop', 'strSalt', 'boDbg', 'site', 'leafBE', 'flLibImageFolder', 'UrlOAuth', 'leafLoginBack', 'userInfoFrDB', 'objApp', 'objUApp', 'strReCaptchaSiteKey', 'strIPPrim', 'nHash']);
 
   var objOut={wwwSite, CSRFCode, Prop, strSalt, boDbg, site, leafBE, flLibImageFolder, UrlOAuth, response_type, leafLoginBack, userInfoFrDB, objApp, objUApp, strReCaptchaSiteKey, strIPPrim, nHash};
-  copySome(objOut,site,['boTLS']);
+  copySome(objOut,req,['wwwSite', 'boTLS']);
 
   Str.push(`<script>
 window.app=window;
@@ -520,7 +534,7 @@ app.reqLoginBack=async function(){
   var wwwLoginScopeTmp=null; if('wwwLoginScope' in req.site) wwwLoginScopeTmp=req.site.wwwLoginScope;
   var uSite=req.strSchemeLong+req.wwwSite;
 
-  if(!req.boCookieLaxOK) {res.outCode(401, "Lax cookie not set");  return;  }
+  //if(!req.boCookieLaxOK) {res.outCode(401, "Lax cookie not set");  return;  }
   
   var Str=[];
   Str.push(`
@@ -542,7 +556,8 @@ var {search:strQS, hash:strHash}=location;
 // var strBroadcastChannel=getCookie('strBroadcastChannel');
 // new BroadcastChannel(strBroadcastChannel).postMessage(strQS);
 
-localStorage.jsonMyLoginReturn=strQS
+//localStorage.strMyLoginReturn=strQS
+localStorage.strMyLoginReturn=JSON.stringify({strQS,strHash})
 
 window.close();
 </script>
@@ -811,7 +826,7 @@ app.reqStatic=async function() {
 app.reqMonitor=async function() {
   var {req, res}=this;
 
-  if(!req.boCookieLaxOK) {res.outCode(401, "Lax cookie not set");  return;  }
+  //if(!req.boCookieLaxOK) {res.outCode(401, "Lax cookie not set");  return;  }
   
   res.removeHeader("Content-Security-Policy"); // Allow to be shown in frame, iframe, embed, object
   
@@ -857,8 +872,8 @@ app.reqMonitor=async function() {
  ******************************************************************************/
 app.reqStat=async function() {
   var {req, res}=this;
-  res.outCode(501, "Not implemented yet. On Todo list."); return
-  if(!req.boCookieLaxOK) {res.outCode(401, "Lax cookie not set");  return;  }
+  res.outCode(501, "Not implemented yet."); return
+  if(!req.boGotSessionCookie) {res.outCode(401, "Session cookie not set");  return;  }
 
   var Sql=[]; 
   Sql.push(`SELECT count(*) AS n FROM ${versionTab};`); 

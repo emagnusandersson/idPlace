@@ -5,9 +5,12 @@
 //
 
 
-intDDOSMax=200; // intDDOSMax: How many requests before DDOSBlocking occurs. 
-tDDOSBan=5; // tDDOSBan: How long in seconds till the blocking is lifted
+app=globalThis
 
+app.intDDOSMax=200; // intDDOSMax: How many requests before DDOSBlocking occurs. 
+app.tDDOSBan=5; // tDDOSBan: How long in seconds till the blocking is lifted
+app.intDDOSIPMax=100; // intDDOSIPMax: How many requests before DDOSBlocking occurs. 
+app.tDDOSIPBan=10; // tDDOSIPBan: How long in seconds till the blocking is lifted
 
 googleSiteVerification="googleXXXXXXXXXXXXXXXX.html"; // Needed if you use Google Webmaster Tools  (www.google.com/webmasters)
 strSalt='abcdefghij'; // Random letters to prevent that the hashed passwords looks the same as on other sites.
@@ -15,7 +18,7 @@ strSalt='abcdefghij'; // Random letters to prevent that the hashed passwords loo
 strSaltID='klmnopqrstu'; // Random letters to prevent that the hashed IDs can be predicted.
 
 
-strFBVersion="v19.0"
+strFBVersion="v20.0"
 app.UrlOAuth={fb:`https://www.facebook.com/${strFBVersion}/dialog/oauth`, google:"https://accounts.google.com/o/oauth2/v2/auth"}
 app.UrlToken={fb:`https://graph.facebook.com/${strFBVersion}/oauth/access_token`, google:"https://accounts.google.com/o/oauth2/token"}
 app.UrlGraph={fb:`https://graph.facebook.com/${strFBVersion}/me`, google:"https://www.googleapis.com/plus/v1/people/me"}; 
@@ -64,7 +67,7 @@ if(process.env.strInfrastructure=='af'){
 
  
   Site={
-    id:{wwwSite:"id.example.com", strRootDomain:"exampleDomain", googleAnalyticsTrackingID:"", boTLS:1}
+    id:{wwwSite:"id.example.com", strRootDomain:"exampleDomain", googleAnalyticsTrackingID:""}
   }
 
   //levelMaintenance=1;
@@ -94,8 +97,8 @@ else if(process.env.strInfrastructure=='heroku'){
 
  
   Site={
-    id:{wwwSite:"id.example.com", strRootDomain:"exampleDomain", googleAnalyticsTrackingID:"", boTLS:1},
-    idS:{wwwSite:"idplace.herokuapp.com", strRootDomain:"herokuappCom", googleAnalyticsTrackingID:"", boTLS:1}
+    id:{wwwSite:"id.example.com", strRootDomain:"exampleDomain", googleAnalyticsTrackingID:""},
+    idS:{wwwSite:"idplace.herokuapp.com", strRootDomain:"herokuappCom", googleAnalyticsTrackingID:""}
   }
   
     // If levelMaintenance=1 then site visitors gets a "Down for maintenance"-message
@@ -116,7 +119,7 @@ else if(process.env.strInfrastructure=='do'){
 
   port = 8084;  
   Site={
-    id:{wwwSite:"id.example.com", strRootDomain:"exampleDomain", googleAnalyticsTrackingID:"", boTLS:1}
+    id:{wwwSite:"id.example.com", strRootDomain:"exampleDomain", googleAnalyticsTrackingID:""}
   }
 
   //levelMaintenance=1;
@@ -139,15 +142,15 @@ else {
   }
 
 
-  boUseSSLViaNodeJS=true;
+  boUseSelfSignedCert=true;
   
   //port = process.argv[2] || 8084;
   //port = port || 8084;
   var www192=ip.address();
   var wwwLocalhost='localhost:'+port, www192WPort=www192+':'+port;
   Site={
-    "id192":{wwwSite:www192WPort, strRootDomain:"192Loc", googleAnalyticsTrackingID:"", boTLS:1},
-    idLoc:{wwwSite:wwwLocalhost, strRootDomain:"localhost", googleAnalyticsTrackingID:"", boTLS:1}
+    "id192":{wwwSite:www192WPort, strRootDomain:"192Loc", googleAnalyticsTrackingID:""},
+    idLoc:{wwwSite:wwwLocalhost, strRootDomain:"localhost", googleAnalyticsTrackingID:""}
   }
 
   //levelMaintenance=1;

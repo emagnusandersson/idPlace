@@ -83,14 +83,14 @@ var uRedir=dirname(window.location.href)+'loginBack.html'; // <--- I'm not sure 
 
   // Endpoints
 var UrlOAuth={
-  fb:"https://www.facebook.com/v19.0/dialog/oauth",
+  fb:"https://www.facebook.com/v20.0/dialog/oauth",
   google: "https://accounts.google.com/o/oauth2/v2/auth",
   idplace:"https://idplace.org",
   idL:"http://localhost:5000",  // <-- The following lines could/should be commented out (or removed)  (only for the developer of idplace)
   id192:"http://192.168.0.4:5000",  // <-- The following lines could/should be commented out (or removed) (only for the developer of idplace)
 };
 var UrlGraph={
-  fb:"https://graph.facebook.com/v19.0/me",
+  fb:"https://graph.facebook.com/v20.0/me",
   google: "https://www.googleapis.com/plus/v1/people/me",
   idplace:"https://idplace.org/me",
   idL:"http://localhost:5000/me",  // <-- The following lines could/should be commented out (or removed)  (only for the developer of idplace)
@@ -117,9 +117,22 @@ var setUp=function(){
     else if(IP=='google')    arrQ.push("scope=profile");
     else if(IP=='idplace' || IP=='idL' || IP=='id192')    arrQ.push("scope=name,image");
     var uPop=UrlOAuth[IP]+'?'+arrQ.join('&');
-    window.open(uPop, '_blank', 'width=580,height=400');
+    window.open(uPop, '_blank'); //, 'width=580,height=400'
 
-    var [strQS, strHash]=await new Promise(resolve=>{   window.loginReturn=(...arg)=>resolve(arg);    });
+    //var [strQS, strHash]=await new Promise(resolve=>{   window.loginReturn=(...arg)=>resolve(arg);    });
+
+    var strHash=await new Promise(resolve=>{
+      var cbStorageEv=function(ev){
+        window.removeEventListener("storage", cbStorageEv);
+        var data; try{ data=JSON.parse(ev.newValue); }catch(e){ setMess(e);  return; }
+        var {strQS,strHash}=data;
+        //var strHash=ev.newValue;
+        resolve(strHash)
+      }
+      window.addEventListener("storage", cbStorageEv);
+    });
+    localStorage.removeItem('strMyLoginReturn')
+
     var param=parseQS(strHash.substring(1));
     var tmp=JSON.stringify(param, null,2);   preParamAccessTokenReq.myText(tmp);
 

@@ -28,11 +28,25 @@ window.onload=function(){
     else if(IP=='google')    arrQ.push("scope=profile");
     else if(IP=='idplace' || IP=='idL' || IP=='id192')    arrQ.push("scope=name,image");
     var uPop=UrlOAuth[IP]+'?'+arrQ.join('&');
-    window.open(uPop, '_blank', 'width=580,height=400');
+    window.open(uPop, '_blank');//, 'width=580,height=400'
 
-    var [strQS, strHash]=await new Promise(resolve=>{
-      window.loginReturn=function(strQST, strHashT){ resolve([strQST, strHashT]); }
+    // var [strQS, strHash]=await new Promise(resolve=>{
+    //   window.loginReturn=function(strQST, strHashT){ resolve([strQST, strHashT]); }
+    // });
+
+
+    var strQS=await new Promise(resolve=>{
+      var cbStorageEv=function(ev){
+        window.removeEventListener("storage", cbStorageEv);
+        var data; try{ data=JSON.parse(ev.newValue); }catch(e){ setMess(e);  return; }
+        var {strQS,strHash}=data;
+        //var strQS=ev.newValue;
+        resolve(strQS)
+      }
+      window.addEventListener("storage", cbStorageEv);
     });
+    localStorage.removeItem('strMyLoginReturn')
+
     var param=parseQS(strQS.substring(1));
     var tmp='<b>Result of "authentication code" request</b>:<pre>'+JSON.stringify(param, null,2)+"</pre>";   $divParamAccessTokenReq.html(tmp);
 
@@ -48,6 +62,7 @@ window.onload=function(){
 
     var xhr = new XMLHttpRequest();
     xhr.open('POST', leafBE);  // I'm using "POST" but with this little data one could have used "GET" 
+    xhr.setRequestHeader('X-Requested-With','XMLHttpRequest'); 
     xhr.setRequestHeader('Content-Type', 'application/json');
     var [err]=await new Promise(resolve=>{
       xhr.onload = function() {
