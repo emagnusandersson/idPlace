@@ -8,7 +8,7 @@
  * reqIndex
  ******************************************************************************/
 app.reqIndex=async function() {
-  var {req, res}=this;
+  var {req, res}=this
   var Str=[];
   Str.push(`<!DOCTYPE html>
 <html lang="en">

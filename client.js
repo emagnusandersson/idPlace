@@ -367,11 +367,11 @@ var getOAuthCode=async function(boReauthenticate=false){
 
   var strParams=response_type=='code'?strQS:strHash;
   
-  var params=parseQS(strParams.substring(1));
-  if(!('state' in params) || params.state !== nonce) {   return ['Invalid state parameter: '+params.state]; } 
-  if('error' in params) { return [params.error]; }
-  if(!('code' in params)) { return ['No "code" parameter in response from IdP']; }
-  return [null, params.code];
+  var objQS=parseQS(strParams.substring(1));
+  if(!('state' in objQS) || objQS.state !== nonce) {   return ['Invalid state parameter: '+objQS.state]; } 
+  if('error' in objQS) { return [objQS.error]; }
+  if(!('code' in objQS)) { return ['No "code" parameter in response from IdP']; }
+  return [null, objQS.code];
 }
 
 
@@ -2275,7 +2275,13 @@ if(boAuthReq){
         };
       });
     }
-    var urlT=decodeURIComponent(objQS.redirect_uri);
+    try{
+      var urlT=decodeQueryParam(objQS.redirect_uri); // Translates "+" to " ", I don't think one can use URL to any greate success, because everything after the question mark is json
+    }catch(e){
+      console.error(e);
+      //console.error(pathName);
+      return;
+    }
     var regUrlCompare=RegExp("^[^#]+"), Match=regUrlCompare.exec(urlT), urlIn=Match[0];
     if(objQS.response_type=='token') {
       if(boAllow) var uRedir=createUriRedir(urlIn, objQS.state, objUApp.access_token, objUApp.maxUnactivityToken);

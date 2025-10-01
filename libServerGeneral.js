@@ -88,7 +88,8 @@ tmp.out301=function(url){  this.writeHead(301, {Location: url});  this.end();   
 tmp.out301Loc=function(url){  this.writeHead(301, {Location: '/'+url});  this.end();   }
 tmp.out403=function(){ this.outCode(403, "403 Forbidden\n");  }
 tmp.out304=function(){  this.outCode(304);   }
-tmp.out404=function(str){ str=str||"404 Not Found\n"; this.outCode(404, str);    }
+tmp.out404=function(str="404 Not Found\n"){ this.outCode(404, str);    }
+tmp.out400=function(str="400 Bad Request\n"){ this.outCode(400, str); }
 tmp.out500=function(e){
   if(e instanceof Error) {var mess=e.name + ': ' + e.message; console.error(e);} else {var mess=e; console.error(mess);} 
   this.writeHead(500, {"Content-Type": MimeType.txt});  this.end(mess+ "\n");

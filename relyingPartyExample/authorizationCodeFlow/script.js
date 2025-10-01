@@ -1,6 +1,6 @@
 global.app=global;
 import http from "http";
-import url from "url";
+//import url from "url";
 import fs, {fsPromises} from "fs";
 import concat from 'concat-stream';
 import fetch from 'node-fetch';
@@ -13,7 +13,7 @@ tmp.out500=function(e){
   this.writeHead(500, {"Content-Type": MimeType.txt});  this.end(mess+ "\n");
 }
 
-app.parseQS2=function(qs){
+app.parseQS=function(qs){
   var objQS={}, objTmp=new URLSearchParams(qs);
   for(const [name, value] of objTmp) {  objQS[name]=value;  }
   return objQS;
@@ -72,7 +72,11 @@ UrlCode2Token={fb:`https://graph.facebook.com/${strFBVersion}/oauth/access_token
 
 var handler=async function(req, res){
 
-  var objUrl=url.parse(req.url), qs=objUrl.query||'', objQS=parseQS2(qs),  pathName=objUrl.pathname;
+  //var objUrl=url.parse(req.url), pathName=objUrl.pathname, qs=objUrl.query||'';
+  var objUrl=new URL(`https://${req.headers.host}${req.url}`), pathName=objUrl.pathname, qs=objUrl.search;
+  //var objQS=objUrl.searchParams; // searchParams requires you to use the "get"-method
+  var objQS=parseQS(qs)
+  //extend(req, {objUrl, objQS});
   if(req.headers.host!=wwwApp){ res.writeHead(404);  res.end("404 Nothing at that url\n"); return; }
   (async function(){
     var objReqRes={req, res};

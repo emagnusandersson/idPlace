@@ -4,7 +4,7 @@
 "use strict"
 
 
-
+// Google "how to use cross-spawn instead of gm"
 // After deleting account, userAppList and devAppList are still populated (when you login again)
 // One is able to delete / edit app without supplying password
 // Clearing image, cause a JSON object returned with a property with undefined, (which causes JSON.parse to fail)
@@ -30,13 +30,13 @@
  * reqIndex
  ******************************************************************************/
 app.reqIndex=async function() {
-  var {req, res}=this, {sessionID, objQS, site, siteName, wwwSite}=req;
+  var {req, res}=this, {sessionID, objUrl, objQS, site, siteName, wwwSite}=req;
 
 
   var boSecFetch='sec-fetch-site' in req.headers
   if(boSecFetch){
     var strT=req.headers['sec-fetch-mode'];
-    if(!(strT=='navigate' || strT=='same-origin')) { res.outCode(400, `sec-fetch-mode header not allowed (${strT})`); return;}
+    if(!(strT=='navigate' || strT=='same-origin')) { res.out400(`sec-fetch-mode header not allowed (${strT})`); return;}
   }
   
 
@@ -100,7 +100,12 @@ app.reqIndex=async function() {
   if(boAuthReq){
     if(!objApp) { res.out200('No app with that client_id'); return; }
 
-    var urlT=decodeURIComponent(objQS.redirect_uri);
+    try {
+      var urlT = decodeQueryParam(objQS.redirect_uri); // Translates "+" to " ", I don't think one can use URL to any greate success, because everything after the question mark is json
+    } catch (e) {
+      console.error(e);
+      res.out400(`decodeQueryParam error`); return;
+    }
     var regUrlCompare=RegExp("^[^#]+"), Match=regUrlCompare.exec(urlT), urlIn=Match[0];
     var boRedirURIOK=objApp.redir_uri==urlIn;
     if(!boRedirURIOK) { res.out200(`The redir_uri you asked for: ${urlIn}, The registered redir_uri: ${objApp.redir_uri}`); return; }
@@ -335,7 +340,7 @@ app.reqMe=async function() {
   }
 
 
-  var tmp='access_token'; if(!(tmp in objQS)) {  res.outCode(400, serialize({error:{type:'invalid_request', message:`The parameter ${tmp} is required`}}));  return;}
+  var tmp='access_token'; if(!(tmp in objQS)) {  res.out400(serialize({error:{type:'invalid_request', message:`The parameter ${tmp} is required`}}));  return;}
 
   var Sql=[], Val=[]; 
   Sql.push(`SELECT name, image, eTagImage, sizeImage, imageHash, LENGTH(idFB)>0 AS boFB, LENGTH(idGoogle)>0 AS boGoogle, address, zip, city, county, federatedState, country, timeZone, email, boEmailVerified, telephone, idNational, birthdate,  motherTongue, gender,
@@ -369,10 +374,10 @@ FROM ${user2AppTab} ua JOIN ${userTab} u ON ua.idUser=u.idUser WHERE access_toke
   var sql=Sql.join('\n');
   var [err, results]=await this.myMySql.query(sql, Val); if(err) {  res.out500(err); return; }
    
-  if(results.length==0) {  res.outCode(400, serialize({error:{type:'access_denied', message:'Nothing found for that access_token'}}));  return;  }
+  if(results.length==0) {  res.out400(serialize({error:{type:'access_denied', message:'Nothing found for that access_token'}}));  return;  }
 
   var objUser=results[0], unixNow=(new Date()).valueOf()/1000;
-  if(objUser.tAccess+objUser.maxUnactivityToken<unixNow) {  debugger;  var tmp='The access_token has timed out'; res.outCode(400, serialize({error:{type:'access_denied', message:tmp}}));  return;  }
+  if(objUser.tAccess+objUser.maxUnactivityToken<unixNow) {  debugger;  var tmp='The access_token has timed out'; res.out400(serialize({error:{type:'access_denied', message:tmp}}));  return;  }
   var objUserN={}, scope=objUser.scope, Scope; if(scope.length) Scope=scope.split(','); else Scope=[]; 
   /*if(Scope.indexOf('all')!=-1) objUserN=objUser;
   else {
@@ -457,14 +462,14 @@ app.reqToken=async function() {
       req.on('end', function(){ resolve([null,body]);  });
     });
     if(err){res.out400(err); return;}
-    objQS=parseQS2(body); 
+    objQS=parseQS(body); 
   }
 
 
 
   var StrNeeded=['grant_type', 'client_id', 'redirect_uri', 'client_secret', 'code'];
   for(var i=0;i<StrNeeded.length;i++){
-    var tmp=StrNeeded[i]; if(!(tmp in objQS)) { res.outCode(400, serialize({error:{type:'invalid_request', message:`The parameter ${tmp} is required`}})); return;}
+    var tmp=StrNeeded[i]; if(!(tmp in objQS)) { res.out400(serialize({error:{type:'invalid_request', message:`The parameter ${tmp} is required`}})); return;}
   }
   
 
@@ -497,11 +502,11 @@ FROM ${user2AppTab} ua JOIN ${userTab} u ON ua.idUser=u.idUser JOIN ${appTab} a 
   var sql=Sql.join('\n');
   var [err, results]=await this.myMySql.query(sql, Val); if(err) {  res.out500(err); return; }
    
-  if(results.length==0) {  res.outCode(400, serialize({error:{type:'access_denied', message:'Nothing found for that authentication code'}}));  return;  }
+  if(results.length==0) {  res.out400(serialize({error:{type:'access_denied', message:'Nothing found for that authentication code'}}));  return;  }
 
   var objUser=results[0], unixNow=(new Date()).valueOf()/1000;
-  if(objUser.tAccess+500<unixNow) {   var tmp='The authentication code has timed out'; res.outCode(400, serialize({error:{type:'access_denied', message:tmp}}));  return;  }
-  if(objUser.secret!=objQS.client_secret) {   var tmp='Wrong client_secret'; res.outCode(400, serialize({error:{type:'access_denied', message:tmp}}));  return;  }
+  if(objUser.tAccess+500<unixNow) {   var tmp='The authentication code has timed out'; res.out400(serialize({error:{type:'access_denied', message:tmp}}));  return;  }
+  if(objUser.secret!=objQS.client_secret) {   var tmp='Wrong client_secret'; res.out400(serialize({error:{type:'access_denied', message:tmp}}));  return;  }
   delete objUser.secret;
 /*
   var objUserN={}, scope=objUser.scope, Scope=scope.split(','); if(scope.length==0) Scope=[];
@@ -641,7 +646,12 @@ app.reqVerifyPWResetReturn=async function() {
   //res.end(sendResult.response);
   
   res.setHeader('Content-Type', MimeType.html);
-  res.end(`A new password has been generated and sent to your email address.<br>Response: ${sendResult.response}<br>Close this tab and login with your new password in the orignal tab.`);
+  //res.end(`A new password has been generated and sent to your email address.<br>Response: ${sendResult.response}<br>Close this tab and login with your new password in the orignal tab.`);
+  var strMess=`<p style="font-size:larger">New password sent to your email.</p>
+    <p>Close this tab and login with your new password in the orignal tab.</p>`
+  if(boDbg) strMess+=`\n<p style="font-size:small">Response from email server (for debugging only):</p>
+    <div style="background:lightgrey;width:fit-content;font-size:small">${sendResult.response}</div>`
+  res.end(strMess);
 }
 
 
@@ -683,20 +693,20 @@ app.deleteOne=async function(user_id){ //
 app.reqDataDelete=async function(){  //
   var {req, res}=this, {objQS, uSite, siteName}=req;
 
-  if(req.method=='GET' && boDbg){ var objUrl=url.parse(req.url), qs=objUrl.query||'', strData=qs; } else 
-  if(req.method=='POST'){
+  if(req.method=='GET' && boDbg){
+    //var objUrl=url.parse(req.url), qs=objUrl.query||'', strData=qs;
+    var objUrl=new URL(`https://${req.headers.host}${req.url}`), strData=objUrl.search.slice(1);
+  } else if(req.method=='POST'){
     var [err,buf]=await new Promise(resolve=>{  var myConcat=concat(bT=>resolve([null,bT]));    req.pipe(myConcat);  });
     if(err){ res.out500(err); return; }
     jsonInput=buf.toString();
-
     var strData=buf.toString();
-  }
-  else {res.outCode(400, "Post request wanted"); return; }
+  } else {res.out400("Post request wanted"); return; }
   
-  var Match=strData.match(/signed_request=(.*)/); if(!Match) {res.outCode(400, "String didn't start with \"signed_request=\""); return; }
+  var Match=strData.match(/signed_request=(.*)/); if(!Match) {res.out400("String didn't start with \"signed_request=\""); return; }
   var strDataB=Match[1];
 
-  var [err, data]=parseSignedRequest(strDataB, req.rootDomain.fb.secret); if(err) { res.outCode(400, "Error in parseSignedRequest: "+err.message); return; }
+  var [err, data]=parseSignedRequest(strDataB, req.rootDomain.fb.secret); if(err) { res.out400("Error in parseSignedRequest: "+err.message); return; }
   var {user_id}=data;
 
   var [err,c]=await deleteOne.call(this, user_id);
@@ -713,8 +723,11 @@ app.reqDataDelete=async function(){  //
 
 app.reqDataDeleteStatus=async function(){
   var {req, res}=this, {site, objQS, uSite}=req;
-  var objUrl=url.parse(req.url), qs=objUrl.query||'', objQS=parseQS2(qs);
-  var confirmation_code=objQS.confirmation_code||'';
+  //var objUrl=url.parse(req.url), qs=objUrl.query||'', objQS=parseQS(qs);
+  //var confirmation_code=objQS.confirmation_code||'';
+  //var objUrl=new URL(`https://${req.headers.host}${req.url}`), objQS=objUrl.searchParams;
+  //var confirmation_code=objQS.get('confirmation_code')||'';
+  var {confirmation_code}=objQS;
   var [err,mess]=await getRedis(confirmation_code+'_DeleteRequest'); 
   if(err) {var mess=err.message;}
   else if(mess==null) {
@@ -748,7 +761,7 @@ app.reqImage=async function() {
   var Match=RegExp('^/image/(u|a)([0-9a-fA-Z]*)$').exec(pathName), idApp, kind;
   if(Match && Match.length>2){
     kind=Match[1]; 
-  } else { res.outCode(400,'Bad Request'); return; }
+  } else { res.out400('Bad Request'); return; }
 
 
   var imageHash=Match[2];
@@ -800,6 +813,7 @@ app.reqStatic=async function() {
     var [err]=await readFileToCache(filename);
     if(err) {
       if(err.code=='ENOENT') {res.out404(); return;}
+      if(err.code=='EISDIR') {res.out400('EISDIR'); return;}
       if('host' in req.headers) console.error(`Faulty request to ${req.headers.host} (${pathName})`);
       if('Referer' in req.headers) console.error('Referer:'+req.headers.Referer);
       res.out500(err); return;
@@ -1005,7 +1019,7 @@ app.SetupSql.prototype.createTable=async function(siteName,boDropOnly){
   idUser int(4) NOT NULL auto_increment,
   name varchar(128) NOT NULL DEFAULT '',
   password char(40) NOT NULL DEFAULT '',
-  image varchar(512) NOT NULL DEFAULT '',
+  image varchar(1024) NOT NULL DEFAULT '',
   eTagImage char(32) NOT NULL DEFAULT '',
   sizeImage int(4) NOT NULL DEFAULT 0,
   imageHash char(56) NULL,
@@ -1285,9 +1299,8 @@ nName, nImage, nEmail, nTelephone, nCountry, nFederatedState, nCounty, nCity, nZ
      // IF FOUND_ROWS()=0 THEN SELECT 'user not found' AS mess; LEAVE proc_label; ELSE SELECT '' AS mess; END IF;
      // COMMIT
 
-
   SqlFunctionDrop.push(`DROP PROCEDURE IF EXISTS ${siteName}loginWExternalIP`);
-  SqlFunction.push(`CREATE PROCEDURE ${siteName}loginWExternalIP(IidIP varchar(128), InameIP varchar(128), Iimage varchar(512), Iemail varchar(128), ItimeZone varchar(16))
+  SqlFunction.push(`CREATE PROCEDURE ${siteName}loginWExternalIP(IidIP varchar(128), InameIP varchar(128), Iimage varchar(1024), Iemail varchar(128), ItimeZone varchar(16))
     proc_label:BEGIN
       DECLARE VidUser, VidUserIP, VidUserE int(4);
       SELECT idUser INTO VidUserIP FROM ${userTab} WHERE idFB=IidIP;
@@ -1323,7 +1336,7 @@ idFB=IidIP, name=InameIP, image=Iimage, email=Iemail, timeZone=ItimeZone WHERE i
 
 /*
   SqlFunctionDrop.push(`DROP PROCEDURE IF EXISTS ${siteName}setUser`);
-  SqlFunction.push(`CREATE PROCEDURE ${siteName}setUser(IIP ${strIPEnum}, IidIP varchar(128), InameIP varchar(128), Iimage varchar(512), OUT OboInserted INT, OUT OidUser INT)
+  SqlFunction.push(`CREATE PROCEDURE ${siteName}setUser(IIP ${strIPEnum}, IidIP varchar(128), InameIP varchar(128), Iimage varchar(1024), OUT OboInserted INT, OUT OidUser INT)
     BEGIN
       DECLARE Vc INT;
       START TRANSACTION;

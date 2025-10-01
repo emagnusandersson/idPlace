@@ -157,7 +157,7 @@ ReqBE.prototype.mesEO=function(e, statusCode=500){
 
 
 ReqBE.prototype.go=async function(){
-  var {req, res}=this, {sessionID}=req;
+  var {req, res}=this, {sessionID, objUrl, objQS}=req;
   
   var boSecFetch='sec-fetch-site' in req.headers
   if(boSecFetch){
@@ -176,7 +176,10 @@ ReqBE.prototype.go=async function(){
 
   if('x-requested-with' in req.headers){
     var str=req.headers['x-requested-with'];   if(str!=="XMLHttpRequest") { this.mesEO(Error("x-requested-with: "+str));  return; }
-  } else {  this.mesEO(Error("x-requested-with not set"));  return;  }
+  } else {
+    console.error(objUrl.searchParams);
+    this.mesEO(Error("x-requested-with not set"));  return;
+  }
 
     // Extract input data either 'POST' or 'GET'
   var jsonInput;
@@ -205,7 +208,6 @@ ReqBE.prototype.go=async function(){
     }
   }
   else if(1){ this.mesEO(new Error('send me a POST')); return; }
-  //else if(req.method=='GET'){ var objUrl=url.parse(req.url), qs=objUrl.query||''; jsonInput=urldecode(qs);}
   
   try{ var beArr=JSON.parse(jsonInput); }catch(e){ this.mesEO(e);  return; }
   
