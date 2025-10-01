@@ -18,7 +18,7 @@ strSalt='abcdefghij'; // Random letters to prevent that the hashed passwords loo
 strSaltID='klmnopqrstu'; // Random letters to prevent that the hashed IDs can be predicted.
 
 
-strFBVersion="v20.0"
+strFBVersion="v26.0"
 app.UrlOAuth={fb:`https://www.facebook.com/${strFBVersion}/dialog/oauth`, google:"https://accounts.google.com/o/oauth2/v2/auth"}
 app.UrlToken={fb:`https://graph.facebook.com/${strFBVersion}/oauth/access_token`, google:"https://accounts.google.com/o/oauth2/token"}
 app.UrlGraph={fb:`https://graph.facebook.com/${strFBVersion}/me`, google:"https://www.googleapis.com/plus/v1/people/me"}; 
@@ -26,10 +26,13 @@ app.response_type='token';
 app.response_type='code';
 strIPPrim='fb';  strIPAlt='google';
 
-  // Sendgrid credentials
-//apiKeySendGrid="XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX";
-objSendinblueAuth={ user:"noreply@example.com", pass:"XXXXXXXXXXXXXX" }
-emailRegisterdUser=objSendinblueAuth.user;
+  // Mail credentials
+app.objMailAuth={
+  host:'YOURSMTPHOST', // smtp-relay.brevo.com, smtp.zoho.com ...
+  port:587,
+  auth:{ user:"noreply@example.com", pass:"XXXXXXXXXXXXXX" }
+}
+emailRegisterdUser=objMailAuth.auth.user;
 
   //
   //  Since one might want use the software on several different infrastrucures (heroku.com, appfog.com, digitalocean.com, localhost ...),

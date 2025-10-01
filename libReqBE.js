@@ -57,7 +57,7 @@
 
 
 //           Sign in                               Create account
-// [email]/[PW] [forgotPW]  | [FB]      Using password   |  Using Facebook
+// [email]/[PW] [forgotPW]  | [FB]      Using email / password   |  Using Facebook
 
 
 // $loginSelectorDiv
@@ -157,7 +157,7 @@ ReqBE.prototype.mesEO=function(e, statusCode=500){
 
 
 ReqBE.prototype.go=async function(){
-  var {req, res}=this, {sessionID}=req;
+  var {req, res}=this, {sessionID, objUrl, objQS}=req;
   
   var boSecFetch='sec-fetch-site' in req.headers
   if(boSecFetch){
@@ -176,7 +176,10 @@ ReqBE.prototype.go=async function(){
 
   if('x-requested-with' in req.headers){
     var str=req.headers['x-requested-with'];   if(str!=="XMLHttpRequest") { this.mesEO(Error("x-requested-with: "+str));  return; }
-  } else {  this.mesEO(Error("x-requested-with not set"));  return;  }
+  } else {
+    console.error(objUrl.searchParams);
+    this.mesEO(Error("x-requested-with not set"));  return;
+  }
 
     // Extract input data either 'POST' or 'GET'
   var jsonInput;
@@ -205,7 +208,6 @@ ReqBE.prototype.go=async function(){
     }
   }
   else if(1){ this.mesEO(new Error('send me a POST')); return; }
-  //else if(req.method=='GET'){ var objUrl=url.parse(req.url), qs=objUrl.query||''; jsonInput=urldecode(qs);}
   
   try{ var beArr=JSON.parse(jsonInput); }catch(e){ this.mesEO(e);  return; }
   
@@ -534,7 +536,7 @@ ReqBE.prototype.logout=async function(inObj){
   req.sessionCache={};  this.GRet.userInfoFrDB={};
   var [err,tmp]=await delRedis([req.sessionID+'_Main']); if(err) return [err]
   //await setRedis(req.sessionID+'_Main', req.sessionCache, maxUnactivity);
-  var strMess=`Logged out`;if(boDbg) strMess+=`, ${tmp} session variables deleted`
+  var strMess=`Logged out`;if(boDbg) strMess+=`, ${tmp} session variable(s) deleted`
   this.mes(strMess); return [null, [Ou]];
 }
 
@@ -1000,7 +1002,9 @@ ReqBE.prototype.verifyEmail=async function(inObj){
   // if(err) {console.log(err); return [new ErrorClient(err.body)]; }
   // this.mes('Email sent');
 
-  let sendResult=await smtpTransport.sendMail(msg)
+  //let sendResult=await smtpTransport.sendMail(msg)
+  var sendResult
+  [err, sendResult]=await smtpTransport.sendMail(msg).toNBP(); if(err) return [err];
   this.mes(sendResult.response);
 
   
@@ -1046,7 +1050,9 @@ ReqBE.prototype.verifyPWReset=async function(inObj){
   // if(err) {console.log(err); return [new ErrorClient(err.body)]; }
   // this.mes('Email sent');
   
-  let sendResult=await smtpTransport.sendMail(msg)
+  //let sendResult=await smtpTransport.sendMail(msg)
+  var sendResult
+  [err, sendResult]=await smtpTransport.sendMail(msg).toNBP(); if(err) return [err];
   this.mes(sendResult.response);
 
   Ou.boOK=1;

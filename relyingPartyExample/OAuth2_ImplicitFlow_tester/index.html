@@ -54,12 +54,10 @@ Element.prototype.css=function(style, value) {
   //
   
 var randomHash=function(){ return Math.random().toString(36).slice(2)+Math.random().toString(36).slice(2);}
-var parseQS=function(str){
-  var params = {},      regex = /([^&=]+)=([^&]*)/g, m;
-  while (m = regex.exec(str)) {
-    params[decodeURIComponent(m[1])] = decodeURIComponent(m[2]);
-  }
-  return params;
+var parseQS=function(qs){
+  var objQS={}, objTmp=new URLSearchParams(qs);
+  for(const [name, value] of objTmp) {  objQS[name]=value;  }
+  return objQS;
 }
 var basename=function(path){ return path.replace(/.*\//, '');}
 var dirname=function(path){ return path.match(/.*\//); }
@@ -82,15 +80,16 @@ var uRedir=dirname(window.location.href)+'loginBack.html'; // <--- I'm not sure 
 
 
   // Endpoints
+var strFBVersion="v26.0"
 var UrlOAuth={
-  fb:"https://www.facebook.com/v20.0/dialog/oauth",
+  fb:`https://www.facebook.com/${strFBVersion}/dialog/oauth`,
   google: "https://accounts.google.com/o/oauth2/v2/auth",
   idplace:"https://idplace.org",
   idL:"http://localhost:5000",  // <-- The following lines could/should be commented out (or removed)  (only for the developer of idplace)
   id192:"http://192.168.0.4:5000",  // <-- The following lines could/should be commented out (or removed) (only for the developer of idplace)
 };
 var UrlGraph={
-  fb:"https://graph.facebook.com/v20.0/me",
+  fb:`https://graph.facebook.com/${strFBVersion}/me`,
   google: "https://www.googleapis.com/plus/v1/people/me",
   idplace:"https://idplace.org/me",
   idL:"http://localhost:5000/me",  // <-- The following lines could/should be commented out (or removed)  (only for the developer of idplace)

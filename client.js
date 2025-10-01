@@ -52,9 +52,9 @@ globalThis.SelThemeCreate={
   strOS:'Same theme as OS', strLight:'Light theme', strDark:'Dark theme',
   factory:function(){
     var {strOS, strLight, strDark}=SelThemeCreate
-    var optSystem=createElement('option').myHtml('◩&nbsp;&nbsp;&nbsp;'+strOS).prop({value:'system'})  //⛅
-    var optLight=createElement('option').myHtml('☼&nbsp;&nbsp;&nbsp;'+strLight).prop({value:'light'})  //☼☀☀️◻◨
-    var optDark=createElement('option').myHtml('☽&nbsp;&nbsp;&nbsp;'+strDark).prop({value:'dark'})  //☾☽◼☁️🌙🌒 🌒
+    var optSystem=createElement('option').myHtml('◩&nbsp;&nbsp;&nbsp;&nbsp;'+strOS).prop({value:'system'})  //⛅
+    var optLight=createElement('option').myHtml('☼&nbsp;&nbsp;&nbsp;&nbsp;'+strLight).prop({value:'light'})  //☼☀☀️◻◨
+    var optDark=createElement('option').myHtml('☽&nbsp;&nbsp;&nbsp;&nbsp;'+strDark).prop({value:'dark'})  //☾☽◼☁️🌙🌒 🌒◐●○
     var Opt=SelThemeCreate.Opt=[optSystem, optLight, optDark]
     var el=createElement('select').myAppend(...Opt).on('change',function(e){
       localStorage.setItem('themeChoise', this.value);
@@ -286,7 +286,7 @@ var mainDivExtend=function(el){
   })
   //var selectorOfTheme=selThemeCreate().css({color:'black', background:'lightgrey'});  initialSetupOfSelectorOfTheme(selectorOfTheme)
   var selectorOfTheme=SelThemeCreate.factory();  setThemeClass(); selectorOfTheme.setValue();
-  var strWidth=boIOS?"3.3em":"2.9em";  selectorOfTheme.css({width: strWidth});
+  var strWidth=boIOS?"3.3em":"2.8em";  selectorOfTheme.css({width: strWidth});
 
   var infoLink=createElement('a').prop({href:"http://emagnusandersson.com/idPlace"}).myText("More info");
   var menuA=createElement('div').myAppend(infoLink, selectorOfTheme).css({display:'flex', 'justify-content':'space-evenly', 'align-items':'center','max-width':maxWidth, margin:'0 auto'}) //.css({padding:'0 0.3em 0 0', overflow:'hidden', 'text-align':'center', margin:'.3em auto .4em'}); 
@@ -329,10 +329,14 @@ var getOAuthCode=async function(boReauthenticate=false){
   var strBroadcastChannel='broadcastChannel_'+randomHash();
   var objCookie={strBroadcastChannel:encodeURIComponent(strBroadcastChannel), 'max-age':300, SameSite:'Strict', Secure:'True'}
   var {hostname}=new URL(uSite);
-  // if(/^192\.168\.0\.[0-9]$/.test(hostname)) objCookie.domain=hostname;  // To make it work when debugging
+  // var uDomainSite // As uLoginRet is to a sibling-domain, objCookieSite must be accessable from other sub-domains
+  // if(/^192\.168\.0\.[0-9]$/.test(hostname)) uDomainSite=hostname;  // To make it work when debugging
   // else {
-  //   var ind=hostname.indexOf('.');  if(ind!=-1) objCookie.domain=hostname.substr(ind+1);  
+  //   var ind=hostname.indexOf('.');
+  //   if(ind!=-1) uDomainSite=hostname.substr(ind+1);
+  //   else uDomainSite=hostname
   // }
+  // objCookieSite.domain=uDomainSite;
   var strCookie=objToQueryArr(objCookie).join(';');
   //document.cookie=strCookie
 
@@ -367,11 +371,11 @@ var getOAuthCode=async function(boReauthenticate=false){
 
   var strParams=response_type=='code'?strQS:strHash;
   
-  var params=parseQS(strParams.substring(1));
-  if(!('state' in params) || params.state !== nonce) {   return ['Invalid state parameter: '+params.state]; } 
-  if('error' in params) { return [params.error]; }
-  if(!('code' in params)) { return ['No "code" parameter in response from IdP']; }
-  return [null, params.code];
+  var objQS=parseQS(strParams.substring(1));
+  if(!('state' in objQS) || objQS.state !== nonce) {   return ['Invalid state parameter: '+objQS.state]; } 
+  if('error' in objQS) { return [objQS.error]; }
+  if(!('code' in objQS)) { return ['No "code" parameter in response from IdP']; }
+  return [null, objQS.code];
 }
 
 
@@ -542,7 +546,7 @@ var createUserSelectorDivExtend=function(el){
   });
   
   var h1=createElement('h1').myText('Create account');
-  var headUN=createElement('h2').myText('Using password');
+  var headUN=createElement('h2').myText('Using email / password');
   var headFB=createElement('h2').myText('Using Facebook');
 
   var divLeft=createElement('div').myAppend(headUN, butCreateAccount);
@@ -2275,7 +2279,13 @@ if(boAuthReq){
         };
       });
     }
-    var urlT=decodeURIComponent(objQS.redirect_uri);
+    try{
+      var urlT=decodeQueryParam(objQS.redirect_uri); // Translates "+" to " ", I don't think one can use URL to any greate success, because everything after the question mark is json
+    }catch(e){
+      console.error(e);
+      //console.error(pathName);
+      return;
+    }
     var regUrlCompare=RegExp("^[^#]+"), Match=regUrlCompare.exec(urlT), urlIn=Match[0];
     if(objQS.response_type=='token') {
       if(boAllow) var uRedir=createUriRedir(urlIn, objQS.state, objUApp.access_token, objUApp.maxUnactivityToken);

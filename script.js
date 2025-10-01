@@ -3,7 +3,7 @@
 global.app=global;
 import http from "http";
 import https from 'https';
-import url from "url";
+//import url from "url";
 import path from "path";
 import fs, {promises as fsPromises} from "fs";
 import mysql from 'mysql';
@@ -19,7 +19,6 @@ import serialize from 'serialize-javascript';
 import validator from 'validator';
 import mime from "mime";
 import minimist from 'minimist';
-//import sgMail from '@sendgrid/mail';
 import ip from 'ip';
 import gmTmp from 'gm';
 app.gm=gmTmp.subClass({ imageMagick: true });
@@ -27,7 +26,7 @@ import nodemailer from 'nodemailer';
 //UglifyJS from "uglify-js";
 
 app.extend=Object.assign;
-extend(app, {http, url, path, fsPromises, mysql, concat, fetch, formidable, myCrypto, zlib, Streamify, serialize, validator, mime, ip, gm}); //, sgMail
+extend(app, {http, path, fsPromises, mysql, concat, fetch, formidable, myCrypto, zlib, Streamify, serialize, validator, mime, ip, gm}); //, url, sgMail
 
 var argv = minimist(process.argv.slice(2));
 
@@ -96,7 +95,6 @@ extend(app, {boDbg:0, boAllowSql:1, port:5000, levelMaintenance:0, googleSiteVer
   UrlGraph:null, 
   response_type:'code',
   strIPPrim:'fb',  strIPAlt:'google',
-  //apiKeySendGrid:"XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
   emailRegisterdUser:"mail@example.com",
   strReCaptchaSiteKey:"XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
   strReCaptchaSecretKey:"XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
@@ -133,12 +131,12 @@ if(boNewConfig) { var tmp=await setRedis(keyR, strMd5Config);  }
 if('levelMaintenance' in process.env) levelMaintenance=process.env.levelMaintenance;
 
 
-//sgMail.setApiKey(apiKeySendGrid);
-app.smtpTransport=nodemailer.createTransport({
-  host:'smtp-relay.sendinblue.com',
-  port:587,
-  auth:objSendinblueAuth
-})
+// app.smtpTransport=nodemailer.createTransport({
+//   host:'smtp-relay.brevo.com',
+//   port:587,
+//   auth:objMailAuth
+// })
+app.smtpTransport=nodemailer.createTransport(objMailAuth)
 
 app.SiteName=Object.keys(Site);
 
@@ -237,13 +235,16 @@ const handler=async function(req, res){
   
 
     // Extract qs, objQS
-  var objUrl=url.parse(req.url), qs=objUrl.query||'', objQS=parseQS2(qs)
-
+  //var objUrlO=url.parse(req.url), pathNameOrgO=objUrlO.pathname, qsO=objUrlO.query||'';
+  var objUrl=new URL(`https://${req.headers.host}${req.url}`), pathNameOrg=objUrl.pathname, qs=objUrl.search;  
+  //var objQS=objUrl.searchParams; // searchParams requires you to use the "get"-method
+  var objQS=parseQS(qs)
+  //if(pathNameOrgO!=pathNameOrg) {debugger}
+  //if(qsO!=qs.slice(1)) {debugger}
 
 
     // Extract siteName, wwwSite
   var domainName=req.headers.host;
-  var pathNameOrg=objUrl.pathname;
   var wwwReq=domainName+pathNameOrg;
 
   var {siteName,wwwSite}=Site.getSite(wwwReq);  
