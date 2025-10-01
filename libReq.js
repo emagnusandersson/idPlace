@@ -4,7 +4,7 @@
 "use strict"
 
 
-
+// Google "how to use cross-spawn instead of gm"
 // After deleting account, userAppList and devAppList are still populated (when you login again)
 // One is able to delete / edit app without supplying password
 // Clearing image, cause a JSON object returned with a property with undefined, (which causes JSON.parse to fail)
@@ -641,7 +641,12 @@ app.reqVerifyPWResetReturn=async function() {
   //res.end(sendResult.response);
   
   res.setHeader('Content-Type', MimeType.html);
-  res.end(`A new password has been generated and sent to your email address.<br>Response: ${sendResult.response}<br>Close this tab and login with your new password in the orignal tab.`);
+  //res.end(`A new password has been generated and sent to your email address.<br>Response: ${sendResult.response}<br>Close this tab and login with your new password in the orignal tab.`);
+  var strMess=`<p style="font-size:larger">New password sent to your email.</p>
+    <p>Close this tab and login with your new password in the orignal tab.</p>`
+  if(boDbg) strMess+=`\n<p style="font-size:small">Response from email server (for debugging only):</p>
+    <div style="background:lightgrey;width:fit-content;font-size:small">${sendResult.response}</div>`
+  res.end(strMess);
 }
 
 
@@ -683,15 +688,15 @@ app.deleteOne=async function(user_id){ //
 app.reqDataDelete=async function(){  //
   var {req, res}=this, {objQS, uSite, siteName}=req;
 
-  if(req.method=='GET' && boDbg){ var objUrl=url.parse(req.url), qs=objUrl.query||'', strData=qs; } else 
-  if(req.method=='POST'){
+  if(req.method=='GET' && boDbg){
+    //var objUrl=url.parse(req.url), qs=objUrl.query||'', strData=qs;
+    var objUrl=new URL('http://trash.com'+req.url), strData=objUrl.search.slice(1);
+  } else if(req.method=='POST'){
     var [err,buf]=await new Promise(resolve=>{  var myConcat=concat(bT=>resolve([null,bT]));    req.pipe(myConcat);  });
     if(err){ res.out500(err); return; }
     jsonInput=buf.toString();
-
     var strData=buf.toString();
-  }
-  else {res.outCode(400, "Post request wanted"); return; }
+  } else {res.outCode(400, "Post request wanted"); return; }
   
   var Match=strData.match(/signed_request=(.*)/); if(!Match) {res.outCode(400, "String didn't start with \"signed_request=\""); return; }
   var strDataB=Match[1];
@@ -713,8 +718,10 @@ app.reqDataDelete=async function(){  //
 
 app.reqDataDeleteStatus=async function(){
   var {req, res}=this, {site, objQS, uSite}=req;
-  var objUrl=url.parse(req.url), qs=objUrl.query||'', objQS=parseQS2(qs);
-  var confirmation_code=objQS.confirmation_code||'';
+  //var objUrl=url.parse(req.url), qs=objUrl.query||'', objQS=parseQS2(qs);
+  //var confirmation_code=objQS.confirmation_code||'';
+  var objUrl=new URL('http://trash.com'+req.url), objQS=objUrl.searchParams;
+  var confirmation_code=objQS.get('confirmation_code')||'';
   var [err,mess]=await getRedis(confirmation_code+'_DeleteRequest'); 
   if(err) {var mess=err.message;}
   else if(mess==null) {
