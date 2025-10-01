@@ -6,12 +6,10 @@
 
 
 var randomHash=function(){ return Math.random().toString(36).slice(2)+Math.random().toString(36).slice(2);}
-var parseQS=function(str){
-  var params = {},      regex = /([^&=]+)=([^&]*)/g, m;
-  while (m = regex.exec(str)) {
-    params[decodeURIComponent(m[1])] = decodeURIComponent(m[2]);
-  }
-  return params;
+var parseQS=function(qs){
+  var objQS={}, objTmp=new URLSearchParams(qs);
+  for(const [name, value] of objTmp) {  objQS[name]=value;  }
+  return objQS;
 }
 
 window.onload=function(){

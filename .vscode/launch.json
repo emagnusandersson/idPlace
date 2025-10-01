@@ -22,7 +22,7 @@
                 "<node_internals>/**"
             ],
             "program": "${workspaceFolder}/script.js",
-            "args": ["--sql", "createView"]
+            "args": ["--sql", "createFunction"]
         }
     ]
 }

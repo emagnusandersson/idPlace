@@ -22,10 +22,6 @@ app.arrArrange=function(arrV,arrI){
 app.pad2=function(n) {return (n<10?'0':'')+n;}
 app.calcLabel=function(Label,strName){ var strLabel=ucfirst(strName); if(strName in Label) strLabel=Label[strName]; return strLabel;}
 
-app.urldecode=function(url) {
-  return decodeURIComponent(url.replace(/\+/g, ' '));
-}
-
 
 //extractLoc=function(obj,strObjName){   // Ex: eval(extractLoc(objMy,'objMy'));
   //var Str=[];  for(var key in obj) Str.push(`${key}=${strObjName}.${key}`);
@@ -280,11 +276,6 @@ app.blobToBase64=function(blob) {
   });
 }
 
-app.parseQS2=function(qs){
-  var objQS={}, objTmp=new URLSearchParams(qs);
-  for(const [name, value] of objTmp) {  objQS[name]=value;  }
-  return objQS;
-}
 
 //
 // Escaping data
@@ -325,14 +316,18 @@ app.createUriRedirCodeDeny=function(uriIn,strStateVar){
   return uriIn+'?'+['state='+strStateVar, 'error=access_denied'].join('&');
 }
 
-app.parseQS=function(str){
-  var params = {},      regex = /([^&=]+)=([^&]*)/g, m;
-  while (m = regex.exec(str)) {
-    params[decodeURIComponent(m[1])] = decodeURIComponent(m[2]);
-  }
-  return params;
-}
+//
+// Data Formatting
+//
 
+app.decodeQueryParam=function(p) {
+  return decodeURIComponent(p.replace(/\+/g, " "));
+}
+app.parseQS=function(qs){
+  var objQS={}, objTmp=new URLSearchParams(qs);
+  for(const [name, value] of objTmp) {  objQS[name]=value;  }
+  return objQS;
+}
 
 
 
