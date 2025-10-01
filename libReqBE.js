@@ -205,7 +205,11 @@ ReqBE.prototype.go=async function(){
     }
   }
   else if(1){ this.mesEO(new Error('send me a POST')); return; }
-  //else if(req.method=='GET'){ var objUrl=url.parse(req.url), qs=objUrl.query||''; jsonInput=urldecode(qs);}
+  //else if(req.method=='GET'){
+  //  //var objUrl=url.parse(req.url), qs=objUrl.query||''; 
+  //  var objUrl=new URL("http://trash.com"+req.url), qs=objUrl.search.slice(1);
+  //  jsonInput=urldecode(qs);
+  //}
   
   try{ var beArr=JSON.parse(jsonInput); }catch(e){ this.mesEO(e);  return; }
   

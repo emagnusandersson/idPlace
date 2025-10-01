@@ -1,6 +1,6 @@
 global.app=global;
 import http from "http";
-import url from "url";
+//import url from "url";
 import fs, {fsPromises} from "fs";
 import concat from 'concat-stream';
 import fetch from 'node-fetch';
@@ -72,7 +72,9 @@ UrlCode2Token={fb:`https://graph.facebook.com/${strFBVersion}/oauth/access_token
 
 var handler=async function(req, res){
 
-  var objUrl=url.parse(req.url), qs=objUrl.query||'', objQS=parseQS2(qs),  pathName=objUrl.pathname;
+  //var objUrl=url.parse(req.url), pathName=objUrl.pathname, qs=objUrl.query||'';
+  var objUrl=new URL("http://trash.com"+req.url), pathName=objUrl.pathname, qs=objUrl.search;  //objQSNew=objUrl.searchParams;
+  var objQS=parseQS2(qs)
   if(req.headers.host!=wwwApp){ res.writeHead(404);  res.end("404 Nothing at that url\n"); return; }
   (async function(){
     var objReqRes={req, res};

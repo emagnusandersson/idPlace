@@ -683,15 +683,15 @@ app.deleteOne=async function(user_id){ //
 app.reqDataDelete=async function(){  //
   var {req, res}=this, {objQS, uSite, siteName}=req;
 
-  if(req.method=='GET' && boDbg){ var objUrl=url.parse(req.url), qs=objUrl.query||'', strData=qs; } else 
-  if(req.method=='POST'){
+  if(req.method=='GET' && boDbg){
+    //var objUrl=url.parse(req.url), qs=objUrl.query||'', strData=qs;
+    var objUrl=new URL('http://trash.com'+req.url), strData=objUrl.search.slice(1);
+  } else if(req.method=='POST'){
     var [err,buf]=await new Promise(resolve=>{  var myConcat=concat(bT=>resolve([null,bT]));    req.pipe(myConcat);  });
     if(err){ res.out500(err); return; }
     jsonInput=buf.toString();
-
     var strData=buf.toString();
-  }
-  else {res.outCode(400, "Post request wanted"); return; }
+  } else {res.outCode(400, "Post request wanted"); return; }
   
   var Match=strData.match(/signed_request=(.*)/); if(!Match) {res.outCode(400, "String didn't start with \"signed_request=\""); return; }
   var strDataB=Match[1];
@@ -713,8 +713,10 @@ app.reqDataDelete=async function(){  //
 
 app.reqDataDeleteStatus=async function(){
   var {req, res}=this, {site, objQS, uSite}=req;
-  var objUrl=url.parse(req.url), qs=objUrl.query||'', objQS=parseQS2(qs);
-  var confirmation_code=objQS.confirmation_code||'';
+  //var objUrl=url.parse(req.url), qs=objUrl.query||'', objQS=parseQS2(qs);
+  //var confirmation_code=objQS.confirmation_code||'';
+  var objUrl=new URL('http://trash.com'+req.url), objQS=objUrl.searchParams;
+  var confirmation_code=objQS.get('confirmation_code')||'';
   var [err,mess]=await getRedis(confirmation_code+'_DeleteRequest'); 
   if(err) {var mess=err.message;}
   else if(mess==null) {
